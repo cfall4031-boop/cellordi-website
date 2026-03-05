@@ -14,13 +14,27 @@ app.use(helmet({ contentSecurityPolicy: false })); // headers de sécurité HTTP
 app.use(compression());                            // compression gzip des réponses
 
 // ── CORS ─────────────────────────────────────────────────────
+// CORS_ORIGINS = origines supplémentaires séparées par virgule (ex: URL Vercel)
+const extraOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map(o => o.trim())
+  : [];
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://reparationcellordi.ca",
-    "https://www.reparationcellordi.ca"
-  ],
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://reparationcellordi.ca",
+      "https://www.reparationcellordi.ca",
+      ...extraOrigins,
+    ];
+    // Autoriser les requêtes sans origin (ex: Postman, mobile)
+    if (!origin || allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS bloqué pour : ${origin}`));
+    }
+  },
   credentials: true
 }));
 
