@@ -1,6 +1,6 @@
 // ── Client API centralisé — Réparation CeLL&Ordi ─────────────
 
-const BASE = "/api";
+const BASE = (import.meta.env.VITE_API_URL as string) || "/api";
 
 export function getToken(): string | null {
   return localStorage.getItem("cellordi_token");
