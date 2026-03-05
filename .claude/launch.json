@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "cwd": "C:\\Users\\cfall\\Desktop\\cellordi-website\\backend",
+      "port": 3001
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "C:\\Users\\cfall\\Desktop\\cellordi-website\\frontend",
+      "port": 5173
+    }
+  ]
+}
