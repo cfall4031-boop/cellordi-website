@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "motion/react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { Services } from "./components/Services";
@@ -14,7 +15,13 @@ import "../styles/fonts.css";
 
 export default function App() {
   return (
-    <div style={{ overflowX: "hidden" }}>
+    <motion.div
+      style={{ overflowX: "hidden" }}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.32, ease: "easeInOut" }}
+    >
       <Navbar />
       <Hero />
       <Services />
@@ -71,6 +78,6 @@ export default function App() {
           color: #fff;
         }
       `}</style>
-    </div>
+    </motion.div>
   );
 }

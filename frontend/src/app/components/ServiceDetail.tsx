@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
+import { motion } from "motion/react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { FadeUp } from "./FadeUp";
@@ -518,7 +519,13 @@ export default function ServiceDetail() {
   }
 
   return (
-    <div style={{ overflowX: "hidden" }}>
+    <motion.div
+      style={{ overflowX: "hidden" }}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.32, ease: "easeInOut" }}
+    >
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
@@ -909,7 +916,23 @@ export default function ServiceDetail() {
         </div>
       </section>
 
+      {/* Retour à l'accueil */}
+      <div style={{
+        background: NAVY_MID,
+        borderTop: "1px solid rgba(109,212,0,0.12)",
+        padding: "3rem 2rem",
+        textAlign: "center",
+      }}>
+        <p style={{ color: GRAY, fontFamily: FONT_DISPLAY, fontSize: "1rem", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
+          Besoin d'une réparation ? On est là.
+        </p>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>← Retour à l'accueil</a>
+          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>Prendre rendez-vous</a>
+        </div>
+      </div>
+
       <Footer />
-    </div>
+    </motion.div>
   );
 }

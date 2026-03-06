@@ -123,22 +123,28 @@ export function Navbar() {
                 width: "24px",
                 height: "2px",
                 background: GREEN,
-                transition: "all 0.2s",
+                transition: "all 0.28s ease",
+                transformOrigin: "center",
+                ...(i === 0 && menuOpen ? { transform: "rotate(45deg) translate(5px, 7px)" } : {}),
+                ...(i === 1 && menuOpen ? { opacity: 0, transform: "scaleX(0)" } : {}),
+                ...(i === 2 && menuOpen ? { transform: "rotate(-45deg) translate(5px, -7px)" } : {}),
               }}
             />
           ))}
         </button>
       </div>
 
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div
-          style={{
-            background: NAVY,
-            borderTop: `1px solid rgba(109,212,0,0.15)`,
-            padding: "1rem 2rem",
-          }}
-        >
+      {/* Mobile Menu — animé avec maxHeight */}
+      <div
+        style={{
+          maxHeight: menuOpen ? "420px" : "0",
+          overflow: "hidden",
+          transition: "max-height 0.32s ease",
+          background: NAVY,
+          borderTop: menuOpen ? `1px solid rgba(109,212,0,0.15)` : "none",
+        }}
+      >
+        <div style={{ padding: "1rem 2rem" }}>
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -161,7 +167,7 @@ export function Navbar() {
             </a>
           ))}
         </div>
-      )}
+      </div>
 
       <style>{`
         @media (max-width: 768px) {

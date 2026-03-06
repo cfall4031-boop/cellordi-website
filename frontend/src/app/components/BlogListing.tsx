@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
+import { motion } from "motion/react";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 import { ARTICLES } from "../data/articles";
 
@@ -19,7 +20,13 @@ export default function BlogListing() {
   const filtered = activeTag === "Tous" ? ARTICLES : ARTICLES.filter(a => a.tag === activeTag);
 
   return (
-    <div style={{ background: NAVY, minHeight: "100vh", color: WHITE }}>
+    <motion.div
+      style={{ background: NAVY, minHeight: "100vh", color: WHITE }}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.32, ease: "easeInOut" }}
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=DM+Sans:wght@300;400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
@@ -179,6 +186,22 @@ export default function BlogListing() {
           ))}
         </div>
       </div>
-    </div>
+
+      {/* Retour à l'accueil */}
+      <div style={{
+        background: NAVY_MID,
+        borderTop: "1px solid rgba(109,212,0,0.12)",
+        padding: "3rem 2rem",
+        textAlign: "center",
+      }}>
+        <p style={{ color: GRAY, fontFamily: FONT_DISPLAY, fontSize: "1rem", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
+          Besoin d'une réparation ? On est là.
+        </p>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>← Retour à l'accueil</a>
+          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>Prendre rendez-vous</a>
+        </div>
+      </div>
+    </motion.div>
   );
 }
