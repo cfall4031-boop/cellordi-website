@@ -2,6 +2,7 @@ const express = require("express");
 const { db }  = require("../database");
 const auth    = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
+const { sendSMS }   = require("../utils/smsService");
 const { dechargeClient } = require("../utils/emailTemplates");
 
 const router = express.Router();
@@ -81,6 +82,14 @@ router.post("/", (req, res) => {
         type_appareil: appareil_final,
         probleme,
       }),
+    }).catch(console.error);
+  }
+
+  // ── SMS de confirmation (fire-and-forget, si téléphone fourni) ────────────
+  if (telephone) {
+    sendSMS({
+      to: telephone,
+      message: `Réparation CeLL&Ordi ✅ Votre décharge pour ${appareil_final} est enregistrée. Nos techniciens vont s'en occuper. Questions? (514) 237-5792`,
     }).catch(console.error);
   }
 

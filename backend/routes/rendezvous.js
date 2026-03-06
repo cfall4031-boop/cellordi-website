@@ -2,6 +2,7 @@ const express = require("express");
 const { db, genererNumeroTicket } = require("../database");
 const auth = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
+const { sendSMS }   = require("../utils/smsService");
 const { rdvClient, rdvAdmin } = require("../utils/emailTemplates");
 
 const router = express.Router();
@@ -71,6 +72,16 @@ router.post("/", (req, res) => {
       to: process.env.ADMIN_NOTIFY_EMAIL,
       subject: `🔔 Nouveau RDV — ${prenom} ${nom} (${type_appareil})`,
       html: rdvAdmin(emailData),
+    }).catch(console.error);
+  }
+
+  // ── SMS de confirmation client (fire-and-forget, si téléphone fourni) ────────
+  if (telephone) {
+    const ticketTxt = numero_ticket ? ` | Ticket: ${numero_ticket}` : "";
+    const dateTxt   = date_rdv ? ` | Date: ${date_rdv}` : "";
+    sendSMS({
+      to: telephone,
+      message: `Réparation CeLL&Ordi ✅ Votre RDV est reçu${ticketTxt}${dateTxt}. Appareil: ${type_appareil}. On vous confirme sous 1h. Questions? (514) 237-5792`,
     }).catch(console.error);
   }
 
