@@ -177,7 +177,7 @@ export function Hero() {
             <span style={{ color: GREEN, fontSize: "0.6rem", lineHeight: 1, opacity: 0.85 }}>✦</span>
           </div>
 
-          {/* H1 avec touche spéciale verte + soulignement animé sur "Cellulaires" */}
+          {/* H1 — CeLL & Ordi */}
           <h1
             style={{
               fontFamily: FONT_DISPLAY,
@@ -190,16 +190,16 @@ export function Hero() {
               letterSpacing: "-0.01em",
             }}
           >
-            Réparation
-            <br />
+            CeLL
             <span
               style={{
                 color: GREEN,
                 position: "relative",
                 display: "inline-block",
+                margin: "0 0.08em",
               }}
             >
-              Cellulaires
+              &amp;
               {/* Underline glow animé */}
               <span
                 style={{
@@ -214,8 +214,7 @@ export function Hero() {
                 }}
               />
             </span>
-            <br />
-            <span style={{ color: WHITE }}>&amp; Ordinateurs</span>
+            Ordi
           </h1>
 
           <p
