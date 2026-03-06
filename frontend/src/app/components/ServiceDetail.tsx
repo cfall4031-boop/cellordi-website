@@ -521,10 +521,10 @@ export default function ServiceDetail() {
   return (
     <motion.div
       style={{ overflowX: "hidden" }}
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.32, ease: "easeInOut" }}
+      initial={{ opacity: 0, scale: 0.97, y: 36 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 1.02, y: -24 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
@@ -549,6 +549,48 @@ export default function ServiceDetail() {
       `}</style>
 
       <Navbar />
+
+      {/* ── Bouton retour flottant ──────────────────────────────────────────── */}
+      <a
+        href="/#services"
+        style={{
+          position: "fixed",
+          top: "82px",
+          left: "20px",
+          zIndex: 999,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.35rem",
+          padding: "0.45rem 1.05rem",
+          background: "rgba(11, 28, 53, 0.88)",
+          backdropFilter: "blur(12px)",
+          border: `1.5px solid ${GREEN}`,
+          borderRadius: "999px",
+          color: GREEN,
+          fontFamily: FONT_DISPLAY,
+          fontWeight: 700,
+          fontSize: "0.78rem",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          textDecoration: "none",
+          boxShadow: "0 0 18px rgba(109,212,0,0.22), 0 2px 12px rgba(0,0,0,0.35)",
+          transition: "all 0.22s ease",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLAnchorElement;
+          el.style.background = GREEN;
+          el.style.color = "#0b1c35";
+          el.style.boxShadow = "0 0 28px rgba(109,212,0,0.55)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLAnchorElement;
+          el.style.background = "rgba(11, 28, 53, 0.88)";
+          el.style.color = GREEN;
+          el.style.boxShadow = "0 0 18px rgba(109,212,0,0.22), 0 2px 12px rgba(0,0,0,0.35)";
+        }}
+      >
+        ← Tous les services
+      </a>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <section
@@ -916,19 +958,77 @@ export default function ServiceDetail() {
         </div>
       </section>
 
-      {/* Retour à l'accueil */}
+      {/* ── Retour aux services ─────────────────────────────────────────────── */}
       <div style={{
-        background: NAVY_MID,
-        borderTop: "1px solid rgba(109,212,0,0.12)",
-        padding: "3rem 2rem",
+        background: `linear-gradient(135deg, rgba(109,212,0,0.07) 0%, ${NAVY} 60%)`,
+        borderTop: `2px solid ${GREEN}`,
+        padding: "4.5rem 2rem",
         textAlign: "center",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        <p style={{ color: GRAY, fontFamily: FONT_DISPLAY, fontSize: "1rem", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
-          Besoin d'une réparation ? On est là.
-        </p>
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>← Retour à l'accueil</a>
-          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>Prendre rendez-vous</a>
+        {/* glow déco */}
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "500px", height: "200px",
+          background: "radial-gradient(ellipse, rgba(109,212,0,0.10) 0%, transparent 70%)",
+          filter: "blur(40px)",
+          pointerEvents: "none",
+        }} />
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <span style={{
+            display: "block",
+            fontFamily: FONT_DISPLAY,
+            fontWeight: 700,
+            fontSize: "0.75rem",
+            color: GREEN,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            marginBottom: "0.7rem",
+          }}>
+            Explorer d'autres services
+          </span>
+          <p style={{
+            color: WHITE,
+            fontFamily: FONT_DISPLAY,
+            fontWeight: 800,
+            fontSize: "clamp(1.4rem, 3vw, 2rem)",
+            letterSpacing: "0.03em",
+            textTransform: "uppercase",
+            margin: "0 0 0.5rem",
+          }}>
+            Tous nos services de réparation
+          </p>
+          <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem", marginBottom: "2rem" }}>
+            Cellulaires · Ordinateurs · Informatique · Web · Cloud · Entretien TI
+          </p>
+          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <a
+              href="/#services"
+              style={{
+                ...btn(GREEN, NAVY),
+                textDecoration: "none",
+                padding: "0.85rem 2.2rem",
+                fontSize: "0.95rem",
+                boxShadow: "0 0 22px rgba(109,212,0,0.38)",
+              }}
+            >
+              ← Tous les services
+            </a>
+            <a
+              href="/#rendezvous"
+              style={{
+                ...btn("transparent", GREEN),
+                border: `1px solid ${GREEN}`,
+                textDecoration: "none",
+                padding: "0.85rem 2.2rem",
+                fontSize: "0.95rem",
+              }}
+            >
+              Prendre rendez-vous
+            </a>
+          </div>
         </div>
       </div>
 
