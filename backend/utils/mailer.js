@@ -1,5 +1,7 @@
 // ── Transporteur Email — Réparation CeLL&Ordi ─────────────────
 const nodemailer = require("nodemailer");
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first"); // Force IPv4 — évite ENETUNREACH sur Railway
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
