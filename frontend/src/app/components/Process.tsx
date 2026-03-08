@@ -45,7 +45,7 @@ const STEPS = [
     num: "02",
     Icon: IconClipboard,
     title: "Devis Transparent",
-    desc: "Vous recevez un devis détaillé par SMS/email. Pas de frais cachés — vous acceptez ou refusez en toute liberté.",
+    desc: "Vous recevez un devis détaillé. Pas de frais cachés — vous acceptez ou refusez en toute liberté.",
   },
   {
     num: "03",

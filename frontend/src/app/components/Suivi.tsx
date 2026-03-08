@@ -74,7 +74,7 @@ export function Suivi() {
               Suivi en Temps Réel
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem" }}>
-              Entrez votre numéro de ticket reçu par SMS/email pour suivre l'avancement.
+              Entrez votre numéro de ticket pour suivre l'avancement de votre réparation.
             </p>
           </div>
         </FadeUp>
@@ -100,7 +100,7 @@ export function Suivi() {
               </button>
             </div>
             <p style={{ fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY_DIM, marginTop: "0.5rem" }}>
-              {loading ? "Recherche en cours..." : "Entrez le numéro de ticket reçu par SMS/email (ex: RCO-20260225-001)"}
+              {loading ? "Recherche en cours..." : "Entrez votre numéro de ticket (ex: RCO-20260225-001)"}
             </p>
           </form>
         </FadeUp>
@@ -116,7 +116,7 @@ export function Suivi() {
               }}
             >
               <span style={{ fontFamily: FONT_BODY, color: "#ff6060", fontSize: "0.95rem" }}>
-                ❌ Aucun ticket trouvé avec ce numéro. Vérifiez votre SMS/email de confirmation.
+                ❌ Aucun ticket trouvé avec ce numéro. Vérifiez le numéro et réessayez.
               </span>
             </div>
           </FadeUp>

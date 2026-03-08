@@ -80,7 +80,7 @@ const SERVICES_DB: Record<string, ServiceData> = {
       {
         num: "03",
         title: "Devis & Accord",
-        desc: "Vous recevez un devis précis par SMS ou en boutique. Aucun frais caché. Vous acceptez librement avant toute intervention.",
+        desc: "Vous recevez un devis précis en boutique ou par téléphone. Aucun frais caché. Vous acceptez librement avant toute intervention.",
       },
       {
         num: "04",
@@ -358,7 +358,7 @@ const SERVICES_DB: Record<string, ServiceData> = {
       },
       {
         title: "Sauvegarde automatisée",
-        desc: "Plan de sauvegarde vers AWS S3 ou Backblaze B2. Rétention configurable, chiffrement AES-256, alertes en cas d'échec par email/SMS.",
+        desc: "Plan de sauvegarde vers AWS S3 ou Backblaze B2. Rétention configurable, chiffrement AES-256, alertes en cas d'échec.",
       },
       {
         title: "Synchronisation appareils",
