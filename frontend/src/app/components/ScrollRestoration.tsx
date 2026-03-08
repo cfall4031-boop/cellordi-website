@@ -10,7 +10,7 @@ const positions: Record<string, number> = {};
  * - Retour arrière (Back) → restaure la position exacte
  */
 export function ScrollRestoration() {
-  const { key } = useLocation();
+  const { key, hash } = useLocation();
   const prevKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -19,12 +19,27 @@ export function ScrollRestoration() {
       positions[prevKey.current] = window.scrollY;
     }
 
-    // Restaurer la position ou aller en haut
-    const saved = positions[key];
-    if (saved !== undefined) {
-      requestAnimationFrame(() => window.scrollTo(0, saved));
+    if (hash) {
+      // Laisser le navigateur scroller vers l'ancre (#rendezvous, #services, etc.)
+      const id = hash.slice(1);
+      const attempt = () => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        } else {
+          // Élément pas encore rendu (ex: navigation SPA) — réessayer
+          requestAnimationFrame(attempt);
+        }
+      };
+      requestAnimationFrame(attempt);
     } else {
-      window.scrollTo(0, 0);
+      // Restaurer la position ou aller en haut
+      const saved = positions[key];
+      if (saved !== undefined) {
+        requestAnimationFrame(() => window.scrollTo(0, saved));
+      } else {
+        window.scrollTo(0, 0);
+      }
     }
 
     prevKey.current = key;
