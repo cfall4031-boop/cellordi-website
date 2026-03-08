@@ -227,7 +227,7 @@ export function Hero() {
               maxWidth: "460px",
             }}
           >
-            Experts en réparation de cellulaires &amp; ordinateurs, soutien informatique et conception web. Pièces certifiées, diagnostics précis et solutions sur mesure pour particuliers et entreprises.
+            Solutions hardware &amp; software — experts en réparation de cellulaires &amp; ordinateurs, soutien informatique et conception web. Pièces certifiées, diagnostics précis et solutions sur mesure pour particuliers et entreprises.
           </p>
 
           {/* CTAs */}
