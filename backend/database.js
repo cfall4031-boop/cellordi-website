@@ -79,6 +79,7 @@ db.exec(`
     date_estimee    TEXT,
     date_completion DATETIME,
     notes_internes  TEXT,
+    date_livraison  TEXT,
     updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -108,6 +109,9 @@ db.exec(`
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+// Migration: add date_livraison if column is missing (existing databases)
+try { db.exec("ALTER TABLE tickets ADD COLUMN date_livraison TEXT"); } catch (_) {}
 
 function initAdmin() {
   const adminEmail    = process.env.ADMIN_EMAIL    || "admin@reparationcellordi.ca";

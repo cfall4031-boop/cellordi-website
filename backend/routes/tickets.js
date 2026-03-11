@@ -75,6 +75,13 @@ router.post("/", auth, (req, res) => {
 
 // GET /api/tickets — Lister tous les tickets (admin)
 router.get("/", auth, (req, res) => {
+  // Lazy expiration: delete tickets marked "livré" more than 24h ago
+  // Decharges are preserved automatically via ON DELETE SET NULL
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  db.prepare(
+    "DELETE FROM tickets WHERE statut = 'livre' AND date_livraison IS NOT NULL AND date_livraison < ?"
+  ).run(cutoff);
+
   const { statut, search } = req.query;
   let query = "SELECT * FROM tickets WHERE 1=1";
   const params = [];
@@ -114,6 +121,7 @@ router.patch("/:id", auth, (req, res) => {
   if (!ticket) return res.status(404).json({ erreur: "Ticket introuvable." });
 
   const dateCompletion = statut === "termine" ? new Date().toISOString() : ticket.date_completion;
+  const dateLivraison  = statut === "livre"   ? new Date().toISOString() : ticket.date_livraison;
 
   db.prepare(`
     UPDATE tickets SET
@@ -125,13 +133,14 @@ router.patch("/:id", auth, (req, res) => {
       date_estimee    = COALESCE(?, date_estimee),
       notes_internes  = COALESCE(?, notes_internes),
       date_completion = ?,
+      date_livraison  = ?,
       updated_at      = CURRENT_TIMESTAMP
     WHERE id = ?
   `).run(
     statut || null, diagnostic || null, pieces || null,
     cout_estime ?? null, cout_final ?? null,
     date_estimee || null, notes_internes || null,
-    dateCompletion, req.params.id
+    dateCompletion, dateLivraison, req.params.id
   );
 
   res.json({ message: "Ticket mis à jour.", ticket: db.prepare("SELECT * FROM tickets WHERE id = ?").get(req.params.id) });

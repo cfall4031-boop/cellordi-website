@@ -26,6 +26,7 @@ export function Rendezvous() {
     date: "", dispo: "", urgence: false,
   });
   const [sent, setSent] = useState(false);
+  const [ticketNumero, setTicketNumero] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState("");
   const [hovBtn, setHovBtn] = useState(false);
@@ -43,7 +44,7 @@ export function Rendezvous() {
     setErreur("");
     setLoading(true);
     try {
-      await rdvApi.create({
+      const res = await rdvApi.create({
         prenom: form.prenom,
         nom: form.nom,
         email: form.email,
@@ -52,6 +53,7 @@ export function Rendezvous() {
         date_rdv: form.date,
         description: `Service: ${form.service} | Appareil: ${form.appareil} | Dispo: ${form.dispo}${form.urgence ? " | URGENT" : ""} | ${form.probleme}`,
       });
+      setTicketNumero(res?.ticket?.numero || null);
       setSent(true);
     } catch (err: any) {
       setErreur(err.message || "Erreur lors de l'envoi. Réessayez.");
@@ -105,6 +107,7 @@ export function Rendezvous() {
               style={{
                 background: `rgba(109,212,0,0.08)`,
                 border: `2px solid ${GREEN}55`,
+                borderRadius: "16px",
                 padding: "3rem",
                 textAlign: "center",
               }}
@@ -120,14 +123,43 @@ export function Rendezvous() {
                   marginBottom: "0.8rem",
                 }}
               >
-                Demande envoyée !
+                Rendez-vous confirmé !
               </h3>
-              <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem" }}>
-                Nous vous contacterons dans les prochaines heures pour confirmer votre rendez-vous.
+              <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", marginBottom: "1.5rem" }}>
+                Votre demande a bien été reçue. Vous recevrez une confirmation par email.
               </p>
+
+              {ticketNumero && (
+                <div
+                  style={{
+                    background: "rgba(109,212,0,0.06)",
+                    border: "1px solid rgba(109,212,0,0.35)",
+                    borderRadius: "12px",
+                    padding: "1.5rem 2rem",
+                    display: "inline-block",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.8rem", margin: "0 0 0.5rem", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                    Votre numéro de suivi
+                  </p>
+                  <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "2rem", color: GREEN, letterSpacing: "0.15em", margin: 0 }}>
+                    {ticketNumero}
+                  </p>
+                  <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.78rem", margin: "0.5rem 0 0" }}>
+                    Conservez ce numéro pour suivre votre réparation
+                  </p>
+                </div>
+              )}
+
+              <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+                Utilisez la section <strong style={{ color: GRAY }}>Suivi de ticket</strong> ci-dessous pour suivre l'avancement.
+              </p>
+
               <button
                 onClick={() => {
                   setSent(false);
+                  setTicketNumero(null);
                   setErreur("");
                   setForm({
                     nom: "", prenom: "", email: "", telephone: "",
@@ -135,7 +167,7 @@ export function Rendezvous() {
                     date: "", dispo: "", urgence: false,
                   });
                 }}
-                style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}
+                style={{ ...btn(GREEN, NAVY), marginTop: "0.5rem" }}
               >
                 Nouvelle demande
               </button>

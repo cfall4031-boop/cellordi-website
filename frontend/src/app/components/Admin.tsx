@@ -432,8 +432,10 @@ function Tickets() {
   const changeStatut = async (id: number, statut: string) => {
     try {
       await ticketsApi.update(id, { statut });
-      setTickets(prev => prev.map((x:any) => x.id === id ? {...x, statut} : x));
-      if (selected?.id === id) setSelected((s:any) => ({...s, statut}));
+      const now = new Date().toISOString();
+      const extra = statut === "livre" ? { date_livraison: now } : {};
+      setTickets(prev => prev.map((x:any) => x.id === id ? {...x, statut, ...extra} : x));
+      if (selected?.id === id) setSelected((s:any) => ({...s, statut, ...extra}));
     } catch (err) { console.error(err); }
   };
 
@@ -484,7 +486,14 @@ function Tickets() {
                     <td style={{...tdStyle,fontWeight:500}}>{t.prenom} {t.nom}</td>
                     <td style={{...tdStyle,color:GRAY}}>{t.type_appareil}</td>
                     <td style={{...tdStyle,color:GRAY,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.probleme}</td>
-                    <td style={tdStyle}><Badge statut={t.statut}/></td>
+                    <td style={tdStyle}>
+                      <Badge statut={t.statut}/>
+                      {t.statut === "livre" && t.date_livraison && (() => {
+                        const remaining = 24 * 3600 * 1000 - (Date.now() - new Date(t.date_livraison).getTime());
+                        const hours = Math.max(0, Math.floor(remaining / 3600000));
+                        return <div style={{color:ORANGE,fontSize:"0.7rem",marginTop:"0.25rem"}}>⏱ Expire dans {hours}h</div>;
+                      })()}
+                    </td>
                     <td style={{...tdStyle,color:t.cout_estime>0?GREEN:GRAY_DIM,fontWeight:t.cout_estime>0?600:400}}>
                       {t.cout_estime>0?`${t.cout_estime} $`:"—"}
                     </td>
