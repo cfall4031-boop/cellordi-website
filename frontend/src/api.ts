@@ -49,7 +49,7 @@ export const rdvApi = {
     req<{ rendezvous: any[] }>("GET", "/rendezvous" + toQuery(params)),
   getOne:      (id: number) => req<any>("GET", `/rendezvous/${id}`),
   create:      (data: Record<string, unknown>) =>
-    req<{ message: string; id: number; ticket?: { id: number; numero: string } }>("POST", "/rendezvous", data, true),
+    req<{ message: string; id: number; numero_ticket?: string | null }>("POST", "/rendezvous", data, true),
   updateStatut:(id: number, statut: string) =>
     req<{ message: string }>("PATCH", `/rendezvous/${id}/statut`, { statut }),
   delete:      (id: number) => req<{ message: string }>("DELETE", `/rendezvous/${id}`),

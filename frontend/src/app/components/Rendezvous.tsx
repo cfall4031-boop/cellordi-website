@@ -53,7 +53,7 @@ export function Rendezvous() {
         date_rdv: form.date,
         description: `Service: ${form.service} | Appareil: ${form.appareil} | Dispo: ${form.dispo}${form.urgence ? " | URGENT" : ""} | ${form.probleme}`,
       });
-      setTicketNumero(res?.ticket?.numero || null);
+      setTicketNumero(res?.numero_ticket || null);
       setSent(true);
     } catch (err: any) {
       setErreur(err.message || "Erreur lors de l'envoi. Réessayez.");
