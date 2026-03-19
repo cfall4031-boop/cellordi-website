@@ -102,6 +102,20 @@ router.post("/:id/reply", auth, (req, res) => {
   res.json({ success: true, replied_at: new Date().toISOString() });
 });
 
+// PATCH /api/messages/:id/archive — Archiver un message (admin)
+router.patch("/:id/archive", auth, (req, res) => {
+  const result = db.prepare("UPDATE messages_contact SET archived = 1 WHERE id = ?").run(req.params.id);
+  if (result.changes === 0) return res.status(404).json({ erreur: "Message introuvable." });
+  res.json({ message: "Message archivé." });
+});
+
+// PATCH /api/messages/:id/unarchive — Désarchiver un message (admin)
+router.patch("/:id/unarchive", auth, (req, res) => {
+  const result = db.prepare("UPDATE messages_contact SET archived = 0 WHERE id = ?").run(req.params.id);
+  if (result.changes === 0) return res.status(404).json({ erreur: "Message introuvable." });
+  res.json({ message: "Message désarchivé." });
+});
+
 // DELETE /api/contact/:id — Supprimer un message (admin)
 router.delete("/:id", auth, (req, res) => {
   const result = db.prepare("DELETE FROM messages_contact WHERE id = ?").run(req.params.id);

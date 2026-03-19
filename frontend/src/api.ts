@@ -88,6 +88,8 @@ export const messagesApi = {
   markRepondu:(id: number) => req<any>("PATCH", `/messages/${id}/repondu`),
   reply:      (id: number, replyText: string) =>
     req<{ success: boolean; replied_at: string }>("POST", `/messages/${id}/reply`, { replyText }),
+  archive:     (id: number) => req<{ message: string }>("PATCH", `/messages/${id}/archive`),
+  unarchive:   (id: number) => req<{ message: string }>("PATCH", `/messages/${id}/unarchive`),
   delete:      (id: number) => req<any>("DELETE", `/messages/${id}`),
 };
 

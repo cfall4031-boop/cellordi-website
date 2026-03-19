@@ -117,6 +117,9 @@ try { db.exec("ALTER TABLE tickets ADD COLUMN date_livraison TEXT"); } catch (_)
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN reply_text TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN replied_at DATETIME"); } catch (_) {}
 
+// Migration: add archived field to messages_contact
+try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 0"); } catch (_) {}
+
 function initAdmin() {
   const adminEmail    = process.env.ADMIN_EMAIL    || "admin@reparationcellordi.ca";
   const adminPassword = process.env.ADMIN_PASSWORD || "AdminPassword123!";

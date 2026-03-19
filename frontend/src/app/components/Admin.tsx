@@ -733,6 +733,7 @@ function Messages() {
   const [msgs, setMsgs]         = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [loading, setLoading]   = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
   const [replyText, setReplyText]   = useState("");
   const [replying, setReplying]     = useState(false);
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -776,30 +777,60 @@ function Messages() {
     }
   };
 
-  const nonLus = msgs.filter((m:any)=>!m.lu).length;
+  const toggleArchive = async (m: any) => {
+    const isArchived = m.archived === 1;
+    try {
+      if (isArchived) await messagesApi.unarchive(m.id);
+      else            await messagesApi.archive(m.id);
+      const updated = { ...m, archived: isArchived ? 0 : 1 };
+      setMsgs(prev => prev.map((x:any) => x.id === m.id ? updated : x));
+      if (selected?.id === m.id) setSelected(updated);
+    } catch (e: any) { console.error(e); }
+  };
+
+  const visibleMsgs = msgs.filter((m:any) => showArchived ? m.archived === 1 : !m.archived);
+  const nonLus = msgs.filter((m:any)=>!m.lu && !m.archived).length;
 
   return (
     <div className="admin-fade" style={{display:"flex",height:"100%"}}>
       {/* ── Liste des messages ── */}
       <div style={{width:340,borderRight:"1px solid rgba(109,212,0,0.1)",display:"flex",flexDirection:"column"}}>
-        <div style={{ padding:"1.5rem", borderBottom:"1px solid rgba(109,212,0,0.1)" }}>
-          <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.4rem", fontWeight:900, margin:0 }}>Messages</h2>
-          <p style={{ fontSize:"0.8rem", color:GRAY, marginTop:"0.2rem", margin:0 }}>{nonLus} non lus</p>
+        <div style={{ padding:"1.2rem 1.5rem", borderBottom:"1px solid rgba(109,212,0,0.1)" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div>
+              <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.4rem", fontWeight:900, margin:0 }}>Messages</h2>
+              <p style={{ fontSize:"0.8rem", color:GRAY, marginTop:"0.2rem", margin:0 }}>
+                {showArchived ? `${visibleMsgs.length} archivé${visibleMsgs.length !== 1 ? "s" : ""}` : `${nonLus} non lu${nonLus !== 1 ? "s" : ""}`}
+              </p>
+            </div>
+            <button onClick={() => { setShowArchived(p=>!p); setSelected(null); }} style={{
+              background: showArchived ? "rgba(109,212,0,0.1)" : "transparent",
+              color: showArchived ? GREEN : GRAY,
+              border: `1px solid ${showArchived ? "rgba(109,212,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+              padding:"0.4rem 0.8rem", cursor:"pointer", fontSize:"0.75rem",
+              fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap", borderRadius:2,
+            }}>
+              🗃 {showArchived ? "Actifs" : "Archives"}
+            </button>
+          </div>
         </div>
         {loading ? <div style={{padding:"2rem",color:GRAY,textAlign:"center"}}>Chargement...</div> : (
         <div style={{ overflowY:"auto", flex:1 }}>
-          {msgs.map((m:any)=>(
+          {visibleMsgs.map((m:any)=>(
             <div key={m.id} onClick={()=>{ setSelected(m); if(!m.lu) markLu(m.id); }}
               style={{ padding:"1rem 1.2rem", borderBottom:"1px solid rgba(255,255,255,0.04)",
                 cursor:"pointer", background:selected?.id===m.id?"rgba(109,212,0,0.06)":m.lu?"transparent":"rgba(109,212,0,0.03)",
                 borderLeft:`3px solid ${selected?.id===m.id?GREEN:!m.lu?GREEN:"transparent"}`,
+                opacity: m.archived ? 0.65 : 1,
                 transition:"all 0.15s" }}>
               <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"0.3rem", alignItems:"center" }}>
                 <span style={{ fontWeight:m.lu?400:600, fontSize:"0.9rem" }}>{m.nom}</span>
                 <div style={{ display:"flex", gap:"0.3rem", alignItems:"center" }}>
-                  {m.repondu
-                    ? <span style={{ fontSize:"0.65rem", background:"rgba(109,212,0,0.15)", color:GREEN, padding:"1px 6px", borderRadius:2, fontWeight:600 }}>Répondu</span>
-                    : !m.lu && <span style={{ width:8,height:8,borderRadius:"50%",background:GREEN,display:"inline-block" }}/>
+                  {m.archived === 1
+                    ? <span style={{ fontSize:"0.65rem", background:"rgba(255,255,255,0.06)", color:GRAY_DIM, padding:"1px 6px", borderRadius:2 }}>Archivé</span>
+                    : m.repondu
+                      ? <span style={{ fontSize:"0.65rem", background:"rgba(109,212,0,0.15)", color:GREEN, padding:"1px 6px", borderRadius:2, fontWeight:600 }}>Répondu</span>
+                      : !m.lu && <span style={{ width:8,height:8,borderRadius:"50%",background:GREEN,display:"inline-block" }}/>
                   }
                 </div>
               </div>
@@ -810,7 +841,11 @@ function Messages() {
               </div>
             </div>
           ))}
-          {msgs.length === 0 && <div style={{padding:"2rem",color:GRAY_DIM,textAlign:"center"}}>Aucun message.</div>}
+          {visibleMsgs.length === 0 && (
+            <div style={{padding:"2rem",color:GRAY_DIM,textAlign:"center"}}>
+              {showArchived ? "Aucun message archivé." : "Aucun message."}
+            </div>
+          )}
         </div>
         )}
       </div>
@@ -830,8 +865,19 @@ function Messages() {
                   </span>
                 )}
               </div>
-              <div style={{ fontSize:"0.82rem", color:GRAY, marginTop:"0.3rem" }}>
-                De : <strong style={{color:"#fff"}}>{selected.nom}</strong> — {selected.email}
+              <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginTop:"0.3rem" }}>
+                <span style={{ fontSize:"0.82rem", color:GRAY }}>
+                  De : <strong style={{color:"#fff"}}>{selected.nom}</strong> — {selected.email}
+                </span>
+                <button onClick={() => toggleArchive(selected)} style={{
+                  marginLeft:"auto", background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(255,255,255,0.05)",
+                  color: selected.archived ? GREEN : GRAY,
+                  border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(255,255,255,0.1)"}`,
+                  padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
+                  fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
+                }}>
+                  {selected.archived ? "↩ Désarchiver" : "🗃 Archiver"}
+                </button>
               </div>
             </div>
 
