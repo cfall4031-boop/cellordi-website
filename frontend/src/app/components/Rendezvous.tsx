@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { rdvApi } from "../../api";
+import { CONSENT_KEY } from "./CookieBanner";
 
 const SERVICES = [
   "Réparation cellulaire",
@@ -61,6 +62,25 @@ export function Rendezvous() {
       setLoading(false);
     }
   };
+
+  if (localStorage.getItem(CONSENT_KEY) === "refused") return (
+    <section id="rendezvous" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
+      <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center", paddingTop: "2rem" }}>
+        <FadeUp>
+          <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</p>
+          <p style={{ color: WHITE, fontFamily: FONT_DISPLAY, fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+            Vous avez refusé le traitement de vos données.
+          </p>
+          <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem" }}>
+            Pour prendre rendez-vous, contactez-nous directement :<br />
+            <strong style={{ color: WHITE }}>📞 (514) 237-5792</strong>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong style={{ color: WHITE }}>✉️ info@reparationcellordi.ca</strong>
+          </p>
+        </FadeUp>
+      </div>
+    </section>
+  );
 
   return (
     <section

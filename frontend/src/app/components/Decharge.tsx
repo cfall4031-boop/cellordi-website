@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { dechargesApi } from "../../api";
+import { CONSENT_KEY } from "./CookieBanner";
 
 export function Decharge() {
   const [step, setStep] = useState(1);
@@ -86,6 +87,25 @@ export function Decharge() {
   };
 
   const stepTitles = ["Informations client", "Description de l'appareil", "Conditions & Signature"];
+
+  if (localStorage.getItem(CONSENT_KEY) === "refused") return (
+    <section id="decharge" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
+      <div style={{ maxWidth: "750px", margin: "0 auto", textAlign: "center", paddingTop: "2rem" }}>
+        <FadeUp>
+          <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</p>
+          <p style={{ color: WHITE, fontFamily: FONT_DISPLAY, fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+            Vous avez refusé le traitement de vos données.
+          </p>
+          <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem" }}>
+            Pour déposer votre appareil, contactez-nous directement :<br />
+            <strong style={{ color: WHITE }}>📞 (514) 237-5792</strong>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong style={{ color: WHITE }}>✉️ info@reparationcellordi.ca</strong>
+          </p>
+        </FadeUp>
+      </div>
+    </section>
+  );
 
   return (
     <section id="decharge" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
