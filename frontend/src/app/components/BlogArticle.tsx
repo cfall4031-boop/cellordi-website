@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
@@ -31,6 +31,54 @@ export default function BlogArticle() {
   }
 
   const accentColor = tagColors[article.tag] || GREEN;
+
+  useEffect(() => {
+    document.title = `${article.title} | Réparation CeLL&Ordi`;
+
+    const setMeta = (sel: string, attr: string, val: string) => {
+      let tag = document.querySelector(sel);
+      if (!tag) { tag = document.createElement('meta'); document.head.appendChild(tag); }
+      tag.setAttribute(attr, val);
+    };
+
+    setMeta('meta[name="description"]',        'content', article.desc);
+    setMeta('meta[property="og:title"]',       'content', `${article.title} | Réparation CeLL&Ordi`);
+    setMeta('meta[property="og:description"]', 'content', article.desc);
+    setMeta('meta[property="og:image"]',       'content', article.img);
+    setMeta('meta[property="og:type"]',        'content', 'article');
+    setMeta('meta[property="og:url"]',         'content', `https://reparationcellordi.ca/blog/${article.slug}`);
+
+    // Attribut manquant sur les og: tags
+    document.querySelector('meta[property="og:title"]')?.setAttribute('property', 'og:title');
+    document.querySelector('meta[property="og:description"]')?.setAttribute('property', 'og:description');
+    document.querySelector('meta[property="og:image"]')?.setAttribute('property', 'og:image');
+    document.querySelector('meta[property="og:type"]')?.setAttribute('property', 'og:type');
+    document.querySelector('meta[property="og:url"]')?.setAttribute('property', 'og:url');
+
+    // JSON-LD Article schema
+    const existing = document.getElementById('ld-article');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.id   = 'ld-article';
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": article.title,
+      "description": article.desc,
+      "image": article.img,
+      "datePublished": article.date,
+      "author":    { "@type": "Organization", "name": "Réparation CeLL&Ordi" },
+      "publisher": { "@type": "Organization", "name": "Réparation CeLL&Ordi", "url": "https://reparationcellordi.ca" },
+      "url": `https://reparationcellordi.ca/blog/${article.slug}`,
+    });
+    document.head.appendChild(script);
+
+    return () => {
+      document.title = 'Réparation CeLL&Ordi — Cellulaire & Ordinateur';
+      document.getElementById('ld-article')?.remove();
+    };
+  }, [article]);
 
   return (
     <motion.div

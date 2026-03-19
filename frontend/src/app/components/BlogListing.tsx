@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
@@ -18,6 +18,14 @@ export default function BlogListing() {
   const [hovered, setHovered]     = useState<string | null>(null);
 
   const filtered = activeTag === "Tous" ? ARTICLES : ARTICLES.filter(a => a.tag === activeTag);
+
+  useEffect(() => {
+    document.title = 'Blog Conseils & Réparation | Réparation CeLL&Ordi';
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) { metaDesc = document.createElement('meta'); metaDesc.setAttribute('name', 'description'); document.head.appendChild(metaDesc); }
+    metaDesc.setAttribute('content', "Conseils d'experts en réparation de téléphones et ordinateurs à Sainte-Catherine, Québec. Guides pratiques pour diagnostiquer et résoudre les pannes les plus courantes.");
+    return () => { document.title = 'Réparation CeLL&Ordi — Cellulaire & Ordinateur'; };
+  }, []);
 
   return (
     <motion.div
