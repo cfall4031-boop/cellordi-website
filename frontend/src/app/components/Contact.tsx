@@ -162,7 +162,7 @@ export function Contact() {
                 <p style={{ fontFamily: FONT_BODY, color: GRAY }}>
                   {t("contact.success.text")}
                 </p>
-                <button onClick={() => setSent(false)} style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}>
+                <button onClick={() => { setSent(false); setForm({ nom: "", email: "", sujet: "", message: "" }); setErreur(""); }} style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}>
                   {t("contact.success.new")}
                 </button>
               </div>
