@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { FadeUp } from "./FadeUp";
@@ -476,6 +477,458 @@ const SERVICES_DB: Record<string, ServiceData> = {
   },
 };
 
+// ─── English data ─────────────────────────────────────────────────────────────
+const SERVICES_DB_EN: Record<string, ServiceData> = {
+  cellulaires: {
+    title: "Phone Repair",
+    subtitle: "iPhone, Samsung, Huawei & more",
+    tagline: "Your phone repaired in less than 2 hours with certified parts.",
+    heroImg: "https://images.unsplash.com/photo-1697208386334-cdb57cd8ae75?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1746005718004-1f992c399428?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Specialists in smartphone repair since 2024, we work on all brands and models. Whether it's a cracked screen, a failing battery or a damaged connector, our certified technicians use OEM quality parts to bring your device back to life.",
+    stats: [
+      { val: "< 2h", label: "Avg. turnaround" },
+      { val: "98%", label: "Satisfaction" },
+      { val: "30 days", label: "Parts warranty" },
+      { val: "100+", label: "Models repaired" },
+    ],
+    features: [
+      {
+        title: "Screen Replacement",
+        desc: "Original LCD or OLED panel, full touch calibration, brightness and responsiveness testing. Compatible with all iPhone, Samsung Galaxy and Android generations.",
+      },
+      {
+        title: "Battery Replacement",
+        desc: "Certified battery with professional calibration tool. Get back to 100% battery life from day one. Capacity test before and after the repair.",
+      },
+      {
+        title: "Camera Repair",
+        desc: "Front camera, rear camera, 4K video module. Complete optical diagnostic with test bench, module replacement if needed, precise alignment.",
+      },
+      {
+        title: "Charging Port",
+        desc: "USB-C, Lightning or micro-USB port — compressed air cleaning or full replacement depending on condition. Fast charge test and sync verification.",
+      },
+      {
+        title: "Buttons & Speakers",
+        desc: "Home button, power, volume, vibrator, speaker, earpiece, microphone — all internal components are diagnosable and replaceable.",
+      },
+      {
+        title: "Data Recovery",
+        desc: "Secure extraction of contacts, photos and documents even from a device that won't turn on. Transfer to your new phone or backup to USB drive.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Drop-off & Welcome",
+        desc: "Bring your phone to our shop without an appointment. Our technicians inspect it visually and note your observations and symptoms.",
+      },
+      {
+        num: "02",
+        title: "Complete Diagnostic (30 min)",
+        desc: "In-depth tests: screen, battery, cameras, connectors, network, speakers. Detailed report of all detected issues.",
+      },
+      {
+        num: "03",
+        title: "Quote & Agreement",
+        desc: "You receive a precise quote in store or by phone. No hidden fees. You freely agree before any work begins.",
+      },
+      {
+        num: "04",
+        title: "Repair (1–2h)",
+        desc: "Workshop repair with certified parts. Most common repairs are completed the same day, often in less than 2 hours.",
+      },
+      {
+        num: "05",
+        title: "Testing & Pickup",
+        desc: "Complete quality testing protocol before handover. Your device comes back with a 30-day warranty on the replaced part.",
+      },
+    ],
+    trustPoints: [
+      "Certified & experienced technicians",
+      "OEM or original quality parts",
+      "Free diagnostic, no commitment",
+      "30-day warranty on every replaced part",
+    ],
+  },
+
+  ordinateurs: {
+    title: "Computer Repair",
+    subtitle: "PC, Mac, Ultrabooks & Workstations",
+    tagline: "PC or Mac, we'll get your computer back up and running quickly.",
+    heroImg: "https://images.unsplash.com/photo-1689236673934-66f8e9d9279b?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Is your computer slow, won't start or showing errors? Our technicians diagnose and repair all types of PCs and Macs. We work on both hardware and software with professional tools and quality parts.",
+    stats: [
+      { val: "PC & Mac", label: "All platforms" },
+      { val: "Data", label: "Secured" },
+      { val: "40 days", label: "Warranty" },
+    ],
+    features: [
+      {
+        title: "SSD / HDD Replacement",
+        desc: "Complete data migration to an ultra-fast SSD. Up to 10× speed improvement over a traditional hard drive. Compatible with Windows, macOS, Linux.",
+      },
+      {
+        title: "RAM Upgrade",
+        desc: "Adding or replacing memory modules to improve multitasking performance and accelerate your creative or professional applications.",
+      },
+      {
+        title: "Cleaning & Disinfection",
+        desc: "Removal of viruses, malware, adware, spyware. Next-generation antivirus installed and configured. System optimized for maximum speed.",
+      },
+      {
+        title: "Laptop Screen Repair",
+        desc: "LCD, IPS or OLED panel replacement for all laptop models. Hinge repair, keyboard and touchpad replacement.",
+      },
+      {
+        title: "OS Reinstallation",
+        desc: "Windows 10/11, macOS or Linux cleanly installed with all your drivers, essential software and recovery of your personal files.",
+      },
+      {
+        title: "Data Recovery",
+        desc: "Dead hard drive, corrupted SSD or accidental formatting. We recover photos, documents, emails and important files with a high success rate.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Device Drop-off",
+        desc: "Bring your computer with its charger. We document its condition, your symptoms and list of important software.",
+      },
+      {
+        num: "02",
+        title: "Hardware & Software Diagnostic",
+        desc: "CPU, RAM, GPU, storage, cooling, power supply, system testing. Precise identification of each issue with a full report.",
+      },
+      {
+        num: "03",
+        title: "Detailed Quote",
+        desc: "List of required work with pricing and estimated timeframes. You freely choose what you want repaired.",
+      },
+      {
+        num: "04",
+        title: "Repair",
+        desc: "Hardware or software intervention as needed. Quality parts, microelectronic soldering if required. 2-hour minimum burn test.",
+      },
+      {
+        num: "05",
+        title: "Testing & Delivery",
+        desc: "Verification of all components under load. Handover with a complete service report and parts warranty.",
+      },
+    ],
+    trustPoints: [
+      "Certified PC & Mac technicians",
+      "OEM or original quality parts",
+      "Free diagnostic, no commitment",
+      "40-day warranty on every replaced part",
+    ],
+  },
+
+  informatique: {
+    title: "IT Services",
+    subtitle: "Individuals & Businesses",
+    tagline: "Configuration, networking, security — we manage your IT environment.",
+    heroImg: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80",
+    description:
+      "From setting up a simple router to deploying a secure business network, our IT technicians cover all your needs. We work on-site or remotely for individuals and SMEs in the Montreal area.",
+    stats: [
+      { val: "On-site", label: "& remote" },
+      { val: "WiFi & cable", label: "Networking" },
+      { val: "WPA3", label: "Network security" },
+      { val: "SME", label: "& individuals" },
+    ],
+    features: [
+      {
+        title: "OS Installation & Configuration",
+        desc: "Windows 10/11 Pro, macOS, Linux — initial setup, user account, automatic updates, drivers and professional applications.",
+      },
+      {
+        title: "Network & WiFi",
+        desc: "Router, switch, NAS, WiFi access point, mesh network extension. WPA3-secured wired Cat6 and wireless network, captive portal.",
+      },
+      {
+        title: "Antivirus & Security",
+        desc: "Enterprise antivirus solution, firewall, DNS filtering, secure VPN. Infrastructure vulnerability audit and recommendation report.",
+      },
+      {
+        title: "Automatic Backup",
+        desc: "3-2-1 plan: 3 copies, 2 media types, 1 off-site. Cloud (AWS, Google, Azure) and local (NAS, external drive) backup with failure alerts.",
+      },
+      {
+        title: "Remote Support",
+        desc: "Secure access to your computer from our workshop to resolve most software issues without requiring an on-site visit.",
+      },
+      {
+        title: "User Training",
+        desc: "Training sessions tailored to your level: Microsoft 365 / Google Workspace, everyday cybersecurity, password management.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Initial Assessment",
+        desc: "Phone call or on-site visit to understand your current needs and existing IT infrastructure.",
+      },
+      {
+        num: "02",
+        title: "Action Plan",
+        desc: "Detailed technical proposal with recommended equipment, intervention timeframes and estimated budget, no commitment.",
+      },
+      {
+        num: "03",
+        title: "Implementation",
+        desc: "On-site or remote installation depending on the nature of the work. Minimum disruption to your business operations.",
+      },
+      {
+        num: "04",
+        title: "Testing & Validation",
+        desc: "Complete verification of each configured service. Security, network performance and multi-device connectivity tests.",
+      },
+      {
+        num: "05",
+        title: "Training & Follow-up",
+        desc: "Training of your teams on new tools, documentation provided and 30-day follow-up included for every new installation.",
+      },
+    ],
+    trustPoints: [
+      "Certified IT technicians",
+      "On-site or remote service",
+      "Free assessment, no commitment",
+      "30-day follow-up included after every installation",
+    ],
+  },
+
+  web: {
+    title: "Web Development",
+    subtitle: "Showcase sites, E-commerce & Applications",
+    tagline: "Your online presence, designed to convert and perform.",
+    heroImg: "https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    description:
+      "We design modern websites and applications tailored to your business needs. From Figma mockup to production deployment, our team handles your entire digital project with a results-driven and performance-oriented approach.",
+    stats: [
+      { val: "Mobile", label: "First design" },
+      { val: "SEO", label: "Google optimized" },
+      { val: "< 2s", label: "Load time" },
+      { val: "HTTPS", label: "SSL secured" },
+    ],
+    features: [
+      {
+        title: "Showcase Site",
+        desc: "Professional online presence with custom design, smooth animations, contact form, Google Maps and Analytics integration.",
+      },
+      {
+        title: "E-commerce",
+        desc: "Online store with shopping cart, secure payment (Stripe, PayPal), inventory management, product catalog and sales dashboard.",
+      },
+      {
+        title: "Web Application",
+        desc: "React/Next.js applications with Node.js backend. User authentication, database, REST API, cloud deployment on AWS or Vercel.",
+      },
+      {
+        title: "Redesign & Migration",
+        desc: "Modernization of your existing site, migration to a performant CMS (WordPress, Webflow) or React/Vue framework for better performance.",
+      },
+      {
+        title: "SEO & Performance",
+        desc: "Technical optimization for Google: Core Web Vitals, schema markup, XML sitemap, robots.txt, Google Search Console and Google My Business.",
+      },
+      {
+        title: "Monthly Maintenance",
+        desc: "Security updates, automatic backups, 24/7 monitoring, bug fixes and small feature additions every month.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Brief & Strategy",
+        desc: "Analysis of your objectives, target audience and competitors. Definition of page structure and priority features.",
+      },
+      {
+        num: "02",
+        title: "Figma Mockup",
+        desc: "High-fidelity interactive mockup design of all pages. You validate the visual appearance before any development begins.",
+      },
+      {
+        num: "03",
+        title: "Development",
+        desc: "Clean, responsive (mobile-first), accessible and optimized code. Cross-browser and multi-device testing at every stage of development.",
+      },
+      {
+        num: "04",
+        title: "Content & SEO",
+        desc: "Integration of your text and images, on-page SEO optimization, Google Analytics, Google Tag Manager and tracking tools setup.",
+      },
+      {
+        num: "05",
+        title: "Launch & Follow-up",
+        desc: "Deployment on high-performance hosting, DNS, SSL and CDN configuration. Performance monitoring and adjustments included for the first month.",
+      },
+    ],
+    trustPoints: [
+      "Experienced React & Node.js developers",
+      "Figma mockup validated before any development",
+      "Free quote, no commitment",
+      "30-day post-delivery support included",
+    ],
+  },
+
+  cloud: {
+    title: "Cloud Solutions",
+    subtitle: "Migration, storage & synchronization",
+    tagline: "Your data available everywhere, securely, at any time.",
+    heroImg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80",
+    description:
+      "The cloud is no longer reserved for large corporations. We help SMEs and freelancers migrate to modern cloud solutions: Google Workspace, Microsoft 365, secure storage and multi-device synchronization, configured and maintained by our experts.",
+    stats: [
+      { val: "99.9%", label: "Availability" },
+      { val: "Encrypted", label: "End-to-end" },
+      { val: "Multi", label: "Platform" },
+      { val: "24/7", label: "Monitoring" },
+    ],
+    features: [
+      {
+        title: "Cloud Migration",
+        desc: "Secure transfer of your files, emails and applications to Google Workspace, Microsoft 365 or a hybrid solution, with no data loss.",
+      },
+      {
+        title: "Google Workspace",
+        desc: "Professional Gmail setup with your domain, shared Drive, Meet, collaborative Docs/Sheets. Team training included.",
+      },
+      {
+        title: "Microsoft 365",
+        desc: "Exchange, OneDrive, SharePoint, Teams — complete setup with license management, security policies and Entra ID (Azure AD).",
+      },
+      {
+        title: "NAS & Local Storage",
+        desc: "Synology or QNAP NAS solution to keep control of your data in-house with secure remote access via VPN or QuickConnect.",
+      },
+      {
+        title: "Automated Backup",
+        desc: "Backup plan to AWS S3 or Backblaze B2. Configurable retention, AES-256 encryption, failure alerts.",
+      },
+      {
+        title: "Device Synchronization",
+        desc: "Access your files from PC, Mac, smartphone and tablet. Real-time collaboration between distributed team members.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Current State Audit",
+        desc: "Complete inventory of your data, current applications and work habits. Identification of priorities and risks.",
+      },
+      {
+        num: "02",
+        title: "Solution Selection",
+        desc: "Recommendation of the cloud solution suited to your needs and budget. Live demonstration and options comparison.",
+      },
+      {
+        num: "03",
+        title: "Secure Migration",
+        desc: "Data transfer with integrity verification at every step. Zero data loss guaranteed, progressive migration if needed.",
+      },
+      {
+        num: "04",
+        title: "Configuration & Security",
+        desc: "User access configuration, two-factor authentication (2FA), sharing policies and sensitive data encryption.",
+      },
+      {
+        num: "05",
+        title: "Training & Support",
+        desc: "Hands-on training for your staff, documentation provided and 30-day post-migration support included in the service.",
+      },
+    ],
+    trustPoints: [
+      "Google Workspace & Microsoft 365 experts",
+      "Zero data loss migration, guaranteed",
+      "Free cloud audit, no commitment",
+      "30-day post-migration support included",
+    ],
+  },
+
+  entretien: {
+    title: "Maintenance Contracts",
+    subtitle: "Preventive maintenance for businesses",
+    tagline: "A dedicated IT partner so you can focus on your business.",
+    heroImg: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1556741533-411cf82e4e2d?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Outsourcing your IT allows you to reduce costs and access complete expertise without hiring. Our maintenance contracts are designed for SMEs that want reliable, secure and up-to-date IT infrastructure, with a dedicated point of contact.",
+    stats: [
+      { val: "< 4h", label: "Response time" },
+      { val: "Monthly", label: "IT report" },
+      { val: "Preventive", label: "Maintenance" },
+      { val: "Flexible", label: "No long commitment" },
+    ],
+    features: [
+      {
+        title: "Preventive Maintenance",
+        desc: "Regular system checks, scheduled security updates, workstation and server cleaning to prevent breakdowns.",
+      },
+      {
+        title: "Priority Support",
+        desc: "Direct line dedicated to your business. Guaranteed response time under 4 hours. On-site or remote service depending on the urgency.",
+      },
+      {
+        title: "Monthly Security Audit",
+        desc: "Network security analysis, penetration testing, monthly report with prioritized recommendations and concrete action plan.",
+      },
+      {
+        title: "License Management",
+        desc: "Tracking of all your software licenses, renewal alerts, cost optimization and legal compliance for your IT fleet.",
+      },
+      {
+        title: "Backup & Recovery Plan",
+        desc: "Business continuity plan (BCP) regularly tested. Verified automatic backups, restoration procedure tested every quarter.",
+      },
+      {
+        title: "Monthly Report",
+        desc: "Complete dashboard of your IT infrastructure status: incidents handled, maintenance performed, recommendations and projected budget.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Free Initial Audit",
+        desc: "Complete inventory of your IT fleet. Identification of weak points, security risks and intervention priorities.",
+      },
+      {
+        num: "02",
+        title: "Contract Proposal",
+        desc: "Personalized offer based on your team size, industry and specific needs. Flexible monthly commitment, no surprises.",
+      },
+      {
+        num: "03",
+        title: "Onboarding",
+        desc: "Taking over your infrastructure, complete fleet documentation, setting up monitoring and alert tools.",
+      },
+      {
+        num: "04",
+        title: "Ongoing Maintenance",
+        desc: "Scheduled interventions (nights or weekends to minimize disruptions), proactive updates and weekly checks.",
+      },
+      {
+        num: "05",
+        title: "Monthly Meeting",
+        desc: "Monthly check-in with your dedicated contact. IT report review, priorities for the coming month, budget and strategic recommendations.",
+      },
+    ],
+    trustPoints: [
+      "IT technician dedicated to your business",
+      "Guaranteed response time < 4 hours",
+      "Free initial audit, no commitment",
+      "Flexible monthly contract, no long-term commitment",
+    ],
+  },
+};
+
 // ─── Checkmark icon ───────────────────────────────────────────────────────────
 const IconCheck = () => (
   <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
@@ -492,6 +945,7 @@ const IconFeature = () => (
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const { t, i18n } = useTranslation();
   const [hovCta, setHovCta] = useState(false);
   const [hovContact, setHovContact] = useState(false);
 
@@ -499,7 +953,8 @@ export default function ServiceDetail() {
     window.scrollTo({ top: 0 });
   }, [slug]);
 
-  const svc = slug ? SERVICES_DB[slug] : null;
+  const db = i18n.language === "en" ? SERVICES_DB_EN : SERVICES_DB;
+  const svc = slug ? db[slug] : null;
 
   if (!svc) {
     return (
@@ -508,9 +963,9 @@ export default function ServiceDetail() {
         <Navbar />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.5rem", padding: "2rem" }}>
           <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "5rem", color: GREEN, lineHeight: 1 }}>404</span>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "2rem", color: WHITE, margin: 0 }}>Service introuvable</h1>
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "2rem", color: WHITE, margin: 0 }}>{t("serviceDetail.not_found")}</h1>
           <a href="/#services" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1rem", color: GREEN, textDecoration: "none", letterSpacing: "0.07em" }}>
-            ← Voir tous nos services
+            {t("serviceDetail.back")}
           </a>
         </div>
         <Footer />
@@ -589,7 +1044,7 @@ export default function ServiceDetail() {
           el.style.boxShadow = "0 0 18px rgba(109,212,0,0.22), 0 2px 12px rgba(0,0,0,0.35)";
         }}
       >
-        ← Tous les services
+        {t("serviceDetail.back")}
       </a>
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
@@ -646,7 +1101,7 @@ export default function ServiceDetail() {
             onMouseEnter={(e) => (e.currentTarget.style.color = GREEN)}
             onMouseLeave={(e) => (e.currentTarget.style.color = GRAY)}
           >
-            ← Tous les services
+            {t("serviceDetail.back")}
           </a>
 
           <span style={{
@@ -710,7 +1165,7 @@ export default function ServiceDetail() {
           <FadeUp>
             <div>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                À propos du service
+                {t("serviceDetail.about")}
               </span>
               <h2 style={{
                 fontFamily: FONT_DISPLAY, fontWeight: 900,
@@ -718,7 +1173,7 @@ export default function ServiceDetail() {
                 color: WHITE, textTransform: "uppercase",
                 letterSpacing: "0.02em", margin: "0.6rem 0 1.5rem", lineHeight: 1.1,
               }}>
-                Experts en {svc.title}
+                {t("serviceDetail.expert_in")} {svc.title}
               </h2>
               <p style={{ fontFamily: FONT_BODY, fontSize: "1rem", color: GRAY, lineHeight: 1.8, marginBottom: "2rem" }}>
                 {svc.description}
@@ -764,7 +1219,7 @@ export default function ServiceDetail() {
           <FadeUp>
             <div style={{ textAlign: "center", marginBottom: "4rem" }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                Ce qu'on couvre
+                {t("serviceDetail.what_covers")}
               </span>
               <h2 style={{
                 fontFamily: FONT_DISPLAY, fontWeight: 900,
@@ -772,10 +1227,10 @@ export default function ServiceDetail() {
                 color: WHITE, textTransform: "uppercase",
                 letterSpacing: "0.02em", margin: "0.6rem 0 1rem",
               }}>
-                Nos Prestations
+                {t("serviceDetail.prestations")}
               </h2>
               <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", maxWidth: "500px", margin: "0 auto" }}>
-                Chaque service est réalisé par nos techniciens avec soin, transparence et rapidité.
+                {t("serviceDetail.prestations_sub")}
               </p>
             </div>
           </FadeUp>
@@ -831,7 +1286,7 @@ export default function ServiceDetail() {
           <FadeUp>
             <div style={{ textAlign: "center", marginBottom: "4rem" }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                Comment ça marche
+                {t("serviceDetail.how_works")}
               </span>
               <h2 style={{
                 fontFamily: FONT_DISPLAY, fontWeight: 900,
@@ -839,7 +1294,7 @@ export default function ServiceDetail() {
                 color: WHITE, textTransform: "uppercase",
                 letterSpacing: "0.02em", margin: "0.6rem 0 1rem",
               }}>
-                Notre Processus
+                {t("serviceDetail.process")}
               </h2>
             </div>
           </FadeUp>
@@ -876,7 +1331,7 @@ export default function ServiceDetail() {
                   {/* Text */}
                   <div style={{ flex: 1, paddingTop: "0.8rem" }}>
                     <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.75rem", color: GREEN, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: "0.3rem" }}>
-                      Étape {step.num}
+                      {t("serviceDetail.step")} {step.num}
                     </div>
                     <h3 style={{
                       fontFamily: FONT_DISPLAY, fontWeight: 700,
@@ -917,7 +1372,7 @@ export default function ServiceDetail() {
         <div style={{ maxWidth: "700px", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
           <FadeUp>
             <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              Prêt à commencer ?
+              {t("serviceDetail.ready")}
             </span>
             <h2 style={{
               fontFamily: FONT_DISPLAY, fontWeight: 900,
@@ -925,10 +1380,10 @@ export default function ServiceDetail() {
               color: WHITE, textTransform: "uppercase",
               margin: "0.6rem 0 1rem", letterSpacing: "0.02em",
             }}>
-              Prenez Rendez-vous
+              {t("serviceDetail.book")}
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", marginBottom: "2.5rem" }}>
-              Diagnostic gratuit · Devis transparent · Intervention rapide
+              {t("serviceDetail.cta_sub")}
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
               <a
@@ -940,7 +1395,7 @@ export default function ServiceDetail() {
                 onMouseEnter={() => setHovCta(true)}
                 onMouseLeave={() => setHovCta(false)}
               >
-                Réserver maintenant
+                {t("serviceDetail.book_now")}
               </a>
               <a
                 href="/#contact"
@@ -951,7 +1406,7 @@ export default function ServiceDetail() {
                 onMouseEnter={() => setHovContact(true)}
                 onMouseLeave={() => setHovContact(false)}
               >
-                Nous contacter
+                {t("serviceDetail.contact_us")}
               </a>
             </div>
           </FadeUp>
@@ -987,7 +1442,7 @@ export default function ServiceDetail() {
             textTransform: "uppercase",
             marginBottom: "0.7rem",
           }}>
-            Explorer d'autres services
+            {t("serviceDetail.explore")}
           </span>
           <p style={{
             color: WHITE,
@@ -998,10 +1453,10 @@ export default function ServiceDetail() {
             textTransform: "uppercase",
             margin: "0 0 0.5rem",
           }}>
-            Tous nos services de réparation
+            {t("serviceDetail.all_services_title")}
           </p>
           <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem", marginBottom: "2rem" }}>
-            Cellulaires · Ordinateurs · Informatique · Web · Cloud · Entretien TI
+            {t("serviceDetail.all_services_sub")}
           </p>
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
             <a
@@ -1014,7 +1469,7 @@ export default function ServiceDetail() {
                 boxShadow: "0 0 22px rgba(109,212,0,0.38)",
               }}
             >
-              ← Tous les services
+              {t("serviceDetail.all_services_btn")}
             </a>
             <a
               href="/#rendezvous"
@@ -1026,7 +1481,7 @@ export default function ServiceDetail() {
                 fontSize: "0.95rem",
               }}
             >
-              Prendre rendez-vous
+              {t("serviceDetail.rdv_btn")}
             </a>
           </div>
         </div>

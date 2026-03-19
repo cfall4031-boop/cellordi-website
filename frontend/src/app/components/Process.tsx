@@ -1,6 +1,7 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
-import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY } from "../tokens";
+import { NAVY, GREEN, WHITE, GRAY, FONT_DISPLAY, FONT_BODY } from "../tokens";
 
 const IconSearch = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -34,40 +35,14 @@ const IconCheckCircle = () => (
   </svg>
 );
 
-const STEPS = [
-  {
-    num: "01",
-    Icon: IconSearch,
-    title: "Diagnostic Gratuit",
-    desc: "Apportez votre appareil en boutique ou remplissez le formulaire en ligne. Notre technicien évalue l'état en 30 minutes.",
-  },
-  {
-    num: "02",
-    Icon: IconClipboard,
-    title: "Devis Transparent",
-    desc: "Vous recevez un devis détaillé. Pas de frais cachés — vous acceptez ou refusez en toute liberté.",
-  },
-  {
-    num: "03",
-    Icon: IconGear,
-    title: "Réparation Express",
-    desc: "Nos techniciens certifiés utilisent des pièces de qualité OEM. La majorité des réparations en moins de 2 heures.",
-  },
-  {
-    num: "04",
-    Icon: IconCheckCircle,
-    title: "Récupération & Suivi",
-    desc: "Récupérez votre appareil entièrement testé. Suivez votre réparation par numéro de ticket en temps réel.",
-  },
-];
+const ICONS = [IconSearch, IconClipboard, IconGear, IconCheckCircle];
 
 export function Process() {
+  const { t } = useTranslation();
+  const steps = t("process.steps", { returnObjects: true }) as Array<{ num: string; title: string; desc: string }>;
+
   return (
-    <section
-      id="process"
-      style={{ background: NAVY, padding: "7rem 2rem", position: "relative", overflow: "hidden" }}
-    >
-      {/* Subtle background accent */}
+    <section id="process" style={{ background: NAVY, padding: "7rem 2rem", position: "relative", overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -84,44 +59,19 @@ export function Process() {
       <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 1 }}>
         <FadeUp>
           <div style={{ textAlign: "center", marginBottom: "5rem" }}>
-            <span
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontWeight: 700,
-                fontSize: "0.82rem",
-                color: GREEN,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-              }}
-            >
-              Comment ça marche
+            <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              {t("process.tag")}
             </span>
-            <h2
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontWeight: 900,
-                fontSize: "clamp(2rem, 4vw, 3rem)",
-                color: WHITE,
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                margin: "0.6rem 0 1rem",
-              }}
-            >
-              Notre Processus
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
+              {t("process.title")}
             </h2>
           </div>
         </FadeUp>
 
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "0",
-            position: "relative",
-          }}
+          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0", position: "relative" }}
           className="process-grid"
         >
-          {/* Connecting line */}
           <div
             style={{
               position: "absolute",
@@ -135,104 +85,89 @@ export function Process() {
             className="process-line"
           />
 
-          {STEPS.map((step, i) => (
-            <FadeUp key={step.num} delay={i * 0.12}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  padding: "0 1.5rem",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                {/* Step icon circle */}
+          {steps.map((step, i) => {
+            const Icon = ICONS[i];
+            return (
+              <FadeUp key={step.num} delay={i * 0.12}>
                 <div
                   style={{
-                    width: "80px",
-                    height: "80px",
-                    background: `rgba(109,212,0,0.08)`,
-                    border: `2px solid ${GREEN}55`,
-                    borderRadius: "50%",
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: "1.5rem",
+                    textAlign: "center",
+                    padding: "0 1.5rem",
                     position: "relative",
-                    animation: "glowPulse 3s ease-in-out infinite",
-                    animationDelay: `${i * 0.5}s`,
+                    zIndex: 1,
                   }}
                 >
-                  <step.Icon />
-                  <span
+                  <div
                     style={{
-                      position: "absolute",
-                      top: "-6px",
-                      right: "-6px",
-                      width: "22px",
-                      height: "22px",
-                      background: GREEN,
+                      width: "80px",
+                      height: "80px",
+                      background: `rgba(109,212,0,0.08)`,
+                      border: `2px solid ${GREEN}55`,
                       borderRadius: "50%",
-                      fontFamily: FONT_DISPLAY,
-                      fontWeight: 900,
-                      fontSize: "0.7rem",
-                      color: NAVY,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      marginBottom: "1.5rem",
+                      position: "relative",
+                      animation: "glowPulse 3s ease-in-out infinite",
+                      animationDelay: `${i * 0.5}s`,
                     }}
                   >
-                    {i + 1}
-                  </span>
+                    <Icon />
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "-6px",
+                        right: "-6px",
+                        width: "22px",
+                        height: "22px",
+                        background: GREEN,
+                        borderRadius: "50%",
+                        fontFamily: FONT_DISPLAY,
+                        fontWeight: 900,
+                        fontSize: "0.7rem",
+                        color: NAVY,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontFamily: FONT_DISPLAY,
+                      fontWeight: 900,
+                      fontSize: "3.5rem",
+                      color: `rgba(109,212,0,0.08)`,
+                      position: "absolute",
+                      top: "-10px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      letterSpacing: "-0.02em",
+                      userSelect: "none",
+                      zIndex: -1,
+                    }}
+                  >
+                    {step.num}
+                  </div>
+
+                  <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.25rem", color: WHITE, marginBottom: "0.8rem", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                    {step.title}
+                  </h3>
+
+                  <p style={{ fontFamily: FONT_BODY, fontSize: "0.9rem", color: GRAY, lineHeight: 1.65 }}>
+                    {step.desc}
+                  </p>
                 </div>
-
-                <div
-                  style={{
-                    fontFamily: FONT_DISPLAY,
-                    fontWeight: 900,
-                    fontSize: "3.5rem",
-                    color: `rgba(109,212,0,0.08)`,
-                    position: "absolute",
-                    top: "-10px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    letterSpacing: "-0.02em",
-                    userSelect: "none",
-                    zIndex: -1,
-                  }}
-                >
-                  {step.num}
-                </div>
-
-                <h3
-                  style={{
-                    fontFamily: FONT_DISPLAY,
-                    fontWeight: 700,
-                    fontSize: "1.25rem",
-                    color: WHITE,
-                    marginBottom: "0.8rem",
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {step.title}
-                </h3>
-
-                <p
-                  style={{
-                    fontFamily: FONT_BODY,
-                    fontSize: "0.9rem",
-                    color: GRAY,
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {step.desc}
-                </p>
-              </div>
-            </FadeUp>
-          ))}
+              </FadeUp>
+            );
+          })}
         </div>
       </div>
 

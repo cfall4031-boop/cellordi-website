@@ -258,6 +258,47 @@ function dechargeClient({ prenom, nom, type_appareil, probleme }) {
   return wrap(content);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 6. EMAIL CLIENT — Réponse admin à un message de contact
+// ═══════════════════════════════════════════════════════════════
+function replyToContact({ nom, sujet, originalMessage, replyText }) {
+  const content = `
+    <h1 style="font-size:20px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:0.03em;margin:0 0 8px;">
+      Réponse à votre message ✓
+    </h1>
+    <p style="color:#a8b8d0;font-size:14px;line-height:1.7;margin:0 0 24px;">
+      Bonjour <strong style="color:#ffffff;">${nom}</strong>,<br/>
+      Notre équipe a répondu à votre demande concernant <em>"${sujet}"</em>.
+    </p>
+
+    <!-- Réponse de l'équipe -->
+    <div style="background:#0e2040;border-left:4px solid #6dd400;padding:18px 20px;margin-bottom:24px;">
+      <div style="font-size:12px;font-weight:700;color:#6dd400;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">
+        Notre réponse
+      </div>
+      <p style="color:#ffffff;font-size:14px;line-height:1.75;margin:0;white-space:pre-line;">${replyText}</p>
+    </div>
+
+    <!-- Message original -->
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:16px 18px;margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:700;color:#a8b8d0;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">
+        Votre message original
+      </div>
+      <p style="color:#a8b8d0;font-size:13px;line-height:1.7;margin:0;white-space:pre-line;">${originalMessage}</p>
+    </div>
+
+    <div style="background:rgba(109,212,0,0.06);border:1px solid rgba(109,212,0,0.2);padding:14px 16px;margin-bottom:24px;">
+      <p style="color:#a8b8d0;font-size:13px;line-height:1.6;margin:0;">
+        Si vous avez d'autres questions, n'hésitez pas à nous recontacter ou à nous appeler au
+        <strong style="color:#6dd400;">(514) 237-5792</strong>.
+      </p>
+    </div>
+
+    ${btnVert("Prendre rendez-vous →", `${SITE_URL}/#rendezvous`)}
+  `;
+  return wrap(content);
+}
+
 // ─────────────────────────────────────────────────────────────
 module.exports = {
   rdvClient,
@@ -265,4 +306,5 @@ module.exports = {
   contactClient,
   contactAdmin,
   dechargeClient,
+  replyToContact,
 };

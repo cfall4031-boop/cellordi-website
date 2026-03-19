@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, WHITE, GRAY, FONT_BODY } from "../tokens";
 
 export const CONSENT_KEY = "cellordi_cookie_consent";
 
 export function CookieBanner() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(
     () => !localStorage.getItem(CONSENT_KEY)
   );
@@ -52,12 +54,10 @@ export function CookieBanner() {
           minWidth: "220px",
         }}
       >
-        <strong style={{ color: WHITE }}>Confidentialité & Cookies</strong>
-        {" "}— Ce site recueille des informations personnelles (nom, courriel,
-        téléphone) via ses formulaires afin de traiter votre demande de
-        réparation, conformément à la{" "}
-        <strong style={{ color: WHITE }}>Loi 25 du Québec</strong>. Aucune
-        donnée n'est vendue ni partagée à des tiers.
+        <strong style={{ color: WHITE }}>{t("cookie.title")}</strong>
+        {" "}— {t("cookie.text")}{" "}
+        <strong style={{ color: WHITE }}>{t("cookie.law")}</strong>
+        {t("cookie.text2")}
       </p>
 
       <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
@@ -74,7 +74,7 @@ export function CookieBanner() {
             cursor: "pointer",
           }}
         >
-          Refuser
+          {t("cookie.refuse")}
         </button>
         <button
           onClick={accept}
@@ -90,7 +90,7 @@ export function CookieBanner() {
             cursor: "pointer",
           }}
         >
-          Accepter
+          {t("cookie.accept")}
         </button>
       </div>
     </div>

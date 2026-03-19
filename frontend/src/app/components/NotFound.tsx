@@ -1,8 +1,11 @@
 import React from "react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
 export default function NotFound() {
+  const { t } = useTranslation();
+
   return (
     <div
       style={{
@@ -18,7 +21,6 @@ export default function NotFound() {
         overflow: "hidden",
       }}
     >
-      {/* Background grid animation */}
       <div
         style={{
           position: "absolute",
@@ -32,8 +34,6 @@ export default function NotFound() {
           pointerEvents: "none",
         }}
       />
-
-      {/* Glow blob */}
       <div
         style={{
           position: "absolute",
@@ -47,9 +47,7 @@ export default function NotFound() {
         }}
       />
 
-      {/* Content */}
       <div style={{ position: "relative", zIndex: 1, maxWidth: "600px" }}>
-        {/* 404 number */}
         <div
           style={{
             fontFamily: FONT_DISPLAY,
@@ -65,7 +63,6 @@ export default function NotFound() {
           404
         </div>
 
-        {/* Label */}
         <div
           style={{
             fontFamily: FONT_DISPLAY,
@@ -77,10 +74,9 @@ export default function NotFound() {
             marginBottom: "1rem",
           }}
         >
-          Page introuvable
+          {t("notfound.label")}
         </div>
 
-        {/* Title */}
         <h1
           style={{
             fontFamily: FONT_DISPLAY,
@@ -92,10 +88,9 @@ export default function NotFound() {
             margin: "0 0 1rem",
           }}
         >
-          Oups, cette page n'existe pas
+          {t("notfound.title")}
         </h1>
 
-        {/* Description */}
         <p
           style={{
             fontFamily: FONT_BODY,
@@ -105,21 +100,18 @@ export default function NotFound() {
             marginBottom: "2.5rem",
           }}
         >
-          La page que vous cherchez a peut-être été déplacée, supprimée, ou n'a jamais existé.
-          Retournez à l'accueil pour continuer.
+          {t("notfound.desc")}
         </p>
 
-        {/* CTA */}
         <Link
           to="/"
           style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
           onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}
         >
-          ← Retour à l'accueil
+          {t("notfound.back")}
         </Link>
 
-        {/* Secondary links */}
         <div
           style={{
             marginTop: "2rem",
@@ -130,9 +122,9 @@ export default function NotFound() {
           }}
         >
           {[
-            { label: "Prendre un RDV", href: "/#rendezvous" },
-            { label: "Suivi de réparation", href: "/#suivi" },
-            { label: "Nous contacter", href: "/#contact" },
+            { key: "rdv" as const, href: "/#rendezvous" },
+            { key: "suivi" as const, href: "/#suivi" },
+            { key: "contact" as const, href: "/#contact" },
           ].map((link) => (
             <a
               key={link.href}
@@ -149,7 +141,7 @@ export default function NotFound() {
               onMouseEnter={(e) => (e.currentTarget.style.color = GREEN)}
               onMouseLeave={(e) => (e.currentTarget.style.color = GRAY_DIM)}
             >
-              {link.label}
+              {t(`notfound.links.${link.key}`)}
             </a>
           ))}
         </div>

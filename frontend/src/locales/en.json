@@ -1,0 +1,344 @@
+{
+  "nav": {
+    "services": "Services",
+    "process": "Process",
+    "rdv": "Appointment",
+    "suivi": "Tracking",
+    "blog": "Blog",
+    "contact": "Contact",
+    "cta": "Book Now",
+    "repair": "Repair"
+  },
+  "hero": {
+    "tag": "Repair · Optimize · Evolve",
+    "subtitle": "Hardware & software solutions — experts in phone & computer repair, IT support and web development. Certified parts, precise diagnostics and tailored solutions for individuals and businesses.",
+    "cta_rdv": "Book an Appointment",
+    "cta_suivi": "Track my repair",
+    "img_alt": "Phone repair technician"
+  },
+  "services": {
+    "tag": "What we do",
+    "title": "Our Services",
+    "subtitle": "From free diagnostics to express repairs, we cover all your technology needs. Click a service to learn more.",
+    "cta": "Learn more",
+    "items": {
+      "cellulaires": {
+        "title": "Phone Repair",
+        "desc": "Broken screens, batteries, cameras, charging ports. iPhone, Samsung, Huawei and more.",
+        "items": ["Screen replacement", "Certified battery", "Camera & sensors", "USB / Lightning port"]
+      },
+      "ordinateurs": {
+        "title": "Computer Repair",
+        "desc": "PC and Mac — viruses, slowdowns, hard drive, screen, keyboard. Data recovery.",
+        "items": ["Virus/malware removal", "HDD/SSD replacement", "RAM upgrade", "Laptop screen repair"]
+      },
+      "informatique": {
+        "title": "IT Services",
+        "desc": "OS installation, network setup, antivirus, automatic backup.",
+        "items": ["Windows / macOS install", "Secure network & WiFi", "Enterprise antivirus", "Cloud backup"]
+      },
+      "web": {
+        "title": "Web Development",
+        "desc": "Custom showcase sites, e-commerce and web applications for your business.",
+        "items": ["Showcase site & SEO", "Stripe E-commerce", "React web app", "Monthly maintenance"]
+      },
+      "cloud": {
+        "title": "Cloud Solutions",
+        "desc": "Cloud migration, secure storage, multi-device synchronization.",
+        "items": ["Google / M365 migration", "Google Workspace", "NAS & local storage", "Automated backup"]
+      },
+      "entretien": {
+        "title": "Maintenance Contracts",
+        "desc": "Preventive maintenance for businesses. Priority support and personalized follow-up.",
+        "items": ["Monthly maintenance", "Priority support < 4h", "Security audit", "Monthly IT report"]
+      }
+    }
+  },
+  "process": {
+    "tag": "How it works",
+    "title": "Our Process",
+    "steps": [
+      {
+        "num": "01",
+        "title": "Free Diagnostic",
+        "desc": "Bring your device to our shop or fill out the online form. Our technician assesses it in 30 minutes."
+      },
+      {
+        "num": "02",
+        "title": "Transparent Quote",
+        "desc": "You receive a detailed quote. No hidden fees — you accept or decline freely."
+      },
+      {
+        "num": "03",
+        "title": "Express Repair",
+        "desc": "Our certified technicians use OEM-quality parts. Most repairs completed in under 2 hours."
+      },
+      {
+        "num": "04",
+        "title": "Pickup & Tracking",
+        "desc": "Get your fully tested device back. Track your repair with a ticket number in real time."
+      }
+    ]
+  },
+  "testimonials": {
+    "tag": "They trust us",
+    "title": "What our clients say",
+    "google_rating": "Google Rating",
+    "reviews_count": "· 67 reviews",
+    "cta": "See all our Google reviews · 67 reviews",
+    "categories": {
+      "reparation": "Repair",
+      "informatique": "IT Services",
+      "web": "Web Development"
+    }
+  },
+  "blog": {
+    "tag": "Tips & News",
+    "title": "Our Blog",
+    "all": "All articles →",
+    "read_more": "Read more →",
+    "read_time": "read",
+    "header_sub": "Expert tips, best practices and tech news — written by our team of technicians.",
+    "all_label": "All",
+    "articles_count_one": "{{count}} article",
+    "articles_count_other": "{{count}} articles",
+    "back_main": "← Main site",
+    "similar": "Related articles",
+    "find_us": "Find us",
+    "hours1": "Mon–Fri: 10am–7pm",
+    "hours2": "Sat: 10am–6pm",
+    "need_repair": "Need a repair? We're here.",
+    "back_home": "← Back to home",
+    "book_rdv": "Book an appointment",
+    "device_problem": "Issue with your device?",
+    "techs_available": "Our technicians are available Monday to Saturday. Free diagnostic!",
+    "summary": "Summary",
+    "back_blog": "← Blog"
+  },
+  "rdv": {
+    "tag": "Online booking",
+    "title": "Book an Appointment",
+    "subtitle": "Fill out this form and we'll confirm your appointment within 1 hour.",
+    "refused_title": "You have declined data processing.",
+    "refused_text": "To book an appointment, contact us directly:",
+    "services": [
+      "Phone repair",
+      "Computer repair",
+      "IT service",
+      "Web development",
+      "Cloud solution",
+      "Maintenance contract",
+      "Other"
+    ],
+    "dispos": [
+      "Morning (9am–12pm)",
+      "Afternoon (12pm–5pm)",
+      "Late afternoon (5pm–7pm)"
+    ],
+    "fields": {
+      "prenom": "First name *",
+      "nom": "Last name *",
+      "email": "Email *",
+      "telephone": "Phone *",
+      "service": "Desired service *",
+      "appareil": "Device model",
+      "probleme": "Problem description *",
+      "date": "Desired date *",
+      "dispo": "Availability *",
+      "urgence": "Urgent repair — I want to be treated as a priority",
+      "select": "-- Select --",
+      "choose": "-- Choose --"
+    },
+    "placeholders": {
+      "prenom": "John",
+      "nom": "Smith",
+      "email": "john@example.com",
+      "telephone": "514-555-1234",
+      "appareil": "e.g. iPhone 14, Dell XPS 15",
+      "probleme": "Briefly describe the issue..."
+    },
+    "urgence_surcharge": "+15%",
+    "submit": "Send my appointment request",
+    "sending": "Sending...",
+    "error_default": "Error while sending. Please try again.",
+    "success": {
+      "title": "Appointment confirmed!",
+      "text": "Your request has been received. You will receive a confirmation by email.",
+      "ticket_label": "Your tracking number",
+      "ticket_hint": "Keep this number to track your repair",
+      "suivi_hint": "Use the",
+      "suivi_link": "Ticket tracking",
+      "suivi_suffix": "section below to follow the progress.",
+      "new": "New request"
+    }
+  },
+  "suivi": {
+    "tag": "Your repair",
+    "title": "Real-Time Tracking",
+    "subtitle": "Enter your ticket number to track your repair progress.",
+    "label": "Ticket number",
+    "placeholder": "e.g. REP-2024-001",
+    "btn": "Search",
+    "loading": "Searching...",
+    "hint": "Enter your ticket number (e.g. RCO-20260225-001)",
+    "not_found": "❌ No ticket found with this number. Check the number and try again.",
+    "result": {
+      "device": "Device",
+      "problem": "Problem",
+      "progress": "Progress",
+      "in_progress": "← In progress"
+    }
+  },
+  "contact": {
+    "tag": "Find us",
+    "title": "Contact us",
+    "refused_title": "You have declined data processing.",
+    "refused_text": "To reach us, contact us directly:",
+    "map_link": "View on Google Maps →",
+    "info": {
+      "address_title": "Address",
+      "phone_title": "Phone",
+      "email_title": "Email",
+      "hours_title": "Hours",
+      "hours": ["Mon–Fri: 10am–7pm", "Saturday: 10am–6pm", "Sunday: Closed"]
+    },
+    "form": {
+      "name": "Full name *",
+      "email": "Email *",
+      "subject": "Subject *",
+      "message": "Message *",
+      "select_subject": "-- Select a subject --",
+      "subjects": ["Quote request", "Repair follow-up", "Business service", "Partnership", "Other"],
+      "name_placeholder": "John Smith",
+      "email_placeholder": "john@example.com",
+      "message_placeholder": "Describe your request...",
+      "submit": "Send message",
+      "sending": "Sending...",
+      "error_default": "Error while sending. Please try again."
+    },
+    "success": {
+      "title": "Message sent!",
+      "text": "We'll get back to you within 24 hours.",
+      "new": "New message"
+    }
+  },
+  "decharge": {
+    "tag": "Device drop-off",
+    "title": "Drop-Off Form",
+    "subtitle": "Official device deposit and repair consent form.",
+    "refused_title": "You have declined data processing.",
+    "refused_text": "To drop off your device, contact us directly:",
+    "steps": ["Client information", "Device description", "Terms & Signature"],
+    "step1": {
+      "title": "Client Information",
+      "prenom": "First name *",
+      "nom": "Last name *",
+      "email": "Email *",
+      "telephone": "Phone *",
+      "next": "Next →"
+    },
+    "step2": {
+      "title": "Device Description",
+      "type": "Device type *",
+      "marque": "Brand *",
+      "modele": "Model *",
+      "serie": "Serial number",
+      "probleme": "Reported issue *",
+      "etat": "Physical condition",
+      "accessoires": "Accessories included",
+      "select": "-- Select --",
+      "types": ["Phone", "Tablet", "Laptop", "Desktop", "Other"],
+      "marque_ph": "Apple, Samsung...",
+      "modele_ph": "iPhone 14, XPS 15...",
+      "serie_ph": "(optional)",
+      "probleme_ph": "Describe the issue...",
+      "etat_ph": "Scratches, cracks, damage...",
+      "accessoires_ph": "Charger, case, cable...",
+      "prev": "← Back",
+      "next": "Next →"
+    },
+    "step3": {
+      "title": "Terms & Signature",
+      "cond1": "I accept the general repair terms and the privacy policy.",
+      "cond2": "I authorize the technician to perform a full diagnostic on my device.",
+      "cond3": "I agree to pay the agreed amount upon device pickup.",
+      "signature": "Client signature *",
+      "clear": "Clear",
+      "sign_hint": "Sign in the box above with your mouse or finger",
+      "prev": "← Back",
+      "submit": "Submit form",
+      "sending": "Sending...",
+      "error_default": "Error while sending. Please try again."
+    },
+    "success": {
+      "title": "Form submitted!",
+      "text": "Your ticket number will be sent to you by email.",
+      "hint": "Keep this number to track your repair.",
+      "new": "New form"
+    }
+  },
+  "footer": {
+    "tagline": "Your trusted partner for all electronics repairs in Montreal.",
+    "google_reviews": "View our Google reviews",
+    "repair": "Repair",
+    "sections": {
+      "services": "Services",
+      "info": "Information",
+      "contact": "Contact"
+    },
+    "links": {
+      "cell": "Phone Repair",
+      "pc": "Computer Repair",
+      "it": "IT Services",
+      "web": "Web Development",
+      "cloud": "Cloud Solutions",
+      "about": "About us",
+      "blog": "Blog",
+      "privacy": "Privacy policy",
+      "cgv": "Terms of service"
+    },
+    "copyright": "All rights reserved.",
+    "status": "System online · Active repairs today"
+  },
+  "cookie": {
+    "title": "Privacy & Cookies",
+    "text": "This site collects personal information (name, email, phone) through its forms to process your repair request, in compliance with",
+    "law": "Quebec Law 25",
+    "text2": ". No data is sold or shared with third parties.",
+    "accept": "Accept",
+    "refuse": "Decline"
+  },
+  "notfound": {
+    "label": "Page not found",
+    "title": "Oops, this page doesn't exist",
+    "desc": "The page you're looking for may have been moved, deleted, or never existed. Return to the homepage to continue.",
+    "back": "← Back to home",
+    "links": {
+      "rdv": "Book an appointment",
+      "suivi": "Repair tracking",
+      "contact": "Contact us"
+    }
+  },
+  "serviceDetail": {
+    "back": "← All services",
+    "not_found": "Service not found",
+    "about": "About this service",
+    "expert_in": "Experts in",
+    "what_covers": "What we cover",
+    "prestations": "Our Services",
+    "prestations_sub": "Every service is performed by our technicians with care, transparency and speed.",
+    "how_works": "How it works",
+    "process": "Our Process",
+    "step": "Step",
+    "ready": "Ready to get started?",
+    "book": "Book an Appointment",
+    "cta_sub": "Free diagnostic · Transparent quote · Fast service",
+    "book_now": "Book now",
+    "contact_us": "Contact us",
+    "explore": "Explore other services",
+    "all_services_title": "All our repair services",
+    "all_services_sub": "Phones · Computers · IT Services · Web · Cloud · IT Maintenance",
+    "all_services_btn": "← All services",
+    "rdv_btn": "Book an appointment"
+  }
+}

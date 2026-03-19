@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { messagesApi } from "../../api";
@@ -48,35 +49,23 @@ const IconSendSvg = () => (
   </svg>
 );
 
-const CONTACT_INFO = [
-  {
-    Icon: IconMapPin,
-    title: "Adresse",
-    lines: ["5050 QC-132 #203", "Sainte-Catherine, QC J5C 1L4"],
-  },
-  {
-    Icon: IconPhone,
-    title: "Téléphone",
-    lines: ["(514) 237-5792"],
-  },
-  {
-    Icon: IconMail,
-    title: "Email",
-    lines: ["reparationcellulaire.ordinateur@gmail.com"],
-  },
-  {
-    Icon: IconClock,
-    title: "Horaires",
-    lines: ["Lun–Ven : 10h–19h", "Samedi : 10h–18h", "Dimanche : Fermé"],
-  },
-];
-
 export function Contact() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ nom: "", email: "", sujet: "", message: "" });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState("");
   const [hovBtn, setHovBtn] = useState(false);
+
+  const hours = t("contact.info.hours", { returnObjects: true }) as string[];
+  const subjects = t("contact.form.subjects", { returnObjects: true }) as string[];
+
+  const CONTACT_INFO = [
+    { Icon: IconMapPin, titleKey: "contact.info.address_title", lines: ["5050 QC-132 #203", "Sainte-Catherine, QC J5C 1L4"] },
+    { Icon: IconPhone, titleKey: "contact.info.phone_title", lines: ["(514) 237-5792"] },
+    { Icon: IconMail, titleKey: "contact.info.email_title", lines: ["reparationcellulaire.ordinateur@gmail.com"] },
+    { Icon: IconClock, titleKey: "contact.info.hours_title", lines: hours },
+  ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -87,15 +76,10 @@ export function Contact() {
     setErreur("");
     setLoading(true);
     try {
-      await messagesApi.send({
-        nom: form.nom,
-        email: form.email,
-        sujet: form.sujet,
-        message: form.message,
-      });
+      await messagesApi.send({ nom: form.nom, email: form.email, sujet: form.sujet, message: form.message });
       setSent(true);
     } catch (err: any) {
-      setErreur(err.message || "Erreur lors de l'envoi. Veuillez réessayer.");
+      setErreur(err.message || t("contact.form.error_default"));
     } finally {
       setLoading(false);
     }
@@ -107,10 +91,10 @@ export function Contact() {
         <FadeUp>
           <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</p>
           <p style={{ color: WHITE, fontFamily: FONT_DISPLAY, fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-            Vous avez refusé le traitement de vos données.
+            {t("contact.refused_title")}
           </p>
           <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem" }}>
-            Pour nous joindre, contactez-nous directement :<br />
+            {t("contact.refused_text")}<br />
             <strong style={{ color: WHITE }}>📞 (514) 237-5792</strong>
             &nbsp;&nbsp;|&nbsp;&nbsp;
             <strong style={{ color: WHITE }}>✉️ info@reparationcellordi.ca</strong>
@@ -126,10 +110,10 @@ export function Contact() {
         <FadeUp>
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
             <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              Nous trouver
+              {t("contact.tag")}
             </span>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
-              Contactez-nous
+              {t("contact.title")}
             </h2>
           </div>
         </FadeUp>
@@ -140,17 +124,10 @@ export function Contact() {
             <div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "2rem" }} className="contact-info-grid">
                 {CONTACT_INFO.map((info) => (
-                  <div
-                    key={info.title}
-                    style={{
-                      background: NAVY,
-                      border: "1px solid rgba(109,212,0,0.1)",
-                      padding: "1.4rem",
-                    }}
-                  >
+                  <div key={info.titleKey} style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.1)", padding: "1.4rem" }}>
                     <div style={{ marginBottom: "0.7rem" }}><info.Icon /></div>
                     <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.95rem", color: GREEN, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.5rem" }}>
-                      {info.title}
+                      {t(info.titleKey)}
                     </div>
                     {info.lines.map((line, i) => (
                       <div key={i} style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: i === 0 ? WHITE : GRAY, lineHeight: 1.6, wordBreak: "break-word" }}>
@@ -161,30 +138,14 @@ export function Contact() {
                 ))}
               </div>
 
-              {/* Map placeholder */}
-              <div
-                style={{
-                  background: NAVY,
-                  border: "1px solid rgba(109,212,0,0.1)",
-                  height: "200px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
+              {/* Map */}
+              <div style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.1)", height: "200px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "0.75rem" }}>
                 <IconMapSvg />
                 <span style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY_DIM, textAlign: "center", padding: "0 1rem" }}>
                   5050 QC-132 #203, Sainte-Catherine
                 </span>
-                <a
-                  href={MAPS_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.85rem", color: GREEN, textDecoration: "none", letterSpacing: "0.06em", textTransform: "uppercase" }}
-                >
-                  Voir sur Google Maps →
+                <a href={MAPS_URL} target="_blank" rel="noreferrer" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.85rem", color: GREEN, textDecoration: "none", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {t("contact.map_link")}
                 </a>
               </div>
             </div>
@@ -196,49 +157,41 @@ export function Contact() {
               <div style={{ background: `rgba(109,212,0,0.08)`, border: `2px solid ${GREEN}55`, padding: "3rem", textAlign: "center" }}>
                 <div style={{ marginBottom: "1rem", display: "flex", justifyContent: "center" }}><IconSendSvg /></div>
                 <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.8rem", color: GREEN, textTransform: "uppercase", marginBottom: "0.8rem" }}>
-                  Message envoyé !
+                  {t("contact.success.title")}
                 </h3>
                 <p style={{ fontFamily: FONT_BODY, color: GRAY }}>
-                  Nous vous répondrons dans les 24 heures.
+                  {t("contact.success.text")}
                 </p>
                 <button onClick={() => setSent(false)} style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}>
-                  Nouveau message
+                  {t("contact.success.new")}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.12)", padding: "2.5rem" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                   <div>
-                    <label style={labelStyle}>Nom complet *</label>
-                    <input name="nom" value={form.nom} onChange={handleChange} required placeholder="Jean Dupont" style={inputStyle} />
+                    <label style={labelStyle}>{t("contact.form.name")}</label>
+                    <input name="nom" value={form.nom} onChange={handleChange} required placeholder={t("contact.form.name_placeholder")} style={inputStyle} />
                   </div>
                   <div>
-                    <label style={labelStyle}>Email *</label>
-                    <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder="jean@exemple.com" style={inputStyle} />
+                    <label style={labelStyle}>{t("contact.form.email")}</label>
+                    <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder={t("contact.form.email_placeholder")} style={inputStyle} />
                   </div>
                 </div>
 
                 <div style={{ marginBottom: "1.2rem" }}>
-                  <label style={labelStyle}>Sujet *</label>
+                  <label style={labelStyle}>{t("contact.form.subject")}</label>
                   <select name="sujet" value={form.sujet} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="">-- Sélectionner un sujet --</option>
-                    {["Demande de devis", "Suivi de réparation", "Service entreprise", "Partenariat", "Autre"].map((s) => (
+                    <option value="">{t("contact.form.select_subject")}</option>
+                    {subjects.map((s) => (
                       <option key={s} value={s} style={{ background: NAVY }}>{s}</option>
                     ))}
                   </select>
                 </div>
 
                 <div style={{ marginBottom: "1.8rem" }}>
-                  <label style={labelStyle}>Message *</label>
-                  <textarea
-                    name="message"
-                    value={form.message}
-                    onChange={handleChange}
-                    required
-                    rows={6}
-                    placeholder="Décrivez votre demande..."
-                    style={{ ...inputStyle, resize: "vertical" }}
-                  />
+                  <label style={labelStyle}>{t("contact.form.message")}</label>
+                  <textarea name="message" value={form.message} onChange={handleChange} required rows={6} placeholder={t("contact.form.message_placeholder")} style={{ ...inputStyle, resize: "vertical" }} />
                 </div>
 
                 {erreur && (
@@ -254,7 +207,7 @@ export function Contact() {
                   onMouseEnter={() => !loading && setHovBtn(true)}
                   onMouseLeave={() => setHovBtn(false)}
                 >
-                  {loading ? "Envoi en cours..." : "Envoyer le message"}
+                  {loading ? t("contact.form.sending") : t("contact.form.submit")}
                 </button>
               </form>
             )}

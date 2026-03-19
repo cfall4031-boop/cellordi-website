@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
-import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
+import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { dechargesApi } from "../../api";
 import { CONSENT_KEY } from "./CookieBanner";
 
 export function Decharge() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     nom: "", prenom: "", email: "", telephone: "",
@@ -22,6 +24,9 @@ export function Decharge() {
   const [drawing, setDrawing] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
 
+  const stepTitles = t("decharge.steps", { returnObjects: true }) as string[];
+  const deviceTypes = t("decharge.step2.types", { returnObjects: true }) as string[];
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setForm((prev) => ({
@@ -30,21 +35,14 @@ export function Decharge() {
     }));
   };
 
-  // Canvas drawing
   const getPos = (canvas: HTMLCanvasElement, e: React.MouseEvent | React.TouchEvent) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     if ("touches" in e) {
-      return {
-        x: (e.touches[0].clientX - rect.left) * scaleX,
-        y: (e.touches[0].clientY - rect.top) * scaleY,
-      };
+      return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
     }
-    return {
-      x: ((e as React.MouseEvent).clientX - rect.left) * scaleX,
-      y: ((e as React.MouseEvent).clientY - rect.top) * scaleY,
-    };
+    return { x: ((e as React.MouseEvent).clientX - rect.left) * scaleX, y: ((e as React.MouseEvent).clientY - rect.top) * scaleY };
   };
 
   const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
@@ -52,8 +50,7 @@ export function Decharge() {
     if (!canvas) return;
     e.preventDefault();
     setDrawing(true);
-    const pos = getPos(canvas, e);
-    setLastPos(pos);
+    setLastPos(getPos(canvas, e));
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
@@ -86,18 +83,16 @@ export function Decharge() {
     setSigned(false);
   };
 
-  const stepTitles = ["Informations client", "Description de l'appareil", "Conditions & Signature"];
-
   if (localStorage.getItem(CONSENT_KEY) === "refused") return (
     <section id="decharge" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
       <div style={{ maxWidth: "750px", margin: "0 auto", textAlign: "center", paddingTop: "2rem" }}>
         <FadeUp>
           <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</p>
           <p style={{ color: WHITE, fontFamily: FONT_DISPLAY, fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-            Vous avez refusé le traitement de vos données.
+            {t("decharge.refused_title")}
           </p>
           <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem" }}>
-            Pour déposer votre appareil, contactez-nous directement :<br />
+            {t("decharge.refused_text")}<br />
             <strong style={{ color: WHITE }}>📞 (514) 237-5792</strong>
             &nbsp;&nbsp;|&nbsp;&nbsp;
             <strong style={{ color: WHITE }}>✉️ info@reparationcellordi.ca</strong>
@@ -113,13 +108,13 @@ export function Decharge() {
         <FadeUp>
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
             <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              Dépôt d'appareil
+              {t("decharge.tag")}
             </span>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
-              Fiche de Décharge
+              {t("decharge.title")}
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem" }}>
-              Formulaire officiel de dépôt et de consentement pour la réparation.
+              {t("decharge.subtitle")}
             </p>
           </div>
         </FadeUp>
@@ -129,37 +124,24 @@ export function Decharge() {
             <div style={{ background: `rgba(109,212,0,0.08)`, border: `2px solid ${GREEN}55`, padding: "3rem", textAlign: "center" }}>
               <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📋</div>
               <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.8rem", color: GREEN, textTransform: "uppercase", marginBottom: "0.8rem" }}>
-                Fiche enregistrée !
+                {t("decharge.success.title")}
               </h3>
               <p style={{ fontFamily: FONT_BODY, color: GRAY, marginBottom: "0.5rem" }}>
-                Votre numéro de ticket vous sera envoyé par email.
+                {t("decharge.success.text")}
               </p>
               <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.85rem" }}>
-                Conservez ce numéro pour suivre votre réparation.
+                {t("decharge.success.hint")}
               </p>
               <button
                 onClick={() => {
-                  setStep(1);
-                  setSigned(false);
-                  setDone(false);
-                  setErreur(null);
-                  setForm({
-                    nom: "", prenom: "", email: "", telephone: "",
-                    appareil: "", marque: "", modele: "", serie: "",
-                    probleme: "", etatAppareil: "", accessoires: "",
-                    acceptConditions: false,
-                    acceptDiagnostic: false,
-                    acceptFacturation: false,
-                  });
+                  setStep(1); setSigned(false); setDone(false); setErreur(null);
+                  setForm({ nom: "", prenom: "", email: "", telephone: "", appareil: "", marque: "", modele: "", serie: "", probleme: "", etatAppareil: "", accessoires: "", acceptConditions: false, acceptDiagnostic: false, acceptFacturation: false });
                   const canvas = canvasRef.current;
-                  if (canvas) {
-                    const ctx = canvas.getContext("2d");
-                    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-                  }
+                  if (canvas) { const ctx = canvas.getContext("2d"); if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
                 }}
                 style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}
               >
-                Nouvelle fiche
+                {t("decharge.success.new")}
               </button>
             </div>
           </FadeUp>
@@ -195,133 +177,121 @@ export function Decharge() {
 
             <FadeUp delay={0.1}>
               <div style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.12)", padding: "2.5rem" }}>
-                {/* Step 1 — Client */}
+                {/* Step 1 */}
                 {step === 1 && (
                   <div>
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, textTransform: "uppercase", marginBottom: "1.5rem" }}>
-                      Informations Client
+                      {t("decharge.step1.title")}
                     </h3>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                       <div>
-                        <label style={labelStyle}>Prénom *</label>
+                        <label style={labelStyle}>{t("decharge.step1.prenom")}</label>
                         <input name="prenom" value={form.prenom} onChange={handleChange} required placeholder="Jean" style={inputStyle} />
                       </div>
                       <div>
-                        <label style={labelStyle}>Nom *</label>
+                        <label style={labelStyle}>{t("decharge.step1.nom")}</label>
                         <input name="nom" value={form.nom} onChange={handleChange} required placeholder="Dupont" style={inputStyle} />
                       </div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                       <div>
-                        <label style={labelStyle}>Email *</label>
+                        <label style={labelStyle}>{t("decharge.step1.email")}</label>
                         <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
                       </div>
                       <div>
-                        <label style={labelStyle}>Téléphone *</label>
+                        <label style={labelStyle}>{t("decharge.step1.telephone")}</label>
                         <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} required style={inputStyle} />
                       </div>
                     </div>
                     <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-                      <button
-                        onClick={() => { if (form.prenom && form.nom && form.email) setStep(2); }}
-                        style={{ ...btn(GREEN, NAVY) }}
+                      <button onClick={() => { if (form.prenom && form.nom && form.email) setStep(2); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}
-                      >
-                        Suivant →
+                        onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
+                        {t("decharge.step1.next")}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Step 2 — Appareil */}
+                {/* Step 2 */}
                 {step === 2 && (
                   <div>
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, textTransform: "uppercase", marginBottom: "1.5rem" }}>
-                      Description de l'Appareil
+                      {t("decharge.step2.title")}
                     </h3>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                       <div>
-                        <label style={labelStyle}>Type d'appareil *</label>
+                        <label style={labelStyle}>{t("decharge.step2.type")}</label>
                         <select name="appareil" value={form.appareil} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
-                          <option value="">-- Sélectionner --</option>
-                          {["Téléphone", "Tablette", "Laptop", "Desktop", "Autre"].map((a) => (
+                          <option value="">{t("decharge.step2.select")}</option>
+                          {deviceTypes.map((a) => (
                             <option key={a} value={a} style={{ background: NAVY }}>{a}</option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label style={labelStyle}>Marque *</label>
-                        <input name="marque" value={form.marque} onChange={handleChange} required placeholder="Apple, Samsung..." style={inputStyle} />
+                        <label style={labelStyle}>{t("decharge.step2.marque")}</label>
+                        <input name="marque" value={form.marque} onChange={handleChange} required placeholder={t("decharge.step2.marque_ph")} style={inputStyle} />
                       </div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                       <div>
-                        <label style={labelStyle}>Modèle *</label>
-                        <input name="modele" value={form.modele} onChange={handleChange} required placeholder="iPhone 14, XPS 15..." style={inputStyle} />
+                        <label style={labelStyle}>{t("decharge.step2.modele")}</label>
+                        <input name="modele" value={form.modele} onChange={handleChange} required placeholder={t("decharge.step2.modele_ph")} style={inputStyle} />
                       </div>
                       <div>
-                        <label style={labelStyle}>N° de série</label>
-                        <input name="serie" value={form.serie} onChange={handleChange} placeholder="(optionnel)" style={inputStyle} />
+                        <label style={labelStyle}>{t("decharge.step2.serie")}</label>
+                        <input name="serie" value={form.serie} onChange={handleChange} placeholder={t("decharge.step2.serie_ph")} style={inputStyle} />
                       </div>
                     </div>
                     <div style={{ marginBottom: "1.2rem" }}>
-                      <label style={labelStyle}>Problème signalé *</label>
-                      <textarea name="probleme" value={form.probleme} onChange={handleChange} required rows={3} placeholder="Décrivez le problème..." style={{ ...inputStyle, resize: "vertical" }} />
+                      <label style={labelStyle}>{t("decharge.step2.probleme")}</label>
+                      <textarea name="probleme" value={form.probleme} onChange={handleChange} required rows={3} placeholder={t("decharge.step2.probleme_ph")} style={{ ...inputStyle, resize: "vertical" }} />
                     </div>
                     <div style={{ marginBottom: "1.2rem" }}>
-                      <label style={labelStyle}>État visuel de l'appareil</label>
-                      <input name="etatAppareil" value={form.etatAppareil} onChange={handleChange} placeholder="Rayures, fissures, dommages..." style={inputStyle} />
+                      <label style={labelStyle}>{t("decharge.step2.etat")}</label>
+                      <input name="etatAppareil" value={form.etatAppareil} onChange={handleChange} placeholder={t("decharge.step2.etat_ph")} style={inputStyle} />
                     </div>
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <label style={labelStyle}>Accessoires déposés</label>
-                      <input name="accessoires" value={form.accessoires} onChange={handleChange} placeholder="Chargeur, étui, câble..." style={inputStyle} />
+                      <label style={labelStyle}>{t("decharge.step2.accessoires")}</label>
+                      <input name="accessoires" value={form.accessoires} onChange={handleChange} placeholder={t("decharge.step2.accessoires_ph")} style={inputStyle} />
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <button onClick={() => setStep(1)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
-                        ← Retour
+                        {t("decharge.step2.prev")}
                       </button>
-                      <button
-                        onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) setStep(3); }}
-                        style={{ ...btn(GREEN, NAVY) }}
+                      <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) setStep(3); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}
-                      >
-                        Suivant →
+                        onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
+                        {t("decharge.step2.next")}
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Step 3 — Signature */}
+                {/* Step 3 */}
                 {step === 3 && (
                   <div>
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, textTransform: "uppercase", marginBottom: "1.5rem" }}>
-                      Conditions & Signature
+                      {t("decharge.step3.title")}
                     </h3>
 
-                    {[
-                      { name: "acceptConditions", label: "J'accepte les conditions générales de réparation et la politique de confidentialité." },
-                      { name: "acceptDiagnostic", label: "J'autorise le technicien à effectuer un diagnostic complet de mon appareil." },
-                      { name: "acceptFacturation", label: "Je m'engage à payer le montant convenu lors de la récupération de l'appareil." },
-                    ].map((c) => (
-                      <label key={c.name} style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", cursor: "pointer", marginBottom: "1rem", fontFamily: FONT_BODY, fontSize: "0.9rem", color: GRAY }}>
-                        <input
-                          type="checkbox"
-                          name={c.name}
-                          checked={(form as any)[c.name]}
-                          onChange={handleChange}
-                          style={{ width: "18px", height: "18px", accentColor: GREEN, cursor: "pointer", marginTop: "2px", flexShrink: 0 }}
-                        />
-                        {c.label}
-                      </label>
-                    ))}
+                    {(["cond1", "cond2", "cond3"] as const).map((key, idx) => {
+                      const names = ["acceptConditions", "acceptDiagnostic", "acceptFacturation"];
+                      return (
+                        <label key={key} style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", cursor: "pointer", marginBottom: "1rem", fontFamily: FONT_BODY, fontSize: "0.9rem", color: GRAY }}>
+                          <input type="checkbox" name={names[idx]} checked={(form as any)[names[idx]]} onChange={handleChange}
+                            style={{ width: "18px", height: "18px", accentColor: GREEN, cursor: "pointer", marginTop: "2px", flexShrink: 0 }} />
+                          {t(`decharge.step3.${key}`)}
+                        </label>
+                      );
+                    })}
 
                     <div style={{ marginTop: "1.5rem", marginBottom: "0.5rem" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                        <label style={labelStyle}>Signature du client *</label>
+                        <label style={labelStyle}>{t("decharge.step3.signature")}</label>
                         <button onClick={clearCanvas} style={{ ...btn("transparent", GRAY_DIM), padding: "0.3rem 0.8rem", fontSize: "0.78rem", border: "1px solid rgba(255,255,255,0.08)" }}>
-                          Effacer
+                          {t("decharge.step3.clear")}
                         </button>
                       </div>
                       <canvas
@@ -347,7 +317,7 @@ export function Decharge() {
                       />
                       {!signed && (
                         <p style={{ fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY_DIM, marginTop: "0.4rem" }}>
-                          Signez dans le cadre ci-dessus avec votre souris ou doigt
+                          {t("decharge.step3.sign_hint")}
                         </p>
                       )}
                     </div>
@@ -360,7 +330,7 @@ export function Decharge() {
 
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem" }}>
                       <button onClick={() => setStep(2)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
-                        ← Retour
+                        {t("decharge.step3.prev")}
                       </button>
                       <button
                         disabled={loading}
@@ -371,23 +341,19 @@ export function Decharge() {
                           try {
                             const signatureBase64 = canvasRef.current?.toDataURL("image/png") ?? null;
                             await dechargesApi.create({
-                              prenom:          form.prenom,
-                              nom:             form.nom,
-                              email:           form.email || undefined,
-                              telephone:       form.telephone,
-                              type_appareil:   form.appareil,
-                              marque_modele:   `${form.marque} ${form.modele}`.trim(),
-                              imei:            form.serie,
-                              probleme:        form.probleme,
-                              etat_physique:   form.etatAppareil,
-                              accessoires:     form.accessoires,
+                              prenom: form.prenom, nom: form.nom,
+                              email: form.email || undefined, telephone: form.telephone,
+                              type_appareil: form.appareil,
+                              marque_modele: `${form.marque} ${form.modele}`.trim(),
+                              imei: form.serie, probleme: form.probleme,
+                              etat_physique: form.etatAppareil, accessoires: form.accessoires,
                               auth_diagnostic: "OUI",
                               auth_reparation: form.acceptFacturation ? "OUI" : "NON",
-                              signature:       signatureBase64,
+                              signature: signatureBase64,
                             });
                             setDone(true);
                           } catch (e: any) {
-                            setErreur(e.message || "Erreur lors de l'envoi. Veuillez réessayer.");
+                            setErreur(e.message || t("decharge.step3.error_default"));
                           } finally {
                             setLoading(false);
                           }
@@ -396,7 +362,7 @@ export function Decharge() {
                         onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = GREEN_GLOW; }}
                         onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = loading ? GRAY_DIM : GREEN; }}
                       >
-                        {loading ? "Envoi en cours..." : "Valider la fiche"}
+                        {loading ? t("decharge.step3.sending") : t("decharge.step3.submit")}
                       </button>
                     </div>
                   </div>

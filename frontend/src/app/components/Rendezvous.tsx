@@ -1,26 +1,12 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { rdvApi } from "../../api";
 import { CONSENT_KEY } from "./CookieBanner";
 
-const SERVICES = [
-  "Réparation cellulaire",
-  "Réparation ordinateur",
-  "Service informatique",
-  "Développement web",
-  "Solution cloud",
-  "Contrat d'entretien",
-  "Autre",
-];
-
-const DISPOS = [
-  "Matin (9h–12h)",
-  "Après-midi (12h–17h)",
-  "Fin de journée (17h–19h)",
-];
-
 export function Rendezvous() {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     nom: "", prenom: "", email: "", telephone: "",
     service: "", appareil: "", probleme: "",
@@ -31,6 +17,9 @@ export function Rendezvous() {
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState("");
   const [hovBtn, setHovBtn] = useState(false);
+
+  const SERVICES = t("rdv.services", { returnObjects: true }) as string[];
+  const DISPOS = t("rdv.dispos", { returnObjects: true }) as string[];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -57,7 +46,7 @@ export function Rendezvous() {
       setTicketNumero(res?.numero_ticket || null);
       setSent(true);
     } catch (err: any) {
-      setErreur(err.message || "Erreur lors de l'envoi. Réessayez.");
+      setErreur(err.message || t("rdv.error_default"));
     } finally {
       setLoading(false);
     }
@@ -69,10 +58,10 @@ export function Rendezvous() {
         <FadeUp>
           <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</p>
           <p style={{ color: WHITE, fontFamily: FONT_DISPLAY, fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-            Vous avez refusé le traitement de vos données.
+            {t("rdv.refused_title")}
           </p>
           <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem" }}>
-            Pour prendre rendez-vous, contactez-nous directement :<br />
+            {t("rdv.refused_text")}<br />
             <strong style={{ color: WHITE }}>📞 (514) 237-5792</strong>
             &nbsp;&nbsp;|&nbsp;&nbsp;
             <strong style={{ color: WHITE }}>✉️ info@reparationcellordi.ca</strong>
@@ -83,97 +72,49 @@ export function Rendezvous() {
   );
 
   return (
-    <section
-      id="rendezvous"
-      style={{ background: NAVY_MID, padding: "7rem 2rem" }}
-    >
+    <section id="rendezvous" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <FadeUp>
           <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-            <span
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontWeight: 700,
-                fontSize: "0.82rem",
-                color: GREEN,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-              }}
-            >
-              Réservation en ligne
+            <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              {t("rdv.tag")}
             </span>
-            <h2
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontWeight: 900,
-                fontSize: "clamp(2rem, 4vw, 3rem)",
-                color: WHITE,
-                textTransform: "uppercase",
-                letterSpacing: "0.02em",
-                margin: "0.6rem 0 1rem",
-              }}
-            >
-              Prendre Rendez-vous
+            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
+              {t("rdv.title")}
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem" }}>
-              Remplissez ce formulaire et nous vous confirmons votre RDV sous 1h.
+              {t("rdv.subtitle")}
             </p>
           </div>
         </FadeUp>
 
         {sent ? (
           <FadeUp>
-            <div
-              style={{
-                background: `rgba(109,212,0,0.08)`,
-                border: `2px solid ${GREEN}55`,
-                borderRadius: "16px",
-                padding: "3rem",
-                textAlign: "center",
-              }}
-            >
+            <div style={{ background: `rgba(109,212,0,0.08)`, border: `2px solid ${GREEN}55`, borderRadius: "16px", padding: "3rem", textAlign: "center" }}>
               <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✅</div>
-              <h3
-                style={{
-                  fontFamily: FONT_DISPLAY,
-                  fontWeight: 700,
-                  fontSize: "1.8rem",
-                  color: GREEN,
-                  textTransform: "uppercase",
-                  marginBottom: "0.8rem",
-                }}
-              >
-                Rendez-vous confirmé !
+              <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.8rem", color: GREEN, textTransform: "uppercase", marginBottom: "0.8rem" }}>
+                {t("rdv.success.title")}
               </h3>
               <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", marginBottom: "1.5rem" }}>
-                Votre demande a bien été reçue. Vous recevrez une confirmation par email.
+                {t("rdv.success.text")}
               </p>
 
               {ticketNumero && (
-                <div
-                  style={{
-                    background: "rgba(109,212,0,0.06)",
-                    border: "1px solid rgba(109,212,0,0.35)",
-                    borderRadius: "12px",
-                    padding: "1.5rem 2rem",
-                    display: "inline-block",
-                    marginBottom: "1.5rem",
-                  }}
-                >
+                <div style={{ background: "rgba(109,212,0,0.06)", border: "1px solid rgba(109,212,0,0.35)", borderRadius: "12px", padding: "1.5rem 2rem", display: "inline-block", marginBottom: "1.5rem" }}>
                   <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.8rem", margin: "0 0 0.5rem", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                    Votre numéro de suivi
+                    {t("rdv.success.ticket_label")}
                   </p>
                   <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "2rem", color: GREEN, letterSpacing: "0.15em", margin: 0 }}>
                     {ticketNumero}
                   </p>
                   <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.78rem", margin: "0.5rem 0 0" }}>
-                    Conservez ce numéro pour suivre votre réparation
+                    {t("rdv.success.ticket_hint")}
                   </p>
                 </div>
               )}
 
               <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.85rem", marginBottom: "1.5rem" }}>
-                Utilisez la section <strong style={{ color: GRAY }}>Suivi de ticket</strong> ci-dessous pour suivre l'avancement.
+                {t("rdv.success.suivi_hint")} <strong style={{ color: GRAY }}>{t("rdv.success.suivi_link")}</strong> {t("rdv.success.suivi_suffix")}
               </p>
 
               <button
@@ -181,222 +122,92 @@ export function Rendezvous() {
                   setSent(false);
                   setTicketNumero(null);
                   setErreur("");
-                  setForm({
-                    nom: "", prenom: "", email: "", telephone: "",
-                    service: "", appareil: "", probleme: "",
-                    date: "", dispo: "", urgence: false,
-                  });
+                  setForm({ nom: "", prenom: "", email: "", telephone: "", service: "", appareil: "", probleme: "", date: "", dispo: "", urgence: false });
                 }}
                 style={{ ...btn(GREEN, NAVY), marginTop: "0.5rem" }}
               >
-                Nouvelle demande
+                {t("rdv.success.new")}
               </button>
             </div>
           </FadeUp>
         ) : (
           <FadeUp delay={0.1}>
-            <form
-              onSubmit={handleSubmit}
-              style={{
-                background: NAVY,
-                border: "1px solid rgba(109,212,0,0.12)",
-                padding: "2.5rem",
-              }}
-            >
-              {/* Identité */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1.2rem",
-                  marginBottom: "1.2rem",
-                }}
-                className="rdv-grid"
-              >
+            <form onSubmit={handleSubmit} style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.12)", padding: "2.5rem" }}>
+              {/* Identity */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                 <div>
-                  <label style={labelStyle}>Prénom *</label>
-                  <input
-                    name="prenom"
-                    value={form.prenom}
-                    onChange={handleChange}
-                    placeholder="Jean"
-                    required
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>{t("rdv.fields.prenom")}</label>
+                  <input name="prenom" value={form.prenom} onChange={handleChange} placeholder={t("rdv.placeholders.prenom")} required style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Nom *</label>
-                  <input
-                    name="nom"
-                    value={form.nom}
-                    onChange={handleChange}
-                    placeholder="Dupont"
-                    required
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>{t("rdv.fields.nom")}</label>
+                  <input name="nom" value={form.nom} onChange={handleChange} placeholder={t("rdv.placeholders.nom")} required style={inputStyle} />
                 </div>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1.2rem",
-                  marginBottom: "1.2rem",
-                }}
-                className="rdv-grid"
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                 <div>
-                  <label style={labelStyle}>Email *</label>
-                  <input
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="jean@exemple.com"
-                    required
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>{t("rdv.fields.email")}</label>
+                  <input name="email" type="email" value={form.email} onChange={handleChange} placeholder={t("rdv.placeholders.email")} required style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Téléphone *</label>
-                  <input
-                    name="telephone"
-                    type="tel"
-                    value={form.telephone}
-                    onChange={handleChange}
-                    placeholder="514-555-1234"
-                    required
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>{t("rdv.fields.telephone")}</label>
+                  <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} placeholder={t("rdv.placeholders.telephone")} required style={inputStyle} />
                 </div>
               </div>
 
-              {/* Service + Appareil */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1.2rem",
-                  marginBottom: "1.2rem",
-                }}
-                className="rdv-grid"
-              >
+              {/* Service + Device */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                 <div>
-                  <label style={labelStyle}>Service souhaité *</label>
-                  <select
-                    name="service"
-                    value={form.service}
-                    onChange={handleChange}
-                    required
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                  >
-                    <option value="">-- Sélectionner --</option>
+                  <label style={labelStyle}>{t("rdv.fields.service")}</label>
+                  <select name="service" value={form.service} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="">{t("rdv.fields.select")}</option>
                     {SERVICES.map((s) => (
-                      <option key={s} value={s} style={{ background: NAVY }}>
-                        {s}
-                      </option>
+                      <option key={s} value={s} style={{ background: NAVY }}>{s}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Modèle d'appareil</label>
-                  <input
-                    name="appareil"
-                    value={form.appareil}
-                    onChange={handleChange}
-                    placeholder="Ex: iPhone 14, Dell XPS 15"
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle}>{t("rdv.fields.appareil")}</label>
+                  <input name="appareil" value={form.appareil} onChange={handleChange} placeholder={t("rdv.placeholders.appareil")} style={inputStyle} />
                 </div>
               </div>
 
               {/* Description */}
               <div style={{ marginBottom: "1.2rem" }}>
-                <label style={labelStyle}>Description du problème *</label>
-                <textarea
-                  name="probleme"
-                  value={form.probleme}
-                  onChange={handleChange}
-                  placeholder="Décrivez brièvement le problème rencontré..."
-                  required
-                  rows={3}
-                  style={{
-                    ...inputStyle,
-                    resize: "vertical",
-                    fontFamily: FONT_BODY,
-                  }}
-                />
+                <label style={labelStyle}>{t("rdv.fields.probleme")}</label>
+                <textarea name="probleme" value={form.probleme} onChange={handleChange} placeholder={t("rdv.placeholders.probleme")} required rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: FONT_BODY }} />
               </div>
 
-              {/* Date + Dispo */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "1.2rem",
-                  marginBottom: "1.2rem",
-                }}
-                className="rdv-grid"
-              >
+              {/* Date + Availability */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                 <div>
-                  <label style={labelStyle}>Date souhaitée *</label>
-                  <input
-                    name="date"
-                    type="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    required
-                    style={{ ...inputStyle, colorScheme: "dark" }}
-                  />
+                  <label style={labelStyle}>{t("rdv.fields.date")}</label>
+                  <input name="date" type="date" value={form.date} onChange={handleChange} required style={{ ...inputStyle, colorScheme: "dark" }} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Disponibilité *</label>
-                  <select
-                    name="dispo"
-                    value={form.dispo}
-                    onChange={handleChange}
-                    required
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                  >
-                    <option value="">-- Choisir --</option>
+                  <label style={labelStyle}>{t("rdv.fields.dispo")}</label>
+                  <select name="dispo" value={form.dispo} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="">{t("rdv.fields.choose")}</option>
                     {DISPOS.map((d) => (
-                      <option key={d} value={d} style={{ background: NAVY }}>
-                        {d}
-                      </option>
+                      <option key={d} value={d} style={{ background: NAVY }}>{d}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* Urgence checkbox */}
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  cursor: "pointer",
-                  marginBottom: "2rem",
-                  fontFamily: FONT_BODY,
-                  fontSize: "0.9rem",
-                  color: GRAY,
-                }}
-              >
+              {/* Urgency */}
+              <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", marginBottom: "2rem", fontFamily: FONT_BODY, fontSize: "0.9rem", color: GRAY }}>
                 <input
                   type="checkbox"
                   name="urgence"
                   checked={form.urgence}
                   onChange={handleChange}
-                  style={{
-                    width: "18px",
-                    height: "18px",
-                    accentColor: GREEN,
-                    cursor: "pointer",
-                  }}
+                  style={{ width: "18px", height: "18px", accentColor: GREEN, cursor: "pointer" }}
                 />
                 <span>
-                  Réparation urgente — je souhaite être traité en priorité
-                  <span style={{ color: GREEN, marginLeft: "0.4rem" }}>+15%</span>
+                  {t("rdv.fields.urgence")}
+                  <span style={{ color: GREEN, marginLeft: "0.4rem" }}>{t("rdv.urgence_surcharge")}</span>
                 </span>
               </label>
 
@@ -413,7 +224,7 @@ export function Rendezvous() {
                 onMouseEnter={() => !loading && setHovBtn(true)}
                 onMouseLeave={() => setHovBtn(false)}
               >
-                {loading ? "Envoi en cours..." : "Envoyer ma demande de RDV"}
+                {loading ? t("rdv.sending") : t("rdv.submit")}
               </button>
             </form>
           </FadeUp>

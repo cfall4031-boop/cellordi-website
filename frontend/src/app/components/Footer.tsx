@@ -1,29 +1,8 @@
 import React, { useState } from "react";
-import { NAVY, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
+import { useTranslation } from "react-i18next";
+import { NAVY, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
 const GOOGLE_URL = "https://share.google/PYU26hHKgOFczWqgO";
-
-const LINKS: Record<string, { label: string; href: string }[]> = {
-  Services: [
-    { label: "Réparation Cellulaires",  href: "/services/cellulaires" },
-    { label: "Réparation Ordinateurs",  href: "/services/ordinateurs" },
-    { label: "Services Informatiques",  href: "/services/informatique" },
-    { label: "Développement Web",       href: "/services/web" },
-    { label: "Solutions Cloud",         href: "/services/cloud" },
-  ],
-  Informations: [
-    { label: "À propos",                    href: "/#about" },
-    { label: "Blog",                        href: "/blog" },
-    { label: "Politique de confidentialité",href: "#" },
-    { label: "CGV",                         href: "#" },
-  ],
-  Contact: [
-    { label: "(514) 237-5792",                              href: "tel:+15142375792" },
-    { label: "reparationcellulaire.ordinateur@gmail.com",   href: "mailto:reparationcellulaire.ordinateur@gmail.com" },
-    { label: "5050 QC-132 #203",                            href: "#" },
-    { label: "Sainte-Catherine, QC J5C 1L4",                href: "#" },
-  ],
-};
 
 const IconGoogle = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -35,7 +14,30 @@ const IconGoogle = ({ size = 18 }: { size?: number }) => (
 );
 
 export function Footer() {
+  const { t } = useTranslation();
   const [hovSocials, setHovSocials] = useState<string | null>(null);
+
+  const LINKS: Record<string, { label: string; href: string }[]> = {
+    [t("footer.sections.services")]: [
+      { label: t("footer.links.cell"),  href: "/services/cellulaires" },
+      { label: t("footer.links.pc"),    href: "/services/ordinateurs" },
+      { label: t("footer.links.it"),    href: "/services/informatique" },
+      { label: t("footer.links.web"),   href: "/services/web" },
+      { label: t("footer.links.cloud"), href: "/services/cloud" },
+    ],
+    [t("footer.sections.info")]: [
+      { label: t("footer.links.about"),   href: "/#about" },
+      { label: t("footer.links.blog"),    href: "/blog" },
+      { label: t("footer.links.privacy"), href: "#" },
+      { label: t("footer.links.cgv"),     href: "#" },
+    ],
+    [t("footer.sections.contact")]: [
+      { label: "(514) 237-5792",                              href: "tel:+15142375792" },
+      { label: "reparationcellulaire.ordinateur@gmail.com",   href: "mailto:reparationcellulaire.ordinateur@gmail.com" },
+      { label: "5050 QC-132 #203",                            href: "#" },
+      { label: "Sainte-Catherine, QC J5C 1L4",                href: "#" },
+    ],
+  };
 
   return (
     <footer style={{ background: NAVY, borderTop: "1px solid rgba(109,212,0,0.1)", padding: "5rem 2rem 2rem" }}>
@@ -45,15 +47,14 @@ export function Footer() {
           <div>
             <div style={{ marginBottom: "1.2rem" }}>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "1.4rem", color: WHITE, letterSpacing: "0.05em", lineHeight: 1.1 }}>
-                <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>Réparation</span>
+                <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>{t("footer.repair")}</span>
                 CeLL<span style={{ color: GREEN }}>&</span>Ordi
               </span>
             </div>
             <p style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY, lineHeight: 1.7, marginBottom: "1.5rem", maxWidth: "260px" }}>
-              Votre partenaire de confiance pour toutes les réparations électroniques à Montréal.
+              {t("footer.tagline")}
             </p>
 
-            {/* Google Reviews button */}
             <a
               href={GOOGLE_URL}
               target="_blank"
@@ -74,11 +75,10 @@ export function Footer() {
               onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
             >
               <IconGoogle size={16} />
-              <span style={{ fontFamily: FONT_BODY, fontSize: "0.8rem", color: GRAY }}>Voir nos avis Google</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: "0.8rem", color: GRAY }}>{t("footer.google_reviews")}</span>
               <span style={{ color: "#FBBC05", fontSize: "0.78rem", letterSpacing: "0.02em" }}>★★★★★</span>
             </a>
 
-            {/* Social icons */}
             <div style={{ display: "flex", gap: "0.6rem" }}>
               <a
                 href={GOOGLE_URL}
@@ -116,13 +116,7 @@ export function Footer() {
                   <li key={link.label}>
                     <a
                       href={link.href}
-                      style={{
-                        fontFamily: FONT_BODY,
-                        fontSize: "0.88rem",
-                        color: GRAY,
-                        textDecoration: "none",
-                        transition: "color 0.2s",
-                      }}
+                      style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY, textDecoration: "none", transition: "color 0.2s" }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = GREEN)}
                       onMouseLeave={(e) => (e.currentTarget.style.color = GRAY)}
                     >
@@ -135,7 +129,6 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Bottom bar */}
         <div
           style={{
             borderTop: "1px solid rgba(255,255,255,0.05)",
@@ -148,7 +141,7 @@ export function Footer() {
           }}
         >
           <span style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY_DIM }}>
-            © 2026 CeLL&Ordi — Tous droits réservés.
+            © 2026 CeLL&Ordi — {t("footer.copyright")}
           </span>
           <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
             <span
@@ -162,7 +155,7 @@ export function Footer() {
               }}
             />
             <span style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY_DIM }}>
-              Système en ligne · Réparations actives aujourd'hui
+              {t("footer.status")}
             </span>
           </div>
         </div>

@@ -86,6 +86,8 @@ export const messagesApi = {
     req<{ message: string }>("POST", "/messages", data, true),
   markLu:     (id: number) => req<any>("PATCH", `/messages/${id}/lu`),
   markRepondu:(id: number) => req<any>("PATCH", `/messages/${id}/repondu`),
+  reply:      (id: number, replyText: string) =>
+    req<{ success: boolean; replied_at: string }>("POST", `/messages/${id}/reply`, { replyText }),
   delete:      (id: number) => req<any>("DELETE", `/messages/${id}`),
 };
 

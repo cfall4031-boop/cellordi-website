@@ -733,6 +733,9 @@ function Messages() {
   const [msgs, setMsgs]         = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [loading, setLoading]   = useState(true);
+  const [replyText, setReplyText]   = useState("");
+  const [replying, setReplying]     = useState(false);
+  const [replyError, setReplyError] = useState<string | null>(null);
 
   const load = useCallback(() => {
     messagesApi.getAll().then((d:any) => setMsgs(d.messages || []))
@@ -741,24 +744,43 @@ function Messages() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Reset reply form when switching messages
+  useEffect(() => {
+    setReplyText("");
+    setReplyError(null);
+  }, [selected?.id]);
+
   const markLu = async (id: number) => {
     try {
       await messagesApi.markLu(id);
       setMsgs(m=>m.map((x:any)=>x.id===id?{...x,lu:1}:x));
     } catch {}
   };
-  const markRepondu = async (id: number) => {
+
+  const sendReply = async () => {
+    if (!replyText.trim() || !selected) return;
+    setReplying(true);
+    setReplyError(null);
     try {
-      await messagesApi.markRepondu(id);
-      setMsgs(m=>m.map((x:any)=>x.id===id?{...x,lu:1,repondu:1}:x));
-      if (selected?.id===id) setSelected((s:any)=>({...s,lu:1,repondu:1}));
-    } catch {}
+      const res = await messagesApi.reply(selected.id, replyText.trim()) as any;
+      const now = res.replied_at || new Date().toISOString();
+      // Mise à jour locale : message marqué répondu + réponse sauvegardée
+      const updated = { ...selected, repondu: 1, lu: 1, reply_text: replyText.trim(), replied_at: now };
+      setSelected(updated);
+      setMsgs(m => m.map((x:any) => x.id === selected.id ? updated : x));
+      setReplyText("");
+    } catch (e: any) {
+      setReplyError(e?.message || "Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+      setReplying(false);
+    }
   };
 
   const nonLus = msgs.filter((m:any)=>!m.lu).length;
 
   return (
     <div className="admin-fade" style={{display:"flex",height:"100%"}}>
+      {/* ── Liste des messages ── */}
       <div style={{width:340,borderRight:"1px solid rgba(109,212,0,0.1)",display:"flex",flexDirection:"column"}}>
         <div style={{ padding:"1.5rem", borderBottom:"1px solid rgba(109,212,0,0.1)" }}>
           <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.4rem", fontWeight:900, margin:0 }}>Messages</h2>
@@ -772,9 +794,14 @@ function Messages() {
                 cursor:"pointer", background:selected?.id===m.id?"rgba(109,212,0,0.06)":m.lu?"transparent":"rgba(109,212,0,0.03)",
                 borderLeft:`3px solid ${selected?.id===m.id?GREEN:!m.lu?GREEN:"transparent"}`,
                 transition:"all 0.15s" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"0.3rem" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"0.3rem", alignItems:"center" }}>
                 <span style={{ fontWeight:m.lu?400:600, fontSize:"0.9rem" }}>{m.nom}</span>
-                {!m.lu && <span style={{ width:8,height:8,borderRadius:"50%",background:GREEN,display:"inline-block",marginTop:4 }}/>}
+                <div style={{ display:"flex", gap:"0.3rem", alignItems:"center" }}>
+                  {m.repondu
+                    ? <span style={{ fontSize:"0.65rem", background:"rgba(109,212,0,0.15)", color:GREEN, padding:"1px 6px", borderRadius:2, fontWeight:600 }}>Répondu</span>
+                    : !m.lu && <span style={{ width:8,height:8,borderRadius:"50%",background:GREEN,display:"inline-block" }}/>
+                  }
+                </div>
               </div>
               <div style={{ fontSize:"0.82rem", color:GREEN, marginBottom:"0.3rem", fontWeight:500 }}>{m.sujet}</div>
               <div style={{ fontSize:"0.78rem", color:GRAY, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.message}</div>
@@ -788,36 +815,106 @@ function Messages() {
         )}
       </div>
 
+      {/* ── Panneau de détail + réponse ── */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         {selected ? (
           <>
-            <div style={{ padding:"1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)" }}>
-              <h3 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.3rem", fontWeight:700, margin:0 }}>{selected.sujet}</h3>
+            {/* En-tête */}
+            <div style={{ padding:"1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)", flexShrink:0 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.8rem", flexWrap:"wrap" }}>
+                <h3 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.3rem", fontWeight:700, margin:0 }}>{selected.sujet}</h3>
+                {selected.repondu === 1 && (
+                  <span style={{ fontSize:"0.72rem", background:"rgba(109,212,0,0.12)", color:GREEN,
+                    border:"1px solid rgba(109,212,0,0.3)", padding:"2px 10px", fontWeight:700, letterSpacing:"0.07em" }}>
+                    ✓ RÉPONDU
+                  </span>
+                )}
+              </div>
               <div style={{ fontSize:"0.82rem", color:GRAY, marginTop:"0.3rem" }}>
                 De : <strong style={{color:"#fff"}}>{selected.nom}</strong> — {selected.email}
               </div>
             </div>
-            <div style={{ flex:1, padding:"2rem", overflowY:"auto" }}>
-              <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem",
-                fontSize:"0.92rem", lineHeight:1.7, maxWidth:600 }}>
-                {selected.message}
+
+            {/* Contenu scrollable */}
+            <div style={{ flex:1, padding:"2rem", overflowY:"auto", display:"flex", flexDirection:"column", gap:"1.5rem" }}>
+
+              {/* Message original */}
+              <div>
+                <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
+                  Message reçu · {new Date(selected.created_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
+                </div>
+                <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem",
+                  fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640 }}>
+                  {selected.message}
+                </div>
               </div>
+
+              {/* Réponse déjà envoyée */}
+              {selected.reply_text && (
+                <div>
+                  <div style={{ fontSize:"0.72rem", color:GREEN, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
+                    ✓ Votre réponse envoyée
+                    {selected.replied_at && (
+                      <span style={{ color:GRAY_DIM, fontWeight:400, marginLeft:8 }}>
+                        · {new Date(selected.replied_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ background:"rgba(109,212,0,0.06)", border:"1px solid rgba(109,212,0,0.25)",
+                    borderLeft:"3px solid " + GREEN, padding:"1.5rem",
+                    fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640, color:"#e8f4e0" }}>
+                    {selected.reply_text}
+                  </div>
+                </div>
+              )}
+
+              {/* Zone de réponse (si pas encore répondu) */}
+              {!selected.repondu && (
+                <div style={{ maxWidth:640 }}>
+                  <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
+                    Votre réponse — un email sera envoyé à {selected.email}
+                  </div>
+                  <textarea
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    placeholder={`Bonjour ${selected.nom},\n\nMerci pour votre message...`}
+                    rows={7}
+                    style={{
+                      width:"100%", background:NAVY_MID,
+                      border:`1px solid ${replyError ? "#f87171" : "rgba(109,212,0,0.2)"}`,
+                      color:"#fff", fontFamily:"'DM Sans',sans-serif", fontSize:"0.92rem",
+                      lineHeight:1.7, padding:"1rem", resize:"vertical",
+                      outline:"none", boxSizing:"border-box",
+                    }}
+                    onFocus={e => { e.currentTarget.style.borderColor = GREEN; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = replyError ? "#f87171" : "rgba(109,212,0,0.2)"; }}
+                  />
+                  {replyError && (
+                    <div style={{ fontSize:"0.82rem", color:"#f87171", marginTop:"0.4rem" }}>⚠ {replyError}</div>
+                  )}
+                  <div style={{ marginTop:"0.8rem", display:"flex", gap:"0.8rem", alignItems:"center" }}>
+                    <button
+                      onClick={sendReply}
+                      disabled={replying || !replyText.trim()}
+                      style={{
+                        background: replying || !replyText.trim() ? "rgba(109,212,0,0.35)" : GREEN,
+                        color: NAVY, fontFamily:"'Barlow Condensed',sans-serif",
+                        fontWeight:700, fontSize:"0.95rem", letterSpacing:"0.08em",
+                        padding:"0.65rem 1.8rem", border:"none",
+                        cursor: replying || !replyText.trim() ? "not-allowed" : "pointer",
+                        clipPath:"polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)",
+                        transition:"all 0.18s",
+                      }}
+                    >
+                      {replying ? "ENVOI…" : "✉ ENVOYER LA RÉPONSE"}
+                    </button>
+                    <span style={{ fontSize:"0.78rem", color:GRAY_DIM }}>
+                      Un email de notification sera envoyé automatiquement.
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-            {!selected.repondu && (
-              <div style={{ padding:"1.2rem 2rem", borderTop:"1px solid rgba(109,212,0,0.1)", display:"flex", gap:"0.8rem" }}>
-                <button onClick={()=>markRepondu(selected.id)} style={{
-                  background:GREEN, color:NAVY, fontFamily:"'Barlow Condensed',sans-serif",
-                  fontWeight:700, fontSize:"0.95rem", letterSpacing:"0.08em",
-                  padding:"0.6rem 1.5rem", border:"none", cursor:"pointer",
-                  clipPath:"polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)"
-                }}>MARQUER RÉPONDU</button>
-                <a href={`mailto:${selected.email}?subject=Re: ${selected.sujet}`} style={{
-                  background:"transparent", color:GREEN, border:"1px solid rgba(109,212,0,0.3)",
-                  fontFamily:"'DM Sans',sans-serif", fontSize:"0.9rem",
-                  padding:"0.6rem 1.2rem", textDecoration:"none", display:"inline-block"
-                }}>✉️ Ouvrir le courriel</a>
-              </div>
-            )}
           </>
         ) : (
           <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", color:GRAY_DIM, flexDirection:"column", gap:"0.5rem" }}>

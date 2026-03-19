@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { NAVY, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
-const navLinks = [
-  { label: "Services", href: "/#services" },
-  { label: "Processus", href: "/#process" },
-  { label: "Rendez-vous", href: "/#rendezvous" },
-  { label: "Suivi", href: "/#suivi" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "/#contact" },
-];
-
 export function Navbar() {
+  const { t, i18n } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [hov, setHov] = useState<string | null>(null);
@@ -20,6 +13,17 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const toggleLang = () => i18n.changeLanguage(i18n.language === "fr" ? "en" : "fr");
+
+  const navLinks = [
+    { label: t("nav.services"), href: "/#services" },
+    { label: t("nav.process"), href: "/#process" },
+    { label: t("nav.rdv"), href: "/#rendezvous" },
+    { label: t("nav.suivi"), href: "/#suivi" },
+    { label: t("nav.blog"), href: "/blog" },
+    { label: t("nav.contact"), href: "/#contact" },
+  ];
 
   return (
     <nav
@@ -58,7 +62,7 @@ export function Navbar() {
               lineHeight: 1.1,
             }}
           >
-            <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>Réparation</span>
+            <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>{t("nav.repair")}</span>
             CeLL<span style={{ color: GREEN }}>&</span>Ordi
           </span>
         </a>
@@ -97,8 +101,32 @@ export function Navbar() {
             onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
             onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}
           >
-            Prendre RDV
+            {t("nav.cta")}
           </a>
+
+          {/* Language toggle */}
+          <button
+            onClick={toggleLang}
+            style={{
+              background: "none",
+              border: `1px solid rgba(109,212,0,0.3)`,
+              borderRadius: "4px",
+              cursor: "pointer",
+              padding: "0.4rem 0.7rem",
+              marginLeft: "0.6rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.2rem",
+              fontFamily: FONT_DISPLAY,
+              fontWeight: 700,
+              fontSize: "0.78rem",
+              letterSpacing: "0.08em",
+            }}
+          >
+            <span style={{ color: i18n.language === "fr" ? GREEN : GRAY }}>FR</span>
+            <span style={{ color: "rgba(109,212,0,0.4)", fontSize: "0.7rem" }}>|</span>
+            <span style={{ color: i18n.language === "en" ? GREEN : GRAY }}>EN</span>
+          </button>
         </div>
 
         {/* Burger Mobile */}
@@ -134,10 +162,10 @@ export function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu — animé avec maxHeight */}
+      {/* Mobile Menu */}
       <div
         style={{
-          maxHeight: menuOpen ? "420px" : "0",
+          maxHeight: menuOpen ? "480px" : "0",
           overflow: "hidden",
           transition: "max-height 0.32s ease",
           background: NAVY,
@@ -166,6 +194,29 @@ export function Navbar() {
               {link.label}
             </a>
           ))}
+          {/* Mobile lang toggle */}
+          <div style={{ paddingTop: "1rem", display: "flex", gap: "0.5rem" }}>
+            {["fr", "en"].map((lang) => (
+              <button
+                key={lang}
+                onClick={() => { i18n.changeLanguage(lang); setMenuOpen(false); }}
+                style={{
+                  fontFamily: FONT_DISPLAY,
+                  fontWeight: 700,
+                  fontSize: "0.9rem",
+                  letterSpacing: "0.1em",
+                  background: i18n.language === lang ? GREEN : "transparent",
+                  color: i18n.language === lang ? NAVY : GRAY,
+                  border: `1px solid ${i18n.language === lang ? GREEN : "rgba(255,255,255,0.15)"}`,
+                  padding: "0.4rem 1rem",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                }}
+              >
+                {lang.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

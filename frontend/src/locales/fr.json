@@ -1,0 +1,344 @@
+{
+  "nav": {
+    "services": "Services",
+    "process": "Processus",
+    "rdv": "Rendez-vous",
+    "suivi": "Suivi",
+    "blog": "Blog",
+    "contact": "Contact",
+    "cta": "Prendre RDV",
+    "repair": "Réparation"
+  },
+  "hero": {
+    "tag": "Répare · Optimise · Évolue",
+    "subtitle": "Solutions hardware & software — experts en réparation de cellulaires & ordinateurs, soutien informatique et conception web. Pièces certifiées, diagnostics précis et solutions sur mesure pour particuliers et entreprises.",
+    "cta_rdv": "Prendre Rendez-vous",
+    "cta_suivi": "Suivre ma réparation",
+    "img_alt": "Réparation téléphone"
+  },
+  "services": {
+    "tag": "Ce qu'on fait",
+    "title": "Nos Services",
+    "subtitle": "Du diagnostic gratuit à la réparation express, nous couvrons tous vos besoins technologiques. Cliquez sur un service pour en savoir plus.",
+    "cta": "En savoir plus",
+    "items": {
+      "cellulaires": {
+        "title": "Réparation Cellulaires",
+        "desc": "Écrans brisés, batteries, caméras, connecteurs de charge. iPhone, Samsung, Huawei et plus.",
+        "items": ["Remplacement écran", "Batterie certifiée", "Caméra & capteurs", "Connecteur USB / Lightning"]
+      },
+      "ordinateurs": {
+        "title": "Réparation Ordinateurs",
+        "desc": "PC et Mac — virus, lenteur, disque dur, écran, clavier. Récupération de données.",
+        "items": ["Nettoyage virus/malware", "Remplacement HDD/SSD", "Upgrade RAM", "Réparation écran laptop"]
+      },
+      "informatique": {
+        "title": "Services Informatiques",
+        "desc": "Installation OS, configuration réseau, antivirus, sauvegarde automatique.",
+        "items": ["Install. Windows / macOS", "Réseau & WiFi sécurisé", "Antivirus entreprise", "Sauvegarde cloud"]
+      },
+      "web": {
+        "title": "Développement Web",
+        "desc": "Sites vitrine, e-commerce et applications web sur mesure pour votre entreprise.",
+        "items": ["Site vitrine & SEO", "E-commerce Stripe", "Application web React", "Maintenance mensuelle"]
+      },
+      "cloud": {
+        "title": "Solutions Cloud",
+        "desc": "Migration cloud, stockage sécurisé, synchronisation multi-appareils.",
+        "items": ["Migration Google / M365", "Google Workspace", "NAS & stockage local", "Sauvegarde automatisée"]
+      },
+      "entretien": {
+        "title": "Contrats d'Entretien",
+        "desc": "Maintenance préventive pour entreprises. Support prioritaire et suivi personnalisé.",
+        "items": ["Maintenance mensuelle", "Support prioritaire < 4h", "Audit sécurité", "Rapport IT mensuel"]
+      }
+    }
+  },
+  "process": {
+    "tag": "Comment ça marche",
+    "title": "Notre Processus",
+    "steps": [
+      {
+        "num": "01",
+        "title": "Diagnostic Gratuit",
+        "desc": "Apportez votre appareil en boutique ou remplissez le formulaire en ligne. Notre technicien évalue l'état en 30 minutes."
+      },
+      {
+        "num": "02",
+        "title": "Devis Transparent",
+        "desc": "Vous recevez un devis détaillé. Pas de frais cachés — vous acceptez ou refusez en toute liberté."
+      },
+      {
+        "num": "03",
+        "title": "Réparation Express",
+        "desc": "Nos techniciens certifiés utilisent des pièces de qualité OEM. La majorité des réparations en moins de 2 heures."
+      },
+      {
+        "num": "04",
+        "title": "Récupération & Suivi",
+        "desc": "Récupérez votre appareil entièrement testé. Suivez votre réparation par numéro de ticket en temps réel."
+      }
+    ]
+  },
+  "testimonials": {
+    "tag": "Ils nous font confiance",
+    "title": "Ce que disent nos clients",
+    "google_rating": "Note Google",
+    "reviews_count": "· 67 avis",
+    "cta": "Voir tous nos avis Google · 67 avis",
+    "categories": {
+      "reparation": "Réparation",
+      "informatique": "Informatique",
+      "web": "Développement Web"
+    }
+  },
+  "blog": {
+    "tag": "Conseils & Actualités",
+    "title": "Notre Blog",
+    "all": "Tous les articles →",
+    "read_more": "Lire la suite →",
+    "read_time": "de lecture",
+    "header_sub": "Conseils d'experts, bonnes pratiques et actualités tech — rédigés par notre équipe de techniciens.",
+    "all_label": "Tous",
+    "articles_count_one": "{{count}} article",
+    "articles_count_other": "{{count}} articles",
+    "back_main": "← Site principal",
+    "similar": "Articles similaires",
+    "find_us": "Nous trouver",
+    "hours1": "Lun–Ven : 10h–19h",
+    "hours2": "Sam : 10h–18h",
+    "need_repair": "Besoin d'une réparation ? On est là.",
+    "back_home": "← Retour à l'accueil",
+    "book_rdv": "Prendre rendez-vous",
+    "device_problem": "Un problème avec votre appareil ?",
+    "techs_available": "Nos techniciens sont disponibles du lundi au samedi. Diagnostic gratuit !",
+    "summary": "En résumé",
+    "back_blog": "← Blog"
+  },
+  "rdv": {
+    "tag": "Réservation en ligne",
+    "title": "Prendre Rendez-vous",
+    "subtitle": "Remplissez ce formulaire et nous vous confirmons votre RDV sous 1h.",
+    "refused_title": "Vous avez refusé le traitement de vos données.",
+    "refused_text": "Pour prendre rendez-vous, contactez-nous directement :",
+    "services": [
+      "Réparation cellulaire",
+      "Réparation ordinateur",
+      "Service informatique",
+      "Développement web",
+      "Solution cloud",
+      "Contrat d'entretien",
+      "Autre"
+    ],
+    "dispos": [
+      "Matin (9h–12h)",
+      "Après-midi (12h–17h)",
+      "Fin de journée (17h–19h)"
+    ],
+    "fields": {
+      "prenom": "Prénom *",
+      "nom": "Nom *",
+      "email": "Email *",
+      "telephone": "Téléphone *",
+      "service": "Service souhaité *",
+      "appareil": "Modèle d'appareil",
+      "probleme": "Description du problème *",
+      "date": "Date souhaitée *",
+      "dispo": "Disponibilité *",
+      "urgence": "Réparation urgente — je souhaite être traité en priorité",
+      "select": "-- Sélectionner --",
+      "choose": "-- Choisir --"
+    },
+    "placeholders": {
+      "prenom": "Jean",
+      "nom": "Dupont",
+      "email": "jean@exemple.com",
+      "telephone": "514-555-1234",
+      "appareil": "Ex: iPhone 14, Dell XPS 15",
+      "probleme": "Décrivez brièvement le problème rencontré..."
+    },
+    "urgence_surcharge": "+15%",
+    "submit": "Envoyer ma demande de RDV",
+    "sending": "Envoi en cours...",
+    "error_default": "Erreur lors de l'envoi. Réessayez.",
+    "success": {
+      "title": "Rendez-vous confirmé !",
+      "text": "Votre demande a bien été reçue. Vous recevrez une confirmation par email.",
+      "ticket_label": "Votre numéro de suivi",
+      "ticket_hint": "Conservez ce numéro pour suivre votre réparation",
+      "suivi_hint": "Utilisez la section",
+      "suivi_link": "Suivi de ticket",
+      "suivi_suffix": "ci-dessous pour suivre l'avancement.",
+      "new": "Nouvelle demande"
+    }
+  },
+  "suivi": {
+    "tag": "Votre réparation",
+    "title": "Suivi en Temps Réel",
+    "subtitle": "Entrez votre numéro de ticket pour suivre l'avancement de votre réparation.",
+    "label": "Numéro de ticket",
+    "placeholder": "Ex: REP-2024-001",
+    "btn": "Rechercher",
+    "loading": "Recherche en cours...",
+    "hint": "Entrez votre numéro de ticket (ex: RCO-20260225-001)",
+    "not_found": "❌ Aucun ticket trouvé avec ce numéro. Vérifiez le numéro et réessayez.",
+    "result": {
+      "device": "Appareil",
+      "problem": "Problème",
+      "progress": "Progression",
+      "in_progress": "← En cours"
+    }
+  },
+  "contact": {
+    "tag": "Nous trouver",
+    "title": "Contactez-nous",
+    "refused_title": "Vous avez refusé le traitement de vos données.",
+    "refused_text": "Pour nous joindre, contactez-nous directement :",
+    "map_link": "Voir sur Google Maps →",
+    "info": {
+      "address_title": "Adresse",
+      "phone_title": "Téléphone",
+      "email_title": "Email",
+      "hours_title": "Horaires",
+      "hours": ["Lun–Ven : 10h–19h", "Samedi : 10h–18h", "Dimanche : Fermé"]
+    },
+    "form": {
+      "name": "Nom complet *",
+      "email": "Email *",
+      "subject": "Sujet *",
+      "message": "Message *",
+      "select_subject": "-- Sélectionner un sujet --",
+      "subjects": ["Demande de devis", "Suivi de réparation", "Service entreprise", "Partenariat", "Autre"],
+      "name_placeholder": "Jean Dupont",
+      "email_placeholder": "jean@exemple.com",
+      "message_placeholder": "Décrivez votre demande...",
+      "submit": "Envoyer le message",
+      "sending": "Envoi en cours...",
+      "error_default": "Erreur lors de l'envoi. Veuillez réessayer."
+    },
+    "success": {
+      "title": "Message envoyé !",
+      "text": "Nous vous répondrons dans les 24 heures.",
+      "new": "Nouveau message"
+    }
+  },
+  "decharge": {
+    "tag": "Dépôt d'appareil",
+    "title": "Fiche de Décharge",
+    "subtitle": "Formulaire officiel de dépôt et de consentement pour la réparation.",
+    "refused_title": "Vous avez refusé le traitement de vos données.",
+    "refused_text": "Pour déposer votre appareil, contactez-nous directement :",
+    "steps": ["Informations client", "Description de l'appareil", "Conditions & Signature"],
+    "step1": {
+      "title": "Informations Client",
+      "prenom": "Prénom *",
+      "nom": "Nom *",
+      "email": "Email *",
+      "telephone": "Téléphone *",
+      "next": "Suivant →"
+    },
+    "step2": {
+      "title": "Description de l'Appareil",
+      "type": "Type d'appareil *",
+      "marque": "Marque *",
+      "modele": "Modèle *",
+      "serie": "N° de série",
+      "probleme": "Problème signalé *",
+      "etat": "État visuel de l'appareil",
+      "accessoires": "Accessoires déposés",
+      "select": "-- Sélectionner --",
+      "types": ["Téléphone", "Tablette", "Laptop", "Desktop", "Autre"],
+      "marque_ph": "Apple, Samsung...",
+      "modele_ph": "iPhone 14, XPS 15...",
+      "serie_ph": "(optionnel)",
+      "probleme_ph": "Décrivez le problème...",
+      "etat_ph": "Rayures, fissures, dommages...",
+      "accessoires_ph": "Chargeur, étui, câble...",
+      "prev": "← Retour",
+      "next": "Suivant →"
+    },
+    "step3": {
+      "title": "Conditions & Signature",
+      "cond1": "J'accepte les conditions générales de réparation et la politique de confidentialité.",
+      "cond2": "J'autorise le technicien à effectuer un diagnostic complet de mon appareil.",
+      "cond3": "Je m'engage à payer le montant convenu lors de la récupération de l'appareil.",
+      "signature": "Signature du client *",
+      "clear": "Effacer",
+      "sign_hint": "Signez dans le cadre ci-dessus avec votre souris ou doigt",
+      "prev": "← Retour",
+      "submit": "Valider la fiche",
+      "sending": "Envoi en cours...",
+      "error_default": "Erreur lors de l'envoi. Veuillez réessayer."
+    },
+    "success": {
+      "title": "Fiche enregistrée !",
+      "text": "Votre numéro de ticket vous sera envoyé par email.",
+      "hint": "Conservez ce numéro pour suivre votre réparation.",
+      "new": "Nouvelle fiche"
+    }
+  },
+  "footer": {
+    "tagline": "Votre partenaire de confiance pour toutes les réparations électroniques à Montréal.",
+    "google_reviews": "Voir nos avis Google",
+    "repair": "Réparation",
+    "sections": {
+      "services": "Services",
+      "info": "Informations",
+      "contact": "Contact"
+    },
+    "links": {
+      "cell": "Réparation Cellulaires",
+      "pc": "Réparation Ordinateurs",
+      "it": "Services Informatiques",
+      "web": "Développement Web",
+      "cloud": "Solutions Cloud",
+      "about": "À propos",
+      "blog": "Blog",
+      "privacy": "Politique de confidentialité",
+      "cgv": "CGV"
+    },
+    "copyright": "Tous droits réservés.",
+    "status": "Système en ligne · Réparations actives aujourd'hui"
+  },
+  "cookie": {
+    "title": "Confidentialité & Cookies",
+    "text": "Ce site recueille des informations personnelles (nom, courriel, téléphone) via ses formulaires afin de traiter votre demande de réparation, conformément à la",
+    "law": "Loi 25 du Québec",
+    "text2": ". Aucune donnée n'est vendue ni partagée à des tiers.",
+    "accept": "Accepter",
+    "refuse": "Refuser"
+  },
+  "notfound": {
+    "label": "Page introuvable",
+    "title": "Oups, cette page n'existe pas",
+    "desc": "La page que vous cherchez a peut-être été déplacée, supprimée, ou n'a jamais existé. Retournez à l'accueil pour continuer.",
+    "back": "← Retour à l'accueil",
+    "links": {
+      "rdv": "Prendre un RDV",
+      "suivi": "Suivi de réparation",
+      "contact": "Nous contacter"
+    }
+  },
+  "serviceDetail": {
+    "back": "← Tous les services",
+    "not_found": "Service introuvable",
+    "about": "À propos du service",
+    "expert_in": "Experts en",
+    "what_covers": "Ce qu'on couvre",
+    "prestations": "Nos Prestations",
+    "prestations_sub": "Chaque service est réalisé par nos techniciens avec soin, transparence et rapidité.",
+    "how_works": "Comment ça marche",
+    "process": "Notre Processus",
+    "step": "Étape",
+    "ready": "Prêt à commencer ?",
+    "book": "Prenez Rendez-vous",
+    "cta_sub": "Diagnostic gratuit · Devis transparent · Intervention rapide",
+    "book_now": "Réserver maintenant",
+    "contact_us": "Nous contacter",
+    "explore": "Explorer d'autres services",
+    "all_services_title": "Tous nos services de réparation",
+    "all_services_sub": "Cellulaires · Ordinateurs · Informatique · Web · Cloud · Entretien TI",
+    "all_services_btn": "← Tous les services",
+    "rdv_btn": "Prendre rendez-vous"
+  }
+}

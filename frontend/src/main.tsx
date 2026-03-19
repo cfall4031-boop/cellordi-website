@@ -1,3 +1,4 @@
+import './i18n';
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router";
 import { AnimatePresence } from "motion/react";

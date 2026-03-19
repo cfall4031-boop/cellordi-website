@@ -2,7 +2,7 @@ const express = require("express");
 const { db } = require("../database");
 const auth = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
-const { contactClient, contactAdmin } = require("../utils/emailTemplates");
+const { contactClient, contactAdmin, replyToContact } = require("../utils/emailTemplates");
 
 const router = express.Router();
 
@@ -72,6 +72,34 @@ router.patch("/:id/lu", auth, (req, res) => {
 router.patch("/:id/repondu", auth, (req, res) => {
   db.prepare("UPDATE messages_contact SET lu = 1, repondu = 1 WHERE id = ?").run(req.params.id);
   res.json({ message: "Message marqué comme répondu." });
+});
+
+// POST /api/messages/:id/reply — Répondre à un message (admin)
+router.post("/:id/reply", auth, (req, res) => {
+  const { replyText } = req.body;
+
+  if (!replyText || !replyText.trim()) {
+    return res.status(400).json({ erreur: "Le texte de réponse est requis." });
+  }
+
+  const msg = db.prepare("SELECT * FROM messages_contact WHERE id = ?").get(req.params.id);
+  if (!msg) return res.status(404).json({ erreur: "Message introuvable." });
+
+  // Sauvegarder la réponse et marquer comme lu + répondu
+  db.prepare(`
+    UPDATE messages_contact
+    SET reply_text = ?, replied_at = CURRENT_TIMESTAMP, repondu = 1, lu = 1
+    WHERE id = ?
+  `).run(replyText.trim(), req.params.id);
+
+  // Envoyer l'email de réponse au client (fire-and-forget)
+  sendEmail({
+    to: msg.email,
+    subject: `Réponse à votre message — Réparation CeLL&Ordi`,
+    html: replyToContact({ nom: msg.nom, sujet: msg.sujet, originalMessage: msg.message, replyText: replyText.trim() }),
+  }).catch(console.error);
+
+  res.json({ success: true, replied_at: new Date().toISOString() });
 });
 
 // DELETE /api/contact/:id — Supprimer un message (admin)

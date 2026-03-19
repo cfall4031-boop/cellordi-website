@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1746005718004-1f992c399428?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydHBob25lJTIwcmVwYWlyJTIwdGVjaG5pY2lhbiUyMHNjcmVlbiUyMHJlcGxhY2VtZW50fGVufDF8fHx8MTc3MjAwODQ4OHww&ixlib=rb-4.1.0&q=80&w=1080";
 
 export function Hero() {
+  const { t } = useTranslation();
   const [hovCta, setHovCta] = useState(false);
   const [hovSec, setHovSec] = useState(false);
 
@@ -19,7 +21,6 @@ export function Hero() {
         overflow: "hidden",
       }}
     >
-      {/* ── Atmospheric glow blob — centre-haut ── */}
       <div
         style={{
           position: "absolute",
@@ -35,8 +36,6 @@ export function Hero() {
           filter: "blur(40px)",
         }}
       />
-
-      {/* Glow secondaire — coin gauche bas */}
       <div
         style={{
           position: "absolute",
@@ -51,11 +50,9 @@ export function Hero() {
           filter: "blur(60px)",
         }}
       />
-
-      {/* Full-bleed image — fondue dans le fond */}
       <img
         src={HERO_IMG}
-        alt="Réparation téléphone"
+        alt={t("hero.img_alt")}
         style={{
           position: "absolute",
           top: 0,
@@ -68,58 +65,33 @@ export function Hero() {
           opacity: 0.7,
         }}
       />
-
-      {/* Gradient image → fond vertical */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(
-            to bottom,
-            ${NAVY}cc 0%,
-            ${NAVY}88 40%,
-            ${NAVY}aa 75%,
-            ${NAVY} 100%
-          )`,
+          background: `linear-gradient(to bottom, ${NAVY}cc 0%, ${NAVY}88 40%, ${NAVY}aa 75%, ${NAVY} 100%)`,
           zIndex: 2,
           pointerEvents: "none",
         }}
       />
-
-      {/* Fade right → left */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(
-            to right,
-            ${NAVY}ee 0%,
-            ${NAVY}99 50%,
-            ${NAVY}55 100%
-          )`,
+          background: `linear-gradient(to right, ${NAVY}ee 0%, ${NAVY}99 50%, ${NAVY}55 100%)`,
           zIndex: 2,
           pointerEvents: "none",
         }}
       />
-
-      {/* Noise / grain subtil */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `repeating-linear-gradient(
-            -52deg,
-            rgba(109,212,0,0.018) 0px,
-            rgba(109,212,0,0.018) 1px,
-            transparent 1px,
-            transparent 64px
-          )`,
+          backgroundImage: `repeating-linear-gradient(-52deg, rgba(109,212,0,0.018) 0px, rgba(109,212,0,0.018) 1px, transparent 1px, transparent 64px)`,
           zIndex: 3,
           pointerEvents: "none",
         }}
       />
-
-      {/* Ligne accent verte haut gauche */}
       <div
         style={{
           position: "absolute",
@@ -133,7 +105,6 @@ export function Hero() {
         }}
       />
 
-      {/* ── Contenu ── */}
       <div
         style={{
           maxWidth: "1200px",
@@ -147,8 +118,6 @@ export function Hero() {
         }}
       >
         <div style={{ maxWidth: "600px" }}>
-
-          {/* Badge tagline */}
           <div
             style={{
               display: "inline-flex",
@@ -172,12 +141,11 @@ export function Hero() {
                 textTransform: "uppercase",
               }}
             >
-              Répare · Optimise · Évolue
+              {t("hero.tag")}
             </span>
             <span style={{ color: GREEN, fontSize: "0.6rem", lineHeight: 1, opacity: 0.85 }}>✦</span>
           </div>
 
-          {/* H1 — CeLL & Ordi */}
           <h1
             style={{
               fontFamily: FONT_DISPLAY,
@@ -200,7 +168,6 @@ export function Hero() {
               }}
             >
               &amp;
-              {/* Underline glow animé */}
               <span
                 style={{
                   position: "absolute",
@@ -227,24 +194,21 @@ export function Hero() {
               maxWidth: "460px",
             }}
           >
-            Solutions hardware &amp; software — experts en réparation de cellulaires &amp; ordinateurs, soutien informatique et conception web. Pièces certifiées, diagnostics précis et solutions sur mesure pour particuliers et entreprises.
+            {t("hero.subtitle")}
           </p>
 
-          {/* CTAs */}
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
             <a
               href="#rendezvous"
               style={{
                 ...btn(hovCta ? GREEN_GLOW : GREEN, "#0c0c12"),
                 fontSize: "1rem",
-                boxShadow: hovCta
-                  ? `0 0 24px rgba(109,212,0,0.5)`
-                  : `0 0 12px rgba(109,212,0,0.25)`,
+                boxShadow: hovCta ? `0 0 24px rgba(109,212,0,0.5)` : `0 0 12px rgba(109,212,0,0.25)`,
               }}
               onMouseEnter={() => setHovCta(true)}
               onMouseLeave={() => setHovCta(false)}
             >
-              Prendre Rendez-vous
+              {t("hero.cta_rdv")}
             </a>
             <a
               href="#suivi"
@@ -256,7 +220,7 @@ export function Hero() {
               onMouseEnter={() => setHovSec(true)}
               onMouseLeave={() => setHovSec(false)}
             >
-              Suivre ma réparation
+              {t("hero.cta_suivi")}
             </a>
           </div>
         </div>

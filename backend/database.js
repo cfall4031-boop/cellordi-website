@@ -113,6 +113,10 @@ db.exec(`
 // Migration: add date_livraison if column is missing (existing databases)
 try { db.exec("ALTER TABLE tickets ADD COLUMN date_livraison TEXT"); } catch (_) {}
 
+// Migration: add reply fields to messages_contact (existing databases)
+try { db.exec("ALTER TABLE messages_contact ADD COLUMN reply_text TEXT"); } catch (_) {}
+try { db.exec("ALTER TABLE messages_contact ADD COLUMN replied_at DATETIME"); } catch (_) {}
+
 function initAdmin() {
   const adminEmail    = process.env.ADMIN_EMAIL    || "admin@reparationcellordi.ca";
   const adminPassword = process.env.ADMIN_PASSWORD || "AdminPassword123!";
