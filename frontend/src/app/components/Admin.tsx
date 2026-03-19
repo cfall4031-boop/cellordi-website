@@ -318,7 +318,7 @@ function Overview() {
 // ── RENDEZ-VOUS ───────────────────────────────────────────────
 function Rendez_vous() {
   const [rdvs, setRdvs]     = useState<any[]>([]);
-  const [filter, setFilter] = useState("tous");
+  const [filter, setFilter] = useState("actifs");
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
@@ -329,7 +329,11 @@ function Rendez_vous() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = filter === "tous" ? rdvs : rdvs.filter((r:any) => r.statut === filter);
+  const filtered =
+    filter === "actifs"   ? rdvs.filter((r:any) => ["en_attente","confirme"].includes(r.statut)) :
+    filter === "archives" ? rdvs.filter((r:any) => ["complete","annule"].includes(r.statut)) :
+    filter === "tous"     ? rdvs :
+    rdvs.filter((r:any) => r.statut === filter);
 
   const changeStatut = async (id: number, statut: string) => {
     try {
@@ -340,17 +344,18 @@ function Rendez_vous() {
 
   return (
     <div className="admin-fade">
-      <Topbar title="Rendez-vous" subtitle={`${rdvs.length} rendez-vous au total`}/>
+      <Topbar title="Rendez-vous" subtitle={`${filtered.length} rendez-vous`}/>
       <div style={{ padding:"1.5rem 2rem" }}>
         <div style={{ display:"flex", gap:"0.5rem", marginBottom:"1.5rem", flexWrap:"wrap" }}>
-          {["tous","en_attente","confirme","complete","annule"].map(f=>(
+          {["actifs","en_attente","confirme","archives","tous"].map(f=>(
             <button key={f} onClick={()=>setFilter(f)} style={{
-              background:filter===f?GREEN:"rgba(255,255,255,0.05)",
-              color:filter===f?NAVY:"#fff", border:"1px solid rgba(109,212,0,0.2)",
+              background:filter===f ? (f==="archives"?"rgba(255,255,255,0.12)":GREEN) : "rgba(255,255,255,0.05)",
+              color:filter===f ? (f==="archives"?"#fff":NAVY) : (f==="archives"?GRAY:"#fff"),
+              border:`1px solid ${f==="archives"?"rgba(255,255,255,0.15)":"rgba(109,212,0,0.2)"}`,
               padding:"0.4rem 1rem", fontSize:"0.82rem", cursor:"pointer",
               fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
             }}>
-              {f==="tous"?"Tous":statutColors[f]?.label||f}
+              {f==="actifs" ? "✓ Actifs" : f==="archives" ? "🗃 Archives" : f==="tous" ? "Tous" : statutColors[f]?.label||f}
             </button>
           ))}
           <button onClick={load} style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
@@ -414,6 +419,7 @@ function Tickets() {
   const [selected, setSelected] = useState<any>(null);
   const [loading, setLoading]   = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -423,11 +429,13 @@ function Tickets() {
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = tickets.filter((t:any) =>
-    `${t.prenom} ${t.nom}`.toLowerCase().includes(search.toLowerCase()) ||
-    (t.numero || "").toLowerCase().includes(search.toLowerCase()) ||
-    (t.type_appareil || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = tickets
+    .filter((t:any) =>
+      `${t.prenom} ${t.nom}`.toLowerCase().includes(search.toLowerCase()) ||
+      (t.numero || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.type_appareil || "").toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((t:any) => showArchived || t.statut !== "livre");
 
   const changeStatut = async (id: number, statut: string) => {
     try {
@@ -444,7 +452,7 @@ function Tickets() {
   return (
     <div className="admin-fade" style={{display:"flex", height:"100%"}}>
       <div style={{flex:1, overflow:"auto"}}>
-        <Topbar title="Tickets de Réparation" subtitle={`${tickets.length} tickets`}/>
+        <Topbar title="Tickets de Réparation" subtitle={`${filtered.length} ticket${filtered.length !== 1 ? "s" : ""} actif${filtered.length !== 1 ? "s" : ""}${!showArchived ? " — livrés masqués" : ""}`}/>
         <div style={{ padding:"1.5rem 2rem" }}>
           <div style={{display:"flex", gap:"0.8rem", marginBottom:"1.2rem"}}>
             <input value={search} onChange={e=>setSearch(e.target.value)}
@@ -457,6 +465,15 @@ function Tickets() {
               letterSpacing:"0.06em", padding:"0.8rem 1.2rem", border:"none", cursor:"pointer",
               whiteSpace:"nowrap" }}>
               + Nouveau ticket
+            </button>
+            <button onClick={()=>setShowArchived(p=>!p)} style={{
+              background: showArchived ? "rgba(109,212,0,0.1)" : "transparent",
+              color: showArchived ? GREEN : GRAY,
+              border: `1px solid ${showArchived ? "rgba(109,212,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+              padding:"0.8rem 1rem", cursor:"pointer", fontSize:"0.82rem",
+              fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap"
+            }}>
+              🗃 {showArchived ? "Masquer archives" : "Voir archives"}
             </button>
             <button onClick={load} style={{ background:"transparent", color:GRAY,
               border:"1px solid rgba(255,255,255,0.1)", padding:"0.8rem", cursor:"pointer" }}>↻</button>
