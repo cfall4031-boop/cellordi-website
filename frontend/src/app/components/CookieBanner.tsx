@@ -42,6 +42,27 @@ export function CookieBanner() {
         fontFamily: FONT_BODY,
       }}
     >
+      {/* Bouton fermer (ignorer) */}
+      <button
+        onClick={() => setVisible(false)}
+        aria-label="Fermer"
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "14px",
+          background: "transparent",
+          border: "none",
+          color: GRAY,
+          fontSize: "18px",
+          lineHeight: 1,
+          cursor: "pointer",
+          padding: "2px 6px",
+          opacity: 0.7,
+        }}
+      >
+        ✕
+      </button>
+
       <span style={{ fontSize: "20px", flexShrink: 0 }}>🍪</span>
 
       <p
