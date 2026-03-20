@@ -1,43 +1,136 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Pages principales -->
   <url>
-    <loc>https://cellordi.ca/</loc>
+    <loc>https://reparationcellordi.ca/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Services -->
   <url>
-    <loc>https://cellordi.ca/services/cellulaires</loc>
+    <loc>https://reparationcellordi.ca/services/cellulaires</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cellordi.ca/services/ordinateurs</loc>
+    <loc>https://reparationcellordi.ca/services/ordinateurs</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cellordi.ca/services/informatique</loc>
+    <loc>https://reparationcellordi.ca/services/informatique</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cellordi.ca/services/web</loc>
+    <loc>https://reparationcellordi.ca/services/web</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://cellordi.ca/services/cloud</loc>
+    <loc>https://reparationcellordi.ca/services/cloud</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://cellordi.ca/services/entretien</loc>
+    <loc>https://reparationcellordi.ca/services/entretien</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+
+  <!-- Blog - listing -->
   <url>
-    <loc>https://cellordi.ca/blog</loc>
+    <loc>https://reparationcellordi.ca/blog</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.8</priority>
   </url>
+
+  <!-- Blog - articles individuels -->
+  <url>
+    <loc>https://reparationcellordi.ca/blog/batterie-iphone-signes</loc>
+    <lastmod>2026-02-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/hdd-vers-ssd-guide</loc>
+    <lastmod>2026-02-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/cybersecurite-smartphone-2026</loc>
+    <lastmod>2026-02-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/bonnes-habitudes-telephone</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/ordinateur-qui-ralentit</loc>
+    <lastmod>2026-01-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/wifi-bluetooth-donnees-mobiles</loc>
+    <lastmod>2026-01-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/ecran-samsung-sallume-plus</loc>
+    <lastmod>2026-03-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/iphone-ne-charge-plus</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/telephone-tombe-eau</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/ecran-fissure-telephone</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/samsung-redemarrage-intempestif</loc>
+    <lastmod>2026-03-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/mot-de-passe-windows-oublie</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/ordinateur-surchauffe</loc>
+    <lastmod>2026-03-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://reparationcellordi.ca/blog/recuperer-donnees-telephone-casse</loc>
+    <lastmod>2026-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
 </urlset>
