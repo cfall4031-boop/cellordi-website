@@ -316,25 +316,70 @@ function Overview() {
 }
 
 // ── RENDEZ-VOUS ───────────────────────────────────────────────
-function Rendez_vous() {
-  const [rdvs, setRdvs]     = useState<any[]>([]);
-  const [filter, setFilter] = useState("actifs");
-  const [loading, setLoading] = useState(true);
+// ── Helpers calendrier ──────────────────────────────────────────────────────
+const JOURS_LABEL = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+const MOIS_LABEL  = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 
+function formatDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function Rendez_vous() {
+  // ── État principal ──────────────────────────────────────────────────────────
+  const [rdvs,    setRdvs]   = useState<any[]>([]);
+  const [dispos,  setDispos] = useState<{jour:number;heure:string;actif:number}[]>([]);
+  const [filter,  setFilter] = useState("actifs");
+  const [loading, setLoading]= useState(true);
+
+  // ── Calendrier ──────────────────────────────────────────────────────────────
+  const today      = new Date();
+  const [calYear,  setCalYear]  = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(today.getMonth()); // 0-based
+  const [selDate,  setSelDate]  = useState<string | null>(null);
+
+  // ── Formulaire création RDV ─────────────────────────────────────────────────
+  const [showForm,  setShowForm]  = useState(false);
+  const [slots,     setSlots]     = useState<string[]>([]);
+  const emptyForm = { prenom:"", nom:"", email:"", telephone:"", service:"Réparation cellulaire", appareil:"", description:"", date:"", heure:"" };
+  const [newRdv,   setNewRdv]   = useState(emptyForm);
+  const [creating, setCreating] = useState(false);
+  const [createErr,setCreateErr]= useState<string|null>(null);
+  const [createOk, setCreateOk] = useState<string|null>(null);
+
+  // ── Tableau dispo ───────────────────────────────────────────────────────────
+  const [showDispo, setShowDispo] = useState(false);
+  const HEURES = ["09:00","10:00","11:00","13:00","14:00","15:00","16:00","17:00","18:00"];
+  const JOURS_DISPO = [1,2,3,4,5,6]; // Lun–Sam
+
+  // ── Chargement ──────────────────────────────────────────────────────────────
   const load = useCallback(() => {
     setLoading(true);
-    rdvApi.getAll().then((d:any) => setRdvs(d.rendezvous || []))
-      .catch(console.error).finally(() => setLoading(false));
+    Promise.all([
+      rdvApi.getAll(),
+      rdvApi.getDisponibilites(),
+    ]).then(([rdvData, dispoData]) => {
+      setRdvs((rdvData as any).rendezvous || []);
+      setDispos((dispoData as any).disponibilites || []);
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered =
-    filter === "actifs"   ? rdvs.filter((r:any) => ["en_attente","confirme"].includes(r.statut)) :
-    filter === "archives" ? rdvs.filter((r:any) => ["complete","annule"].includes(r.statut)) :
-    filter === "tous"     ? rdvs :
-    rdvs.filter((r:any) => r.statut === filter);
+  // ── Slots quand date change ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!newRdv.date) { setSlots([]); return; }
+    rdvApi.getSlots(newRdv.date).then((d:any) => setSlots(d.slots || [])).catch(() => setSlots([]));
+  }, [newRdv.date]);
 
+  // ── Filtrer RDVs ────────────────────────────────────────────────────────────
+  const byDate = selDate ? rdvs.filter((r:any) => r.date_rdv === selDate) : rdvs;
+  const filtered =
+    filter === "actifs"   ? byDate.filter((r:any) => ["en_attente","confirme"].includes(r.statut)) :
+    filter === "archives" ? byDate.filter((r:any) => ["complete","annule"].includes(r.statut)) :
+    filter === "tous"     ? byDate :
+    byDate.filter((r:any) => r.statut === filter);
+
+  // ── Changer statut ──────────────────────────────────────────────────────────
   const changeStatut = async (id: number, statut: string) => {
     try {
       await rdvApi.updateStatut(id, statut);
@@ -342,72 +387,377 @@ function Rendez_vous() {
     } catch (err) { console.error(err); }
   };
 
+  // ── Toggle disponibilité ────────────────────────────────────────────────────
+  const toggleSlot = async (jour: number, heure: string) => {
+    try {
+      const res = await rdvApi.toggleSlot(jour, heure) as any;
+      setDispos(prev => {
+        const idx = prev.findIndex(d => d.jour === jour && d.heure === heure);
+        if (idx >= 0) return prev.map((d,i) => i===idx ? res.slot : d);
+        return [...prev, res.slot];
+      });
+    } catch (err) { console.error(err); }
+  };
+
+  const isActif = (jour: number, heure: string) => {
+    const s = dispos.find(d => d.jour === jour && d.heure === heure);
+    return s ? s.actif === 1 : false;
+  };
+
+  // ── Créer RDV ───────────────────────────────────────────────────────────────
+  const submitNewRdv = async () => {
+    if (!newRdv.prenom || !newRdv.nom || !newRdv.email || !newRdv.date) {
+      setCreateErr("Prénom, nom, email et date sont requis."); return;
+    }
+    setCreating(true); setCreateErr(null); setCreateOk(null);
+    try {
+      const res = await rdvApi.createAdmin({
+        prenom: newRdv.prenom, nom: newRdv.nom,
+        email: newRdv.email, telephone: newRdv.telephone,
+        type_appareil: newRdv.service || newRdv.appareil || "Non spécifié",
+        date_rdv: newRdv.date, heure: newRdv.heure || null,
+        description: `${newRdv.appareil ? "Appareil: "+newRdv.appareil+" | " : ""}${newRdv.description}`,
+      }) as any;
+      setCreateOk(`✅ RDV créé${res.numero_ticket ? ` — Ticket ${res.numero_ticket}` : ""}. Email envoyé au client.`);
+      setNewRdv(emptyForm);
+      load();
+    } catch(e:any) { setCreateErr(e.message || "Erreur lors de la création."); }
+    finally { setCreating(false); }
+  };
+
+  // ── Données calendrier ──────────────────────────────────────────────────────
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDay  = new Date(calYear, calMonth + 1, 0);
+  // Décalage : getDay() retourne 0=Sun, on veut 0=Lun
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  const totalCells  = startOffset + lastDay.getDate();
+  const rows        = Math.ceil(totalCells / 7);
+
+  const rdvsParJour = (day: number) => {
+    const d = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    return rdvs.filter((r:any) => r.date_rdv === d && ["en_attente","confirme"].includes(r.statut)).length;
+  };
+
+  const prevMonth = () => { if (calMonth === 0) { setCalYear(y=>y-1); setCalMonth(11); } else setCalMonth(m=>m-1); };
+  const nextMonth = () => { if (calMonth === 11) { setCalYear(y=>y+1); setCalMonth(0); } else setCalMonth(m=>m+1); };
+
+  const SERVICES = ["Réparation cellulaire","Réparation ordinateur","Service informatique","Développement web","Solution cloud","Contrat d'entretien","Autre"];
+
   return (
     <div className="admin-fade">
-      <Topbar title="Rendez-vous" subtitle={`${filtered.length} rendez-vous`}/>
+      <Topbar title="Rendez-vous" subtitle={selDate ? `Vue du ${selDate}` : `${filtered.length} rendez-vous`}/>
       <div style={{ padding:"1.5rem 2rem" }}>
-        <div style={{ display:"flex", gap:"0.5rem", marginBottom:"1.5rem", flexWrap:"wrap" }}>
-          {["actifs","en_attente","confirme","archives","tous"].map(f=>(
-            <button key={f} onClick={()=>setFilter(f)} style={{
-              background:filter===f ? (f==="archives"?"rgba(255,255,255,0.12)":GREEN) : "rgba(255,255,255,0.05)",
-              color:filter===f ? (f==="archives"?"#fff":NAVY) : (f==="archives"?GRAY:"#fff"),
-              border:`1px solid ${f==="archives"?"rgba(255,255,255,0.15)":"rgba(109,212,0,0.2)"}`,
-              padding:"0.4rem 1rem", fontSize:"0.82rem", cursor:"pointer",
-              fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
-            }}>
-              {f==="actifs" ? "✓ Actifs" : f==="archives" ? "🗃 Archives" : f==="tous" ? "Tous" : statutColors[f]?.label||f}
-            </button>
-          ))}
+
+        {/* ── Bouton Nouveau RDV + Dispo ── */}
+        <div style={{ display:"flex", gap:"0.75rem", marginBottom:"1.25rem", flexWrap:"wrap", alignItems:"center" }}>
+          <button onClick={()=>{ setShowForm(f=>!f); setCreateErr(null); setCreateOk(null); }}
+            style={{ background:showForm ? GREEN : "rgba(109,212,0,0.12)", color:showForm ? NAVY : GREEN,
+              border:`1px solid ${GREEN}44`, padding:"0.45rem 1.1rem", fontSize:"0.84rem",
+              cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+            ＋ Nouveau rendez-vous
+          </button>
+          <button onClick={()=>setShowDispo(d=>!d)}
+            style={{ background:showDispo ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)", color:GRAY,
+              border:"1px solid rgba(255,255,255,0.12)", padding:"0.45rem 1.1rem", fontSize:"0.84rem",
+              cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+            🗓 {showDispo ? "Masquer disponibilités" : "Gérer disponibilités"}
+          </button>
           <button onClick={load} style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
-            padding:"0.4rem 1rem", fontSize:"0.82rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", marginLeft:"auto" }}>
+            padding:"0.4rem 0.9rem", fontSize:"0.82rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", marginLeft:"auto" }}>
             ↻ Actualiser
           </button>
         </div>
-        {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
-        <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
-          <table>
-            <thead>
-              <tr style={{ background:"rgba(109,212,0,0.04)" }}>
-                {["Client","Téléphone","Appareil","Date","Heure","Statut","Action"].map(h=>(
-                  <th key={h} style={thStyle}>{h}</th>
+
+        {/* ── Formulaire Nouveau RDV ── */}
+        {showForm && (
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.2)", padding:"1.5rem", marginBottom:"1.5rem" }}>
+            <p style={{ color:GREEN, fontWeight:700, fontSize:"0.85rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"1.2rem" }}>
+              ＋ Créer un rendez-vous
+            </p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem" }} className="rdv-grid">
+              {/* Colonne gauche — client */}
+              <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+                {([["Prénom *","prenom","text","Jean"],["Nom *","nom","text","Dupont"],
+                  ["Email *","email","email","client@email.com"],["Téléphone","telephone","tel","(514) 000-0000"]]
+                ).map(([label,name,type,ph])=>(
+                  <div key={name as string}>
+                    <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>{label}</label>
+                    <input value={(newRdv as any)[name as string]} onChange={e=>setNewRdv(p=>({...p,[name as string]:e.target.value}))}
+                      type={type as string} placeholder={ph as string}
+                      style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
+                        color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
+                  </div>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r:any)=>(
-                <tr key={r.id}
-                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
-                  onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
-                  <td style={{...tdStyle, fontWeight:500}}>{r.prenom} {r.nom}</td>
-                  <td style={{...tdStyle, color:GRAY}}>{r.telephone}</td>
-                  <td style={tdStyle}>{r.type_appareil}</td>
-                  <td style={{...tdStyle, color:GRAY}}>{r.date_rdv}</td>
-                  <td style={tdStyle}>
-                    <span style={{background:GREEN_DIM,color:GREEN,padding:"0.2rem 0.5rem",fontWeight:600,fontSize:"0.82rem"}}>
-                      {r.heure || "—"}
-                    </span>
-                  </td>
-                  <td style={tdStyle}><Badge statut={r.statut}/></td>
-                  <td style={tdStyle}>
-                    <select value={r.statut} onChange={e=>changeStatut(r.id,e.target.value)}
-                      style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
-                        fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
-                      <option value="en_attente">En attente</option>
-                      <option value="confirme">Confirmer</option>
-                      <option value="complete">Compléter</option>
-                      <option value="annule">Annuler</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {filtered.length === 0 && (
-            <div style={{ textAlign:"center", padding:"3rem", color:GRAY }}>Aucun rendez-vous pour ce filtre.</div>
-          )}
-        </div>
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Service</label>
+                  <select value={newRdv.service} onChange={e=>setNewRdv(p=>({...p,service:e.target.value}))}
+                    style={{ width:"100%", background:NAVY, border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
+                      padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", outline:"none" }}>
+                    {SERVICES.map(s=><option key={s} value={s} style={{background:NAVY}}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Appareil / Modèle</label>
+                  <input value={newRdv.appareil} onChange={e=>setNewRdv(p=>({...p,appareil:e.target.value}))}
+                    placeholder="iPhone 13, Dell XPS 15…"
+                    style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
+                      color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
+                </div>
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Description / Problème</label>
+                  <textarea value={newRdv.description} onChange={e=>setNewRdv(p=>({...p,description:e.target.value}))}
+                    rows={3} placeholder="Décrire le problème…"
+                    style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
+                      color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", resize:"vertical" as const, boxSizing:"border-box" as const, outline:"none" }} />
+                </div>
+              </div>
+              {/* Colonne droite — date + créneau */}
+              <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Date du rendez-vous *</label>
+                  <input type="date" value={newRdv.date} onChange={e=>setNewRdv(p=>({...p,date:e.target.value,heure:""}))}
+                    min={formatDate(today)}
+                    style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
+                      color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none", colorScheme:"dark" }} />
+                </div>
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>
+                    Créneau horaire {newRdv.date ? `(${slots.length} disponible${slots.length!==1?"s":""})` : "— choisissez une date d'abord"}
+                  </label>
+                  {newRdv.date && slots.length === 0 && (
+                    <p style={{ color:ORANGE, fontSize:"0.8rem", fontFamily:"'DM Sans',sans-serif" }}>⚠ Aucun créneau actif ce jour-là. Configurez les disponibilités ci-dessus.</p>
+                  )}
+                  {slots.length > 0 && (
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:"0.5rem" }}>
+                      {slots.map(h=>(
+                        <button key={h} onClick={()=>setNewRdv(p=>({...p,heure:h}))}
+                          style={{ background:newRdv.heure===h ? GREEN : "rgba(255,255,255,0.05)",
+                            color:newRdv.heure===h ? NAVY : GRAY,
+                            border:`1px solid ${newRdv.heure===h ? GREEN : "rgba(255,255,255,0.12)"}`,
+                            padding:"0.4rem 0.8rem", fontSize:"0.85rem", cursor:"pointer",
+                            fontFamily:"'DM Sans',sans-serif", fontWeight:newRdv.heure===h?700:400 }}>
+                          {h}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Mini récap */}
+                {(newRdv.prenom || newRdv.date) && (
+                  <div style={{ background:"rgba(109,212,0,0.06)", border:"1px solid rgba(109,212,0,0.15)", padding:"0.75rem", marginTop:"0.5rem" }}>
+                    <p style={{ color:GREEN, fontSize:"0.78rem", fontWeight:700, marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif" }}>RÉCAPITULATIF</p>
+                    {newRdv.prenom && <p style={{ color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif" }}>👤 {newRdv.prenom} {newRdv.nom}</p>}
+                    {newRdv.date   && <p style={{ color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif" }}>📅 {newRdv.date}{newRdv.heure ? ` à ${newRdv.heure}` : ""}</p>}
+                    {newRdv.service&& <p style={{ color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif" }}>🔧 {newRdv.service}</p>}
+                  </div>
+                )}
+              </div>
+            </div>
+            {createErr && <p style={{ color:RED, fontSize:"0.85rem", marginTop:"1rem", fontFamily:"'DM Sans',sans-serif" }}>⚠ {createErr}</p>}
+            {createOk  && <p style={{ color:GREEN, fontSize:"0.85rem", marginTop:"1rem", fontFamily:"'DM Sans',sans-serif" }}>{createOk}</p>}
+            <div style={{ display:"flex", gap:"0.75rem", marginTop:"1.25rem" }}>
+              <button onClick={submitNewRdv} disabled={creating}
+                style={{ background:creating?"rgba(109,212,0,0.4)":GREEN, color:NAVY, border:"none",
+                  padding:"0.55rem 1.4rem", fontSize:"0.85rem", fontWeight:700, cursor:creating?"not-allowed":"pointer",
+                  fontFamily:"'DM Sans',sans-serif" }}>
+                {creating ? "Création…" : "✓ Créer le rendez-vous"}
+              </button>
+              <button onClick={()=>{ setShowForm(false); setCreateErr(null); setCreateOk(null); setNewRdv(emptyForm); }}
+                style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
+                  padding:"0.55rem 1rem", fontSize:"0.85rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
         )}
+
+        {/* ── Tableau disponibilités ── */}
+        {showDispo && (
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(255,255,255,0.1)", padding:"1.25rem", marginBottom:"1.5rem", overflowX:"auto" }}>
+            <p style={{ color:GRAY, fontWeight:700, fontSize:"0.82rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
+              🗓 Tableau de disponibilités — cliquez pour activer / désactiver
+            </p>
+            <table style={{ borderCollapse:"collapse", width:"100%", minWidth:"500px" }}>
+              <thead>
+                <tr>
+                  <th style={{ padding:"0.4rem 0.6rem", textAlign:"left", color:GRAY, fontSize:"0.78rem", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>Créneau</th>
+                  {JOURS_DISPO.map(j=>(
+                    <th key={j} style={{ padding:"0.4rem 0.6rem", textAlign:"center", color:GRAY, fontSize:"0.78rem", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+                      {JOURS_LABEL[j-1]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {HEURES.map(h=>(
+                  <tr key={h}>
+                    <td style={{ padding:"0.35rem 0.6rem", color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>{h}</td>
+                    {JOURS_DISPO.map(j=>{
+                      const actif = isActif(j,h);
+                      return (
+                        <td key={j} style={{ padding:"0.25rem 0.4rem", textAlign:"center" }}>
+                          <button onClick={()=>toggleSlot(j,h)}
+                            title={actif ? "Cliquer pour fermer" : "Cliquer pour ouvrir"}
+                            style={{
+                              width:"36px", height:"28px", cursor:"pointer",
+                              background: actif ? "rgba(109,212,0,0.15)" : "rgba(255,255,255,0.03)",
+                              border: `1px solid ${actif ? "rgba(109,212,0,0.4)" : "rgba(255,255,255,0.08)"}`,
+                              color: actif ? GREEN : GRAY_DIM,
+                              fontSize:"0.82rem", transition:"all 0.15s",
+                            }}>
+                            {actif ? "✓" : "✗"}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={{ color:GRAY_DIM, fontSize:"0.75rem", marginTop:"0.75rem", fontFamily:"'DM Sans',sans-serif" }}>
+              ✓ = créneau ouvert (visible dans le formulaire de création) · ✗ = créneau fermé
+            </p>
+          </div>
+        )}
+
+        {/* ── Calendrier + liste ── */}
+        <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:"1.5rem", alignItems:"start" }} className="cal-grid">
+
+          {/* Calendrier */}
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1rem", flexShrink:0 }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.75rem" }}>
+              <button onClick={prevMonth} style={{ background:"transparent", border:"none", color:GRAY, cursor:"pointer", fontSize:"1rem", padding:"0.2rem 0.5rem" }}>◀</button>
+              <span style={{ color:"#fff", fontWeight:700, fontSize:"0.88rem", fontFamily:"'DM Sans',sans-serif" }}>
+                {MOIS_LABEL[calMonth]} {calYear}
+              </span>
+              <button onClick={nextMonth} style={{ background:"transparent", border:"none", color:GRAY, cursor:"pointer", fontSize:"1rem", padding:"0.2rem 0.5rem" }}>▶</button>
+            </div>
+            {/* En-têtes jours */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:"2px", marginBottom:"4px" }}>
+              {JOURS_LABEL.map(j=>(
+                <div key={j} style={{ textAlign:"center", fontSize:"0.68rem", color:GRAY_DIM, fontFamily:"'DM Sans',sans-serif", fontWeight:600, padding:"0.15rem 0" }}>{j}</div>
+              ))}
+            </div>
+            {/* Jours */}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:"2px" }}>
+              {Array.from({length: rows * 7}).map((_,i) => {
+                const dayNum = i - startOffset + 1;
+                if (dayNum < 1 || dayNum > lastDay.getDate()) return <div key={i} />;
+                const dateStr = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(dayNum).padStart(2,"0")}`;
+                const count   = rdvsParJour(dayNum);
+                const isSel   = selDate === dateStr;
+                const isToday = dateStr === formatDate(today);
+                return (
+                  <button key={i} onClick={()=>setSelDate(isSel ? null : dateStr)}
+                    style={{
+                      background: isSel ? "rgba(109,212,0,0.2)" : "transparent",
+                      border: isSel ? `1px solid ${GREEN}` : isToday ? "1px solid rgba(109,212,0,0.35)" : "1px solid transparent",
+                      color: isSel ? GREEN : isToday ? GREEN : "#fff",
+                      padding:"0.25rem 0", textAlign:"center", cursor:"pointer",
+                      fontSize:"0.8rem", fontFamily:"'DM Sans',sans-serif",
+                      position:"relative" as const, display:"flex", flexDirection:"column" as const, alignItems:"center", gap:"1px",
+                    }}>
+                    {dayNum}
+                    {count > 0 && (
+                      <span style={{
+                        display:"block", width:"6px", height:"6px", borderRadius:"50%",
+                        background: count >= 3 ? ORANGE : GREEN,
+                        flexShrink:0,
+                      }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {selDate && (
+              <button onClick={()=>setSelDate(null)} style={{ width:"100%", marginTop:"0.75rem", background:"transparent", border:"1px solid rgba(255,255,255,0.1)", color:GRAY, padding:"0.35rem", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+                ✕ Voir tous les RDVs
+              </button>
+            )}
+            {/* Légende */}
+            <div style={{ marginTop:"0.75rem", display:"flex", flexDirection:"column", gap:"0.3rem" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.5rem" }}>
+                <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:GREEN, display:"inline-block" }} />
+                <span style={{ fontSize:"0.72rem", color:GRAY_DIM, fontFamily:"'DM Sans',sans-serif" }}>1–2 RDVs</span>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.5rem" }}>
+                <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:ORANGE, display:"inline-block" }} />
+                <span style={{ fontSize:"0.72rem", color:GRAY_DIM, fontFamily:"'DM Sans',sans-serif" }}>3+ RDVs</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Liste des RDVs */}
+          <div>
+            <div style={{ display:"flex", gap:"0.4rem", marginBottom:"1rem", flexWrap:"wrap" }}>
+              {["actifs","en_attente","confirme","archives","tous"].map(f=>(
+                <button key={f} onClick={()=>setFilter(f)} style={{
+                  background:filter===f ? (f==="archives"?"rgba(255,255,255,0.12)":GREEN) : "rgba(255,255,255,0.05)",
+                  color:filter===f ? (f==="archives"?"#fff":NAVY) : (f==="archives"?GRAY:"#fff"),
+                  border:`1px solid ${f==="archives"?"rgba(255,255,255,0.15)":"rgba(109,212,0,0.2)"}`,
+                  padding:"0.35rem 0.85rem", fontSize:"0.8rem", cursor:"pointer",
+                  fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
+                }}>
+                  {f==="actifs" ? "✓ Actifs" : f==="archives" ? "🗃 Archives" : f==="tous" ? "Tous" : statutColors[f]?.label||f}
+                </button>
+              ))}
+            </div>
+            {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
+            <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+              <table>
+                <thead>
+                  <tr style={{ background:"rgba(109,212,0,0.04)" }}>
+                    {["Client","Téléphone","Appareil","Date","Heure","Statut","Action"].map(h=>(
+                      <th key={h} style={thStyle}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r:any)=>(
+                    <tr key={r.id}
+                      onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
+                      onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+                      <td style={{...tdStyle, fontWeight:500}}>{r.prenom} {r.nom}</td>
+                      <td style={{...tdStyle, color:GRAY}}>{r.telephone || "—"}</td>
+                      <td style={tdStyle}>{r.type_appareil}</td>
+                      <td style={{...tdStyle, color:GRAY}}>{r.date_rdv}</td>
+                      <td style={tdStyle}>
+                        <span style={{background:GREEN_DIM,color:GREEN,padding:"0.2rem 0.5rem",fontWeight:600,fontSize:"0.82rem"}}>
+                          {r.heure || "—"}
+                        </span>
+                      </td>
+                      <td style={tdStyle}><Badge statut={r.statut}/></td>
+                      <td style={tdStyle}>
+                        <select value={r.statut} onChange={e=>changeStatut(r.id,e.target.value)}
+                          style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                            fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
+                          <option value="en_attente">En attente</option>
+                          <option value="confirme">Confirmer</option>
+                          <option value="complete">Compléter</option>
+                          <option value="annule">Annuler</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filtered.length === 0 && (
+                <div style={{ textAlign:"center", padding:"3rem", color:GRAY }}>
+                  {selDate ? `Aucun rendez-vous le ${selDate}.` : "Aucun rendez-vous pour ce filtre."}
+                </div>
+              )}
+            </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      <style>{`
+        @media (max-width: 700px) {
+          .cal-grid { grid-template-columns: 1fr !important; }
+          .rdv-grid  { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 }

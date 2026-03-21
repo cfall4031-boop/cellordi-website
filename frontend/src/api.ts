@@ -45,14 +45,22 @@ export const authApi = {
 
 // ── RENDEZ-VOUS ──────────────────────────────────────────────
 export const rdvApi = {
-  getAll:      (params: Record<string, string> = {}) =>
+  getAll:            (params: Record<string, string> = {}) =>
     req<{ rendezvous: any[] }>("GET", "/rendezvous" + toQuery(params)),
-  getOne:      (id: number) => req<any>("GET", `/rendezvous/${id}`),
-  create:      (data: Record<string, unknown>) =>
+  getOne:            (id: number) => req<any>("GET", `/rendezvous/${id}`),
+  create:            (data: Record<string, unknown>) =>
     req<{ message: string; id: number; numero_ticket?: string | null }>("POST", "/rendezvous", data, true),
-  updateStatut:(id: number, statut: string) =>
+  createAdmin:       (data: Record<string, unknown>) =>
+    req<{ message: string; id: number; numero_ticket?: string | null }>("POST", "/rendezvous", data),
+  updateStatut:      (id: number, statut: string) =>
     req<{ message: string }>("PATCH", `/rendezvous/${id}/statut`, { statut }),
-  delete:      (id: number) => req<{ message: string }>("DELETE", `/rendezvous/${id}`),
+  delete:            (id: number) => req<{ message: string }>("DELETE", `/rendezvous/${id}`),
+  getDisponibilites: () =>
+    req<{ disponibilites: { id: number; jour: number; heure: string; actif: number }[] }>("GET", "/rendezvous/disponibilites"),
+  toggleSlot:        (jour: number, heure: string) =>
+    req<{ slot: { jour: number; heure: string; actif: number } }>("POST", "/rendezvous/disponibilites", { jour, heure }),
+  getSlots:          (date: string) =>
+    req<{ slots: string[] }>("GET", `/rendezvous/slots?date=${date}`),
 };
 
 // ── TICKETS ──────────────────────────────────────────────────

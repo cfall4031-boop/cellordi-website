@@ -92,6 +92,39 @@ router.post("/", (req, res) => {
   });
 });
 
+// GET /api/rendezvous/disponibilites — Grille horaires (admin)
+router.get("/disponibilites", auth, (req, res) => {
+  const rows = db.prepare("SELECT * FROM horaires_dispo ORDER BY jour, heure").all();
+  res.json({ disponibilites: rows });
+});
+
+// POST /api/rendezvous/disponibilites — Toggle un créneau ON/OFF (admin)
+router.post("/disponibilites", auth, (req, res) => {
+  const { jour, heure } = req.body;
+  if (!jour || !heure) return res.status(400).json({ erreur: "jour et heure requis." });
+  const existing = db.prepare("SELECT * FROM horaires_dispo WHERE jour = ? AND heure = ?").get(jour, heure);
+  if (existing) {
+    db.prepare("UPDATE horaires_dispo SET actif = ? WHERE jour = ? AND heure = ?").run(existing.actif ? 0 : 1, jour, heure);
+  } else {
+    db.prepare("INSERT INTO horaires_dispo (jour, heure, actif) VALUES (?, ?, 1)").run(jour, heure);
+  }
+  const updated = db.prepare("SELECT * FROM horaires_dispo WHERE jour = ? AND heure = ?").get(jour, heure);
+  res.json({ slot: updated });
+});
+
+// GET /api/rendezvous/slots?date=YYYY-MM-DD — Créneaux actifs pour une date (admin)
+router.get("/slots", auth, (req, res) => {
+  const { date } = req.query;
+  if (!date) return res.status(400).json({ erreur: "date requise (YYYY-MM-DD)." });
+  const d = new Date(date + "T12:00:00");
+  // getDay(): 0=Sun,1=Mon...6=Sat → map to our 1=Lun...6=Sam
+  const dayJs = d.getDay(); // 0=Sun
+  const jour = dayJs === 0 ? null : dayJs; // Sun = fermé
+  if (!jour) return res.json({ slots: [] });
+  const slots = db.prepare("SELECT heure FROM horaires_dispo WHERE jour = ? AND actif = 1 ORDER BY heure").all(jour);
+  res.json({ slots: slots.map(s => s.heure) });
+});
+
 // GET /api/rendezvous — Lister tous les RDV (admin)
 router.get("/", auth, (req, res) => {
   const { statut, date } = req.query;
