@@ -5,6 +5,28 @@ import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY,
 import { dechargesApi } from "../../api";
 import { CONSENT_KEY } from "./CookieBanner";
 
+// ── Helpers pour la politique de service ────────────────────────────────────
+function PolicySection({ title, children, last = false }: { title: string; children: React.ReactNode; last?: boolean }) {
+  return (
+    <div style={{ marginBottom: last ? 0 : "1rem", paddingBottom: last ? 0 : "1rem", borderBottom: last ? "none" : "1px solid rgba(255,255,255,0.06)" }}>
+      <p style={{ fontFamily: "inherit", fontWeight: 700, fontSize: "0.8rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.5rem" }}>{title}</p>
+      <div style={{ fontSize: "0.82rem", color: "#8899aa", lineHeight: 1.65 }}>{children}</div>
+    </div>
+  );
+}
+function PolicyList({ items }: { items: string[] }) {
+  return (
+    <ul style={{ margin: "0.3rem 0 0", padding: 0, listStyle: "none" }}>
+      {items.map((item, i) => (
+        <li key={i} style={{ paddingLeft: "1rem", position: "relative", marginBottom: "0.25rem", fontSize: "0.82rem", color: "#8899aa", lineHeight: 1.6 }}>
+          <span style={{ position: "absolute", left: 0, color: "#6dd400" }}>·</span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function Decharge() {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
@@ -276,16 +298,133 @@ export function Decharge() {
                       {t("decharge.step3.title")}
                     </h3>
 
-                    {(["cond1", "cond2", "cond3"] as const).map((key, idx) => {
-                      const names = ["acceptConditions", "acceptDiagnostic", "acceptFacturation"];
-                      return (
-                        <label key={key} style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", cursor: "pointer", marginBottom: "1rem", fontFamily: FONT_BODY, fontSize: "0.9rem", color: GRAY }}>
-                          <input type="checkbox" name={names[idx]} checked={(form as any)[names[idx]]} onChange={handleChange}
-                            style={{ width: "18px", height: "18px", accentColor: GREEN, cursor: "pointer", marginTop: "2px", flexShrink: 0 }} />
-                          {t(`decharge.step3.${key}`)}
-                        </label>
-                      );
-                    })}
+                    {/* ── Politique de service scrollable ── */}
+                    <div style={{
+                      maxHeight: "320px", overflowY: "auto",
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(109,212,0,0.18)",
+                      padding: "1.25rem 1.4rem",
+                      marginBottom: "1.5rem",
+                      fontFamily: FONT_BODY,
+                    }}>
+                      {/* En-tête */}
+                      <div style={{ textAlign: "center", marginBottom: "1.1rem", paddingBottom: "0.9rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                        <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "0.88rem", color: GREEN, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 0.2rem" }}>
+                          📄 Politique de Service
+                        </p>
+                        <p style={{ color: WHITE, fontWeight: 700, fontSize: "0.85rem", margin: "0 0 0.15rem" }}>Les Entreprises Fall-C inc.</p>
+                        <p style={{ color: GRAY, fontSize: "0.78rem", margin: 0 }}>5050 QC-132 #203, Sainte-Catherine, QC J5C 1L4 · Version en vigueur : 18/03/2026</p>
+                      </div>
+
+                      {/* Section 1 */}
+                      <PolicySection title="1. Champ d'application">
+                        <p>La présente politique s'applique à l'ensemble des services de diagnostic et de réparation offerts par Les Entreprises Fall-C inc. pour les appareils électroniques suivants :</p>
+                        <PolicyList items={["Téléphones intelligents (toutes marques)", "Tablettes numériques", "Ordinateurs portables et de bureau", "Consoles de jeux vidéo", "Tout autre appareil électronique accepté par le prestataire"]} />
+                      </PolicySection>
+
+                      {/* Section 2 */}
+                      <PolicySection title="2. Processus de service">
+                        <PolicyList items={[
+                          "① Dépôt : Le client dépose son appareil et complète la fiche de réception. L'état physique est consigné et des photos peuvent être prises.",
+                          "② Diagnostic : Le technicien effectue les tests nécessaires afin d'évaluer la panne. Un devis est ensuite soumis au client.",
+                          "③ Autorisation : Aucune réparation n'est entreprise sans l'accord écrit du client sur le devis (prix + délai estimé).",
+                          "④ Réparation : Les travaux sont réalisés selon les standards du prestataire avec des pièces certifiées ou compatibles selon disponibilité et choix du client.",
+                          "⑤ Remise : L'appareil est testé avant remise. La facture et les conditions de garantie sont remises au client.",
+                        ]} />
+                      </PolicySection>
+
+                      {/* Section 3 */}
+                      <PolicySection title="3. Frais de diagnostic et acompte">
+                        <p><strong style={{ color: WHITE }}>Diagnostic :</strong></p>
+                        <PolicyList items={[
+                          "Gratuit si la réparation est effectuée.",
+                          "Des frais fixes peuvent s'appliquer si le client refuse la réparation après diagnostic.",
+                        ]} />
+                        <p style={{ marginTop: "0.5rem" }}><strong style={{ color: WHITE }}>Acompte pour commande de pièces :</strong></p>
+                        <PolicyList items={[
+                          "Un acompte peut être exigé avant toute commande de pièce spéciale.",
+                          "Les pièces commandées spécialement sont non remboursables en cas d'annulation après commande, sauf erreur du prestataire ou pièce confirmée défectueuse.",
+                          "Si le client refuse la réparation après commande, il demeure redevable des frais engagés.",
+                        ]} />
+                      </PolicySection>
+
+                      {/* Section 4 */}
+                      <PolicySection title="4. Garantie">
+                        <p style={{ marginBottom: "0.6rem" }}>Avant toute réparation, Les Entreprises Fall-C inc. présentent systématiquement au client les options de pièces disponibles et l'informent clairement du statut de garantie de chaque pièce.</p>
+                        <div style={{ background: "rgba(255,255,255,0.04)", padding: "0.7rem 1rem", marginBottom: "0.7rem", fontSize: "0.78rem" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "0.3rem 0.8rem", color: GRAY }}>
+                            <span style={{ color: WHITE, fontWeight: 700 }}>Type de pièce</span>
+                            <span style={{ color: WHITE, fontWeight: 700 }}>Pièce</span>
+                            <span style={{ color: WHITE, fontWeight: 700 }}>Main-d'œuvre</span>
+                            <span>Pièce certifiée (garantie fournisseur)</span>
+                            <span style={{ color: GREEN }}>14 jours</span>
+                            <span style={{ color: GREEN }}>30 jours</span>
+                            <span>Pièce non certifiée (non garantie fournisseur)</span>
+                            <span style={{ color: "#ff6b6b" }}>Aucune</span>
+                            <span style={{ color: GREEN }}>30 jours</span>
+                          </div>
+                        </div>
+                        <p><strong style={{ color: WHITE }}>La garantie ne couvre jamais :</strong></p>
+                        <PolicyList items={[
+                          "Dommages physiques, chocs ou bris causés par le client après la réparation",
+                          "Dommages liquides ou oxydation survenant après l'intervention",
+                          "Surtension électrique, usure normale ou mauvaise utilisation",
+                          "Intervention effectuée par un tiers après notre réparation",
+                          "Tout problème non directement lié à l'intervention effectuée",
+                        ]} />
+                        <p style={{ marginTop: "0.5rem", fontSize: "0.78rem", color: GRAY }}>Microsoudure / carte-mère et dommages liquides : réparation au meilleur effort, durée de garantie précisée sur le devis selon le cas.</p>
+                      </PolicySection>
+
+                      {/* Section 5 */}
+                      <PolicySection title="5. Risques acceptés par le client">
+                        <PolicyList items={[
+                          "État préexistant : L'appareil peut présenter des dommages non visibles (chute, torsion, oxydation, réparation antérieure, pièces non d'origine) pouvant entraîner des complications ou une impossibilité de réparation.",
+                          "Dommages liquides : Si présence d'humidité, l'appareil peut cesser de fonctionner à tout moment, même après intervention. La réparation est réalisée selon un principe de « meilleur effort ».",
+                          "Pièces compatibles : Des pièces OEM ou compatibles peuvent être utilisées selon disponibilité et budget. De légères différences esthétiques (couleur, teinte, luminosité) peuvent exister.",
+                          "Données personnelles : Le client est seul responsable de ses sauvegardes. Une intervention peut entraîner une perte de données. Le prestataire n'est pas responsable de toute perte de données.",
+                          "Récupération de données : Aucune garantie de résultat. Toute récupération dépend de l'état du support (disque, SSD, carte-mère).",
+                        ]} />
+                      </PolicySection>
+
+                      {/* Section 6 */}
+                      <PolicySection title="6. Appareil non récupéré">
+                        <PolicyList items={[
+                          "Le client s'engage à récupérer son appareil dans un délai de 30 jours suivant l'avis « prêt ».",
+                          "Après 30 jours sans nouvelles, des frais d'entreposage peuvent s'appliquer.",
+                          "Après 60 jours, l'appareil peut être considéré abandonné et traité (recyclage/démontage) afin de couvrir les frais, dans la limite permise par les lois applicables.",
+                        ]} />
+                      </PolicySection>
+
+                      {/* Section 7 */}
+                      <PolicySection title="7. Limitation de responsabilité">
+                        <p>Dans la mesure permise par la loi, Les Entreprises Fall-C inc. ne peut être tenue responsable pour :</p>
+                        <PolicyList items={[
+                          "La perte de données, photos, fichiers ou mots de passe.",
+                          "Les défaillances préexistantes ou ultérieures non directement causées par l'intervention.",
+                          "Les dommages indirects (perte d'usage, perte de revenus, etc.).",
+                        ]} />
+                        <p style={{ marginTop: "0.5rem" }}>Toute responsabilité du prestataire, lorsqu'applicable, est limitée au montant payé pour l'intervention visée.</p>
+                      </PolicySection>
+
+                      {/* Section 8 */}
+                      <PolicySection title="8. Confidentialité et communications" last>
+                        <p>Les informations personnelles collectées (nom, coordonnées, description de l'appareil) sont utilisées exclusivement aux fins de la prestation de service et ne sont pas partagées avec des tiers.</p>
+                        <p style={{ marginTop: "0.5rem" }}>Le client autorise le prestataire à le contacter par appel, SMS ou courriel pour : statut du dossier, devis, autorisation de réparation, avis de récupération et suivi de garantie.</p>
+                      </PolicySection>
+                    </div>
+
+                    {/* ── Cases à cocher ── */}
+                    {[
+                      { name: "acceptConditions",   text: "J'ai lu et j'accepte la Politique de Service ci-dessus dans son intégralité (garanties, risques, limitations de responsabilité)." },
+                      { name: "acceptDiagnostic",    text: "J'autorise le diagnostic de mon appareil. Je comprends que des frais peuvent s'appliquer si je refuse la réparation après diagnostic." },
+                      { name: "acceptFacturation",   text: "J'autorise la réparation selon le devis qui me sera présenté et j'accepte les conditions de garantie applicables à ma réparation." },
+                    ].map(({ name, text }) => (
+                      <label key={name} style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", cursor: "pointer", marginBottom: "1rem", fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY }}>
+                        <input type="checkbox" name={name} checked={(form as any)[name]} onChange={handleChange}
+                          style={{ width: "18px", height: "18px", accentColor: GREEN, cursor: "pointer", marginTop: "2px", flexShrink: 0 }} />
+                        {text}
+                      </label>
+                    ))}
 
                     <div style={{ marginTop: "1.5rem", marginBottom: "0.5rem" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
@@ -320,6 +459,10 @@ export function Decharge() {
                           {t("decharge.step3.sign_hint")}
                         </p>
                       )}
+                      {/* Note légale */}
+                      <p style={{ fontFamily: FONT_BODY, fontSize: "0.75rem", color: GRAY_DIM, marginTop: "0.6rem", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "0.6rem", lineHeight: 1.5 }}>
+                        En signant, le client reconnaît avoir lu et accepté la Politique de Service des Entreprises Fall-C inc. — Document officiel, version 18/03/2026.
+                      </p>
                     </div>
 
                     {erreur && (
