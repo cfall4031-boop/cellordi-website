@@ -471,12 +471,75 @@ function Rendez_vous() {
         {/* ── Formulaire Nouveau RDV ── */}
         {showForm && (
           <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.2)", padding:"1.5rem", marginBottom:"1.5rem" }}>
-            <p style={{ color:GREEN, fontWeight:700, fontSize:"0.85rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"1.2rem" }}>
+            <p style={{ color:GREEN, fontWeight:700, fontSize:"0.85rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"1.5rem" }}>
               ＋ Créer un rendez-vous
             </p>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem" }} className="rdv-grid">
-              {/* Colonne gauche — client */}
-              <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
+
+            {/* ── ÉTAPE 1 : Date + Créneau ── */}
+            <div style={{ background:"rgba(109,212,0,0.04)", border:"1px solid rgba(109,212,0,0.15)", padding:"1.2rem", marginBottom:"1.2rem" }}>
+              <p style={{ color:GREEN, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
+                📅 Étape 1 — Date &amp; Créneau
+              </p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem", alignItems:"start" }} className="rdv-grid">
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif" }}>Date du rendez-vous *</label>
+                  <input type="date" value={newRdv.date}
+                    onChange={e => { setSlots([]); setNewRdv(p=>({...p,date:e.target.value,heure:""})); }}
+                    min={formatDate(today)}
+                    style={{ width:"100%", background:"rgba(255,255,255,0.06)", border:`2px solid ${newRdv.date ? GREEN+"55" : "rgba(109,212,0,0.2)"}`,
+                      color:"#fff", padding:"0.6rem 0.75rem", fontSize:"0.95rem", fontFamily:"'DM Sans',sans-serif",
+                      boxSizing:"border-box" as const, outline:"none", colorScheme:"dark" }} />
+                </div>
+                <div>
+                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif" }}>
+                    Créneau horaire *
+                    {newRdv.date && slots.length > 0 && <span style={{ color:GREEN, marginLeft:"0.5rem" }}>({slots.length} disponibles)</span>}
+                  </label>
+                  {!newRdv.date && (
+                    <p style={{ color:GRAY_DIM, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif", marginTop:"0.25rem" }}>
+                      ← Choisissez d'abord une date
+                    </p>
+                  )}
+                  {newRdv.date && slots.length === 0 && (
+                    <p style={{ color:ORANGE, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif", marginTop:"0.25rem" }}>
+                      ⚠ Aucun créneau disponible ce jour (fermé).
+                    </p>
+                  )}
+                  {slots.length > 0 && (
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:"0.45rem" }}>
+                      {slots.map(h=>(
+                        <button key={h} type="button" onClick={()=>setNewRdv(p=>({...p,heure:h}))}
+                          style={{
+                            background: newRdv.heure===h ? GREEN : "rgba(255,255,255,0.06)",
+                            color: newRdv.heure===h ? NAVY : GRAY,
+                            border: `2px solid ${newRdv.heure===h ? GREEN : "rgba(255,255,255,0.12)"}`,
+                            padding:"0.45rem 0.9rem", fontSize:"0.9rem", cursor:"pointer",
+                            fontFamily:"'DM Sans',sans-serif", fontWeight: newRdv.heure===h ? 700 : 400,
+                            transition:"all 0.12s",
+                          }}>
+                          {h}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {newRdv.date && newRdv.heure && (
+                <div style={{ marginTop:"0.9rem", background:"rgba(109,212,0,0.1)", border:"1px solid rgba(109,212,0,0.3)", padding:"0.6rem 0.9rem", display:"inline-flex", gap:"0.5rem", alignItems:"center" }}>
+                  <span style={{ fontSize:"1rem" }}>✅</span>
+                  <span style={{ color:GREEN, fontWeight:700, fontSize:"0.88rem", fontFamily:"'DM Sans',sans-serif" }}>
+                    RDV le {newRdv.date} à {newRdv.heure}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* ── ÉTAPE 2 : Infos client ── */}
+            <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", padding:"1.2rem" }}>
+              <p style={{ color:GRAY, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
+                👤 Étape 2 — Informations client
+              </p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid">
                 {([["Prénom *","prenom","text","Jean"],["Nom *","nom","text","Dupont"],
                   ["Email *","email","email","client@email.com"],["Téléphone","telephone","tel","(514) 000-0000"]]
                 ).map(([label,name,type,ph])=>(
@@ -488,6 +551,8 @@ function Rendez_vous() {
                         color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
                   </div>
                 ))}
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid">
                 <div>
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Service</label>
                   <select value={newRdv.service} onChange={e=>setNewRdv(p=>({...p,service:e.target.value}))}
@@ -503,56 +568,16 @@ function Rendez_vous() {
                     style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
                       color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
                 </div>
-                <div>
-                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Description / Problème</label>
-                  <textarea value={newRdv.description} onChange={e=>setNewRdv(p=>({...p,description:e.target.value}))}
-                    rows={3} placeholder="Décrire le problème…"
-                    style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
-                      color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", resize:"vertical" as const, boxSizing:"border-box" as const, outline:"none" }} />
-                </div>
               </div>
-              {/* Colonne droite — date + créneau */}
-              <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>
-                <div>
-                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Date du rendez-vous *</label>
-                  <input type="date" value={newRdv.date} onChange={e=>setNewRdv(p=>({...p,date:e.target.value,heure:""}))}
-                    min={formatDate(today)}
-                    style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
-                      color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none", colorScheme:"dark" }} />
-                </div>
-                <div>
-                  <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>
-                    Créneau horaire {newRdv.date ? `(${slots.length} disponible${slots.length!==1?"s":""})` : "— choisissez une date d'abord"}
-                  </label>
-                  {newRdv.date && slots.length === 0 && (
-                    <p style={{ color:ORANGE, fontSize:"0.8rem", fontFamily:"'DM Sans',sans-serif" }}>⚠ Aucun créneau actif ce jour-là. Configurez les disponibilités ci-dessus.</p>
-                  )}
-                  {slots.length > 0 && (
-                    <div style={{ display:"flex", flexWrap:"wrap", gap:"0.5rem" }}>
-                      {slots.map(h=>(
-                        <button key={h} onClick={()=>setNewRdv(p=>({...p,heure:h}))}
-                          style={{ background:newRdv.heure===h ? GREEN : "rgba(255,255,255,0.05)",
-                            color:newRdv.heure===h ? NAVY : GRAY,
-                            border:`1px solid ${newRdv.heure===h ? GREEN : "rgba(255,255,255,0.12)"}`,
-                            padding:"0.4rem 0.8rem", fontSize:"0.85rem", cursor:"pointer",
-                            fontFamily:"'DM Sans',sans-serif", fontWeight:newRdv.heure===h?700:400 }}>
-                          {h}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {/* Mini récap */}
-                {(newRdv.prenom || newRdv.date) && (
-                  <div style={{ background:"rgba(109,212,0,0.06)", border:"1px solid rgba(109,212,0,0.15)", padding:"0.75rem", marginTop:"0.5rem" }}>
-                    <p style={{ color:GREEN, fontSize:"0.78rem", fontWeight:700, marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif" }}>RÉCAPITULATIF</p>
-                    {newRdv.prenom && <p style={{ color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif" }}>👤 {newRdv.prenom} {newRdv.nom}</p>}
-                    {newRdv.date   && <p style={{ color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif" }}>📅 {newRdv.date}{newRdv.heure ? ` à ${newRdv.heure}` : ""}</p>}
-                    {newRdv.service&& <p style={{ color:GRAY, fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif" }}>🔧 {newRdv.service}</p>}
-                  </div>
-                )}
+              <div>
+                <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Description / Problème</label>
+                <textarea value={newRdv.description} onChange={e=>setNewRdv(p=>({...p,description:e.target.value}))}
+                  rows={3} placeholder="Décrire le problème…"
+                  style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
+                    color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", resize:"vertical" as const, boxSizing:"border-box" as const, outline:"none" }} />
               </div>
             </div>
+
             {createErr && <p style={{ color:RED, fontSize:"0.85rem", marginTop:"1rem", fontFamily:"'DM Sans',sans-serif" }}>⚠ {createErr}</p>}
             {createOk  && <p style={{ color:GREEN, fontSize:"0.85rem", marginTop:"1rem", fontFamily:"'DM Sans',sans-serif" }}>{createOk}</p>}
             <div style={{ display:"flex", gap:"0.75rem", marginTop:"1.25rem" }}>
@@ -562,7 +587,7 @@ function Rendez_vous() {
                   fontFamily:"'DM Sans',sans-serif" }}>
                 {creating ? "Création…" : "✓ Créer le rendez-vous"}
               </button>
-              <button onClick={()=>{ setShowForm(false); setCreateErr(null); setCreateOk(null); setNewRdv(emptyForm); }}
+              <button onClick={()=>{ setShowForm(false); setCreateErr(null); setCreateOk(null); setNewRdv(emptyForm); setSlots([]); }}
                 style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
                   padding:"0.55rem 1rem", fontSize:"0.85rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 Annuler
