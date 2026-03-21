@@ -61,6 +61,8 @@ export const rdvApi = {
     req<{ slot: { jour: number; heure: string; actif: number } }>("POST", "/rendezvous/disponibilites", { jour, heure }),
   getSlots:          (date: string) =>
     req<{ slots: string[] }>("GET", `/rendezvous/slots?date=${date}`),
+  resetDisponibilites: () =>
+    req<{ message: string; disponibilites: any[] }>("POST", "/rendezvous/disponibilites/reset"),
 };
 
 // ── TICKETS ──────────────────────────────────────────────────

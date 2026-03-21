@@ -112,7 +112,15 @@ router.post("/disponibilites", auth, (req, res) => {
   res.json({ slot: updated });
 });
 
+// POST /api/rendezvous/disponibilites/reset — Réactiver tous les créneaux (admin)
+router.post("/disponibilites/reset", auth, (req, res) => {
+  db.prepare("UPDATE horaires_dispo SET actif = 1").run();
+  const rows = db.prepare("SELECT * FROM horaires_dispo ORDER BY jour, heure").all();
+  res.json({ message: "Tous les créneaux ont été réactivés.", disponibilites: rows });
+});
+
 // GET /api/rendezvous/slots?date=YYYY-MM-DD — Créneaux actifs pour une date (public)
+// Exclut automatiquement les créneaux déjà réservés pour cette date (sauf si annulé)
 router.get("/slots", (req, res) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ erreur: "date requise (YYYY-MM-DD)." });
@@ -121,8 +129,21 @@ router.get("/slots", (req, res) => {
   const dayJs = d.getDay(); // 0=Sun
   const jour = dayJs === 0 ? null : dayJs; // Sun = fermé
   if (!jour) return res.json({ slots: [] });
-  const slots = db.prepare("SELECT heure FROM horaires_dispo WHERE jour = ? AND actif = 1 ORDER BY heure").all(jour);
-  res.json({ slots: slots.map(s => s.heure) });
+
+  // Créneaux actifs pour ce jour de semaine
+  const activeSlots = db.prepare(
+    "SELECT heure FROM horaires_dispo WHERE jour = ? AND actif = 1 ORDER BY heure"
+  ).all(jour);
+
+  // Créneaux déjà réservés ce jour précis (RDVs non annulés)
+  const booked = db.prepare(
+    "SELECT heure FROM rendezvous WHERE date_rdv = ? AND statut != 'annule' AND heure IS NOT NULL"
+  ).all(date);
+  const bookedSet = new Set(booked.map(s => s.heure));
+
+  // Retourner uniquement les créneaux libres
+  const available = activeSlots.filter(s => !bookedSet.has(s.heure));
+  res.json({ slots: available.map(s => s.heure) });
 });
 
 // GET /api/rendezvous — Lister tous les RDV (admin)

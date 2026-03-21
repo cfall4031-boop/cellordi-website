@@ -348,6 +348,7 @@ function Rendez_vous() {
 
   // ── Tableau dispo ───────────────────────────────────────────────────────────
   const [showDispo, setShowDispo] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const HEURES = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
   const JOURS_DISPO = [1,2,3,4,5,6]; // Lun–Sam
 
@@ -599,9 +600,26 @@ function Rendez_vous() {
         {/* ── Tableau disponibilités ── */}
         {showDispo && (
           <div style={{ background:NAVY_MID, border:"1px solid rgba(255,255,255,0.1)", padding:"1.25rem", marginBottom:"1.5rem", overflowX:"auto" }}>
-            <p style={{ color:GRAY, fontWeight:700, fontSize:"0.82rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
-              🗓 Tableau de disponibilités — cliquez pour activer / désactiver
-            </p>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"1rem", flexWrap:"wrap", gap:"0.5rem" }}>
+              <p style={{ color:GRAY, fontWeight:700, fontSize:"0.82rem", textTransform:"uppercase", letterSpacing:"0.08em", margin:0, fontFamily:"'DM Sans',sans-serif" }}>
+                🗓 Tableau de disponibilités — cliquez pour activer / désactiver
+              </p>
+              <button
+                disabled={resetting}
+                onClick={async () => {
+                  setResetting(true);
+                  try {
+                    const res = await rdvApi.resetDisponibilites() as any;
+                    setDispos(res.disponibilites || []);
+                  } catch(e) { console.error(e); }
+                  finally { setResetting(false); }
+                }}
+                style={{ background:"rgba(109,212,0,0.12)", color:GREEN, border:`1px solid ${GREEN}44`,
+                  padding:"0.35rem 0.9rem", fontSize:"0.78rem", cursor:resetting?"not-allowed":"pointer",
+                  fontFamily:"'DM Sans',sans-serif", fontWeight:600, opacity:resetting?0.6:1 }}>
+                {resetting ? "…" : "✅ Tout activer"}
+              </button>
+            </div>
             <table style={{ borderCollapse:"collapse", width:"100%", minWidth:"500px" }}>
               <thead>
                 <tr>
