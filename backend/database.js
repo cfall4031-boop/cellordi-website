@@ -131,25 +131,30 @@ db.exec(`
   );
 `);
 
-// Seed par défaut si la table est vide
+// Horaires officiels : Lun–Ven 10h–19h, Sam 11h–18h, Dim fermé
 function seedHoraires() {
   const count = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo").get();
   if (count.c > 0) return;
-  const heures = ["09:00","10:00","11:00","13:00","14:00","15:00","16:00","17:00","18:00"];
+  const heuresLV  = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
+  const heuresSam = ["11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
   const insert = db.prepare("INSERT OR IGNORE INTO horaires_dispo (jour, heure, actif) VALUES (?, ?, ?)");
   const insertMany = db.transaction(() => {
-    for (let jour = 1; jour <= 5; jour++) {         // Lun–Ven : tous actifs
-      for (const h of heures) insert.run(jour, h, 1);
+    for (let jour = 1; jour <= 5; jour++) {   // Lun–Ven actifs 10h–19h
+      for (const h of heuresLV) insert.run(jour, h, 1);
     }
-    for (const h of ["09:00","10:00","11:00","13:00"]) { // Sam : 9h–13h actifs
+    for (const h of heuresSam) {              // Sam actifs 11h–18h
       insert.run(6, h, 1);
-    }
-    for (const h of ["14:00","15:00","16:00","17:00","18:00"]) { // Sam : 14h+ fermés
-      insert.run(6, h, 0);
     }
   });
   insertMany();
-  console.log("✅ Horaires de disponibilité initialisés par défaut.");
+  console.log("✅ Horaires initialisés : Lun–Ven 10h–19h, Sam 11h–18h, Dim fermé.");
+}
+
+// Migration : si l'ancien schedule (09:00 actif) est détecté, effacer et re-seeder
+const hasOldSchedule = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '09:00' AND actif = 1").get();
+if (hasOldSchedule.c > 0) {
+  db.prepare("DELETE FROM horaires_dispo").run();
+  console.log("🔄 Anciens horaires détectés — réinitialisation aux nouveaux horaires.");
 }
 seedHoraires();
 

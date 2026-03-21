@@ -112,8 +112,8 @@ router.post("/disponibilites", auth, (req, res) => {
   res.json({ slot: updated });
 });
 
-// GET /api/rendezvous/slots?date=YYYY-MM-DD — Créneaux actifs pour une date (admin)
-router.get("/slots", auth, (req, res) => {
+// GET /api/rendezvous/slots?date=YYYY-MM-DD — Créneaux actifs pour une date (public)
+router.get("/slots", (req, res) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ erreur: "date requise (YYYY-MM-DD)." });
   const d = new Date(date + "T12:00:00");

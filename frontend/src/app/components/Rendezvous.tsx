@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
@@ -10,8 +10,10 @@ export function Rendezvous() {
   const [form, setForm] = useState({
     nom: "", prenom: "", email: "", telephone: "",
     service: "", appareil: "", probleme: "",
-    date: "", dispo: "", urgence: false,
+    date: "", heure: "", urgence: false,
   });
+  const [slots, setSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [ticketNumero, setTicketNumero] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,17 @@ export function Rendezvous() {
   const [hovBtn, setHovBtn] = useState(false);
 
   const SERVICES = t("rdv.services", { returnObjects: true }) as string[];
-  const DISPOS = t("rdv.dispos", { returnObjects: true }) as string[];
+
+  // Charger les créneaux disponibles quand la date change
+  useEffect(() => {
+    if (!form.date) { setSlots([]); return; }
+    setSlotsLoading(true);
+    setForm(prev => ({ ...prev, heure: "" })); // reset créneau si date change
+    rdvApi.getSlots(form.date)
+      .then((d: any) => setSlots(d.slots || []))
+      .catch(() => setSlots([]))
+      .finally(() => setSlotsLoading(false));
+  }, [form.date]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -32,6 +44,11 @@ export function Rendezvous() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErreur("");
+    // Validation créneau
+    if (form.date && slots.length > 0 && !form.heure) {
+      setErreur("Veuillez sélectionner un créneau horaire.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await rdvApi.create({
@@ -41,7 +58,8 @@ export function Rendezvous() {
         telephone: form.telephone,
         type_appareil: form.service || form.appareil || "Non spécifié",
         date_rdv: form.date,
-        description: `Service: ${form.service} | Appareil: ${form.appareil} | Dispo: ${form.dispo}${form.urgence ? " | URGENT" : ""} | ${form.probleme}`,
+        heure: form.heure || undefined,
+        description: `Service: ${form.service} | Appareil: ${form.appareil}${form.urgence ? " | URGENT" : ""} | ${form.probleme}`,
       });
       setTicketNumero(res?.numero_ticket || null);
       setSent(true);
@@ -122,7 +140,8 @@ export function Rendezvous() {
                   setSent(false);
                   setTicketNumero(null);
                   setErreur("");
-                  setForm({ nom: "", prenom: "", email: "", telephone: "", service: "", appareil: "", probleme: "", date: "", dispo: "", urgence: false });
+                  setForm({ nom: "", prenom: "", email: "", telephone: "", service: "", appareil: "", probleme: "", date: "", heure: "", urgence: false });
+                  setSlots([]);
                 }}
                 style={{ ...btn(GREEN, NAVY), marginTop: "0.5rem" }}
               >
@@ -179,21 +198,49 @@ export function Rendezvous() {
                 <textarea name="probleme" value={form.probleme} onChange={handleChange} placeholder={t("rdv.placeholders.probleme")} required rows={3} style={{ ...inputStyle, resize: "vertical", fontFamily: FONT_BODY }} />
               </div>
 
-              {/* Date + Availability */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                <div>
-                  <label style={labelStyle}>{t("rdv.fields.date")}</label>
-                  <input name="date" type="date" value={form.date} onChange={handleChange} required style={{ ...inputStyle, colorScheme: "dark" }} />
-                </div>
-                <div>
-                  <label style={labelStyle}>{t("rdv.fields.dispo")}</label>
-                  <select name="dispo" value={form.dispo} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="">{t("rdv.fields.choose")}</option>
-                    {DISPOS.map((d) => (
-                      <option key={d} value={d} style={{ background: NAVY }}>{d}</option>
+              {/* Date */}
+              <div style={{ marginBottom: "1.2rem" }}>
+                <label style={labelStyle}>{t("rdv.fields.date")}</label>
+                <input name="date" type="date" value={form.date} onChange={handleChange} required
+                  style={{ ...inputStyle, colorScheme: "dark", maxWidth: "300px" }} />
+              </div>
+
+              {/* Créneaux dynamiques */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={labelStyle}>{t("rdv.fields.dispo")}</label>
+                {!form.date && (
+                  <p style={{ color: GRAY_DIM, fontFamily: FONT_BODY, fontSize: "0.88rem", margin: "0.3rem 0 0" }}>
+                    ← Choisissez d'abord une date ci-dessus
+                  </p>
+                )}
+                {form.date && slotsLoading && (
+                  <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.88rem", margin: "0.3rem 0 0" }}>
+                    Chargement des créneaux…
+                  </p>
+                )}
+                {form.date && !slotsLoading && slots.length === 0 && (
+                  <p style={{ color: "#f59e0b", fontFamily: FONT_BODY, fontSize: "0.88rem", margin: "0.3rem 0 0" }}>
+                    ⚠ Aucun créneau disponible ce jour (fermé ou non configuré).
+                  </p>
+                )}
+                {slots.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.5rem" }}>
+                    {slots.map(h => (
+                      <button key={h} type="button" onClick={() => setForm(p => ({ ...p, heure: h }))}
+                        style={{
+                          background: form.heure === h ? GREEN : "rgba(255,255,255,0.04)",
+                          color: form.heure === h ? NAVY : GRAY,
+                          border: `1px solid ${form.heure === h ? GREEN : "rgba(109,212,0,0.25)"}`,
+                          padding: "0.45rem 1rem", fontSize: "0.9rem",
+                          cursor: "pointer", fontFamily: FONT_BODY,
+                          fontWeight: form.heure === h ? 700 : 400,
+                          transition: "all 0.15s",
+                        }}>
+                        {h}
+                      </button>
                     ))}
-                  </select>
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Urgency */}
