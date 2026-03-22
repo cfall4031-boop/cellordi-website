@@ -182,7 +182,7 @@ export function Hero() {
             style={{
               fontFamily: FONT_DISPLAY,
               fontWeight: 900,
-              fontSize: "clamp(3rem, 7.5vw, 6rem)",
+              fontSize: "clamp(2.4rem, 5.5vw, 4.8rem)",
               color: WHITE,
               lineHeight: 1.05,
               letterSpacing: "-0.01em",

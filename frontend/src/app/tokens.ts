@@ -11,8 +11,8 @@ export const GRAY_DIM   = "#3a3a52";   // subtle / dim text
 export const WHITE      = "#ffffff";
 
 // Typography
-export const FONT_DISPLAY = "'Barlow Condensed', sans-serif";
-export const FONT_BODY    = "'DM Sans', sans-serif";
+export const FONT_DISPLAY = "'Space Grotesk', sans-serif";
+export const FONT_BODY    = "'Space Grotesk', sans-serif";
 
 // Shared styles
 export const btn = (bg: string, color: string, extra: React.CSSProperties = {}): React.CSSProperties => ({
