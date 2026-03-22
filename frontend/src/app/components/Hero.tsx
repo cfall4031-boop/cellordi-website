@@ -50,6 +50,7 @@ export function Hero() {
           filter: "blur(60px)",
         }}
       />
+      {/* Image de fond (fallback subtil) */}
       <img
         src={HERO_IMG}
         alt={t("hero.img_alt")}
@@ -62,14 +63,37 @@ export function Hero() {
           objectFit: "cover",
           objectPosition: "center top",
           zIndex: 1,
-          opacity: 0.7,
+          opacity: 0.15,
         }}
       />
+
+      {/* Vidéo cinématique en fond */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center center",
+          zIndex: 1,
+          opacity: 0.38,
+          pointerEvents: "none",
+        }}
+      >
+        <source src="/videos/hero-bg.mp4" type="video/mp4" />
+      </video>
+
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(to bottom, ${NAVY}cc 0%, ${NAVY}88 40%, ${NAVY}aa 75%, ${NAVY} 100%)`,
+          background: `linear-gradient(to bottom, ${NAVY}99 0%, ${NAVY}55 40%, ${NAVY}77 75%, ${NAVY} 100%)`,
           zIndex: 2,
           pointerEvents: "none",
         }}
@@ -78,8 +102,22 @@ export function Hero() {
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(to right, ${NAVY}ee 0%, ${NAVY}99 50%, ${NAVY}55 100%)`,
+          background: `linear-gradient(to right, ${NAVY}dd 0%, ${NAVY}77 50%, ${NAVY}33 100%)`,
           zIndex: 2,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Fondu bas — fusion fluide avec la section suivante */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "40%",
+          background: `linear-gradient(to bottom, transparent 0%, ${NAVY} 100%)`,
+          zIndex: 4,
           pointerEvents: "none",
         }}
       />
@@ -238,7 +276,10 @@ export function Hero() {
         @media (max-width: 768px) {
           section#hero img {
             width: 100%;
-            opacity: 0.18;
+            opacity: 0.1;
+          }
+          section#hero video {
+            opacity: 0.22;
           }
         }
       `}</style>
