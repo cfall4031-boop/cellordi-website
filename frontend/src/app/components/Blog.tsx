@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router";
+import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 import { ARTICLES } from "../data/articles";
@@ -8,6 +9,7 @@ import { ARTICLES } from "../data/articles";
 const PREVIEW = ARTICLES.slice(0, 3);
 
 export function Blog() {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
@@ -17,10 +19,10 @@ export function Blog() {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "4rem", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-                Conseils & Actualités
+                {t("blog.tag")}
               </span>
               <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 0" }}>
-                Notre Blog
+                {t("blog.title")}
               </h2>
             </div>
             <Link
@@ -29,7 +31,7 @@ export function Blog() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = `rgba(109,212,0,0.1)`; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
             >
-              Tous les articles →
+              {t("blog.all")}
             </Link>
           </div>
         </FadeUp>
@@ -98,7 +100,7 @@ export function Blog() {
                   <div style={{ padding: "1.5rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.8rem" }}>
                       <span style={{ fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY_DIM }}>{art.date}</span>
-                      <span style={{ fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY_DIM }}>⏱ {art.readTime} de lecture</span>
+                      <span style={{ fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY_DIM }}>⏱ {art.readTime} {t("blog.read_time")}</span>
                     </div>
 
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, marginBottom: "0.7rem", lineHeight: 1.3, letterSpacing: "0.02em" }}>
@@ -110,7 +112,7 @@ export function Blog() {
                     </p>
 
                     <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.88rem", color: GREEN, letterSpacing: "0.07em", textTransform: "uppercase" }}>
-                      Lire la suite →
+                      {t("blog.read_more")}
                     </span>
                   </div>
                 </div>

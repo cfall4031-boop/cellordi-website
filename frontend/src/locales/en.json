@@ -113,7 +113,9 @@
     "device_problem": "Issue with your device?",
     "techs_available": "Our technicians are available Monday to Saturday. Free diagnostic!",
     "summary": "Summary",
-    "back_blog": "← Blog"
+    "back_blog": "← Blog",
+    "not_found": "Article not found.",
+    "not_found_back": "← Back to blog"
   },
   "rdv": {
     "tag": "Online booking",
@@ -259,9 +261,10 @@
     },
     "step3": {
       "title": "Terms & Signature",
-      "cond1": "I accept the general repair terms and the privacy policy.",
-      "cond2": "I authorize the technician to perform a full diagnostic on my device.",
-      "cond3": "I agree to pay the agreed amount upon device pickup.",
+      "cond1": "I have read and accept the Service Policy above in its entirety (warranties, risks, limitations of liability).",
+      "cond2": "I authorize the diagnostic of my device. I understand that fees may apply if I refuse the repair after the diagnostic.",
+      "cond3": "I authorize the repair according to the quote that will be presented to me and I accept the applicable warranty terms for my repair.",
+      "legal_note": "By signing, the client acknowledges having read and accepted the Service Policy of Les Entreprises Fall-C inc. — Official document, version 03/18/2026.",
       "signature": "Client signature *",
       "clear": "Clear",
       "sign_hint": "Sign in the box above with your mouse or finger",

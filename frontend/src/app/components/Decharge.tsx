@@ -27,8 +27,46 @@ function PolicyList({ items }: { items: string[] }) {
   );
 }
 
+// ── Données bilingues de la politique de service ─────────────────────────────
+const POLICY_DATA = {
+  fr: {
+    headerTitle: "📄 Politique de Service",
+    company: "Les Entreprises Fall-C inc.",
+    address: "5050 QC-132 #203, Sainte-Catherine, QC J5C 1L4 · Version en vigueur : 18/03/2026",
+    warranty: { typeCol: "Type de pièce", partCol: "Pièce", laborCol: "Main-d'œuvre", certified: "Pièce certifiée (garantie fournisseur)", certPart: "14 jours", certLabor: "30 jours", uncertified: "Pièce non certifiée (non garantie fournisseur)", uncertPart: "Aucune", uncertLabor: "30 jours", neverCovers: "La garantie ne couvre jamais :", microNote: "Microsoudure / carte-mère et dommages liquides : réparation au meilleur effort, durée de garantie précisée sur le devis selon le cas." },
+    sections: [
+      { title: "1. Champ d'application", text: "La présente politique s'applique à l'ensemble des services de diagnostic et de réparation offerts par Les Entreprises Fall-C inc. pour les appareils électroniques suivants :", items: ["Téléphones intelligents (toutes marques)", "Tablettes numériques", "Ordinateurs portables et de bureau", "Consoles de jeux vidéo", "Tout autre appareil électronique accepté par le prestataire"] },
+      { title: "2. Processus de service", items: ["① Dépôt : Le client dépose son appareil et complète la fiche de réception. L'état physique est consigné et des photos peuvent être prises.", "② Diagnostic : Le technicien effectue les tests nécessaires afin d'évaluer la panne. Un devis est ensuite soumis au client.", "③ Autorisation : Aucune réparation n'est entreprise sans l'accord écrit du client sur le devis (prix + délai estimé).", "④ Réparation : Les travaux sont réalisés selon les standards du prestataire avec des pièces certifiées ou compatibles selon disponibilité et choix du client.", "⑤ Remise : L'appareil est testé avant remise. La facture et les conditions de garantie sont remises au client."] },
+      { title: "3. Frais de diagnostic et acompte", diagLabel: "Diagnostic :", diagItems: ["Gratuit si la réparation est effectuée.", "Des frais fixes peuvent s'appliquer si le client refuse la réparation après diagnostic."], depositLabel: "Acompte pour commande de pièces :", depositItems: ["Un acompte peut être exigé avant toute commande de pièce spéciale.", "Les pièces commandées spécialement sont non remboursables en cas d'annulation après commande, sauf erreur du prestataire ou pièce confirmée défectueuse.", "Si le client refuse la réparation après commande, il demeure redevable des frais engagés."] },
+      { title: "4. Garantie", warrantyIntro: "Avant toute réparation, Les Entreprises Fall-C inc. présentent systématiquement au client les options de pièces disponibles et l'informent clairement du statut de garantie de chaque pièce.", warrantyExclusions: ["Dommages physiques, chocs ou bris causés par le client après la réparation", "Dommages liquides ou oxydation survenant après l'intervention", "Surtension électrique, usure normale ou mauvaise utilisation", "Intervention effectuée par un tiers après notre réparation", "Tout problème non directement lié à l'intervention effectuée"] },
+      { title: "5. Risques acceptés par le client", items: ["État préexistant : L'appareil peut présenter des dommages non visibles (chute, torsion, oxydation, réparation antérieure, pièces non d'origine) pouvant entraîner des complications ou une impossibilité de réparation.", "Dommages liquides : Si présence d'humidité, l'appareil peut cesser de fonctionner à tout moment, même après intervention. La réparation est réalisée selon un principe de « meilleur effort ».", "Pièces compatibles : Des pièces OEM ou compatibles peuvent être utilisées selon disponibilité et budget. De légères différences esthétiques (couleur, teinte, luminosité) peuvent exister.", "Données personnelles : Le client est seul responsable de ses sauvegardes. Une intervention peut entraîner une perte de données. Le prestataire n'est pas responsable de toute perte de données.", "Récupération de données : Aucune garantie de résultat. Toute récupération dépend de l'état du support (disque, SSD, carte-mère)."] },
+      { title: "6. Appareil non récupéré", items: ["Le client s'engage à récupérer son appareil dans un délai de 30 jours suivant l'avis « prêt ».", "Après 30 jours sans nouvelles, des frais d'entreposage peuvent s'appliquer.", "Après 60 jours, l'appareil peut être considéré abandonné et traité (recyclage/démontage) afin de couvrir les frais, dans la limite permise par les lois applicables."] },
+      { title: "7. Limitation de responsabilité", text: "Dans la mesure permise par la loi, Les Entreprises Fall-C inc. ne peut être tenue responsable pour :", items: ["La perte de données, photos, fichiers ou mots de passe.", "Les défaillances préexistantes ou ultérieures non directement causées par l'intervention.", "Les dommages indirects (perte d'usage, perte de revenus, etc.)."], footer: "Toute responsabilité du prestataire, lorsqu'applicable, est limitée au montant payé pour l'intervention visée." },
+      { title: "8. Confidentialité et communications", text: "Les informations personnelles collectées (nom, coordonnées, description de l'appareil) sont utilisées exclusivement aux fins de la prestation de service et ne sont pas partagées avec des tiers.", text2: "Le client autorise le prestataire à le contacter par appel, SMS ou courriel pour : statut du dossier, devis, autorisation de réparation, avis de récupération et suivi de garantie." },
+    ],
+  },
+  en: {
+    headerTitle: "📄 Service Policy",
+    company: "Les Entreprises Fall-C inc.",
+    address: "5050 QC-132 #203, Sainte-Catherine, QC J5C 1L4 · Effective version: 03/18/2026",
+    warranty: { typeCol: "Part type", partCol: "Part", laborCol: "Labour", certified: "Certified part (supplier warranty)", certPart: "14 days", certLabor: "30 days", uncertified: "Non-certified part (no supplier warranty)", uncertPart: "None", uncertLabor: "30 days", neverCovers: "The warranty never covers:", microNote: "Microsoldering / motherboard and liquid damage: best-effort repair, warranty duration specified on the quote." },
+    sections: [
+      { title: "1. Scope", text: "This policy applies to all diagnostic and repair services offered by Les Entreprises Fall-C inc. for the following electronic devices:", items: ["Smart phones (all brands)", "Digital tablets", "Laptops and desktop computers", "Video game consoles", "Any other electronic device accepted by the provider"] },
+      { title: "2. Service Process", items: ["① Drop-off: The client drops off their device and completes the intake form. The physical condition is recorded and photos may be taken.", "② Diagnostic: The technician performs the necessary tests to assess the issue. A quote is then submitted to the client.", "③ Authorization: No repair is undertaken without the client's written agreement on the quote (price + estimated time).", "④ Repair: Work is performed according to the provider's standards using certified or compatible parts based on availability and client preference.", "⑤ Handover: The device is tested before handover. The invoice and warranty terms are provided to the client."] },
+      { title: "3. Diagnostic Fees and Deposit", diagLabel: "Diagnostic:", diagItems: ["Free if the repair is performed.", "Fixed fees may apply if the client refuses the repair after the diagnostic."], depositLabel: "Deposit for parts ordering:", depositItems: ["A deposit may be required before any special part order.", "Specially ordered parts are non-refundable upon cancellation after ordering, unless due to provider error or confirmed defective part.", "If the client refuses the repair after ordering, they remain liable for incurred costs."] },
+      { title: "4. Warranty", warrantyIntro: "Before any repair, Les Entreprises Fall-C inc. systematically presents the available parts options to the client and clearly informs them of the warranty status of each part.", warrantyExclusions: ["Physical damage, shocks or breakage caused by the client after the repair", "Liquid damage or oxidation occurring after the intervention", "Electrical surge, normal wear or misuse", "Intervention performed by a third party after our repair", "Any issue not directly related to the intervention performed"] },
+      { title: "5. Risks Accepted by the Client", items: ["Pre-existing condition: The device may have non-visible damage (drop, torsion, oxidation, prior repair, non-original parts) which may cause complications or impossibility of repair.", "Liquid damage: If moisture is present, the device may stop working at any time, even after intervention. Repair is performed on a best-effort basis.", "Compatible parts: OEM or compatible parts may be used depending on availability and budget. Minor aesthetic differences (colour, shade, brightness) may exist.", "Personal data: The client is solely responsible for their backups. An intervention may result in data loss. The provider is not responsible for any data loss.", "Data recovery: No guarantee of result. Any recovery depends on the condition of the storage medium (hard drive, SSD, motherboard)."] },
+      { title: "6. Uncollected Device", items: ["The client agrees to collect their device within 30 days of the 'ready' notice.", "After 30 days with no contact, storage fees may apply.", "After 60 days, the device may be considered abandoned and processed (recycling/dismantling) to cover costs, within the limits permitted by applicable laws."] },
+      { title: "7. Limitation of Liability", text: "To the extent permitted by law, Les Entreprises Fall-C inc. cannot be held liable for:", items: ["Loss of data, photos, files or passwords.", "Pre-existing or subsequent failures not directly caused by the intervention.", "Indirect damages (loss of use, loss of income, etc.)."], footer: "Any liability of the provider, when applicable, is limited to the amount paid for the relevant intervention." },
+      { title: "8. Privacy and Communications", text: "Personal information collected (name, contact details, device description) is used exclusively for service delivery purposes and is not shared with third parties.", text2: "The client authorizes the provider to contact them by call, SMS or email for: case status, quotes, repair authorization, collection notices and warranty follow-up." },
+    ],
+  },
+} as const;
+
 export function Decharge() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEN = i18n.language === 'en';
+  const policy = isEN ? POLICY_DATA.en : POLICY_DATA.fr;
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     nom: "", prenom: "", email: "", telephone: "",
@@ -307,117 +345,79 @@ export function Decharge() {
                       marginBottom: "1.5rem",
                       fontFamily: FONT_BODY,
                     }}>
-                      {/* En-tête */}
+                      {/* En-tête bilingue */}
                       <div style={{ textAlign: "center", marginBottom: "1.1rem", paddingBottom: "0.9rem", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                         <p style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "0.88rem", color: GREEN, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 0.2rem" }}>
-                          📄 Politique de Service
+                          {policy.headerTitle}
                         </p>
-                        <p style={{ color: WHITE, fontWeight: 700, fontSize: "0.85rem", margin: "0 0 0.15rem" }}>Les Entreprises Fall-C inc.</p>
-                        <p style={{ color: GRAY, fontSize: "0.78rem", margin: 0 }}>5050 QC-132 #203, Sainte-Catherine, QC J5C 1L4 · Version en vigueur : 18/03/2026</p>
+                        <p style={{ color: WHITE, fontWeight: 700, fontSize: "0.85rem", margin: "0 0 0.15rem" }}>{policy.company}</p>
+                        <p style={{ color: GRAY, fontSize: "0.78rem", margin: 0 }}>{policy.address}</p>
                       </div>
 
-                      {/* Section 1 */}
-                      <PolicySection title="1. Champ d'application">
-                        <p>La présente politique s'applique à l'ensemble des services de diagnostic et de réparation offerts par Les Entreprises Fall-C inc. pour les appareils électroniques suivants :</p>
-                        <PolicyList items={["Téléphones intelligents (toutes marques)", "Tablettes numériques", "Ordinateurs portables et de bureau", "Consoles de jeux vidéo", "Tout autre appareil électronique accepté par le prestataire"]} />
+                      {/* Sections 1, 2 */}
+                      {policy.sections.slice(0, 2).map((s: any, i: number) => (
+                        <PolicySection key={i} title={s.title}>
+                          {s.text && <p>{s.text}</p>}
+                          {s.items && <PolicyList items={[...s.items]} />}
+                        </PolicySection>
+                      ))}
+
+                      {/* Section 3 — Frais */}
+                      <PolicySection title={policy.sections[2].title}>
+                        <p><strong style={{ color: WHITE }}>{(policy.sections[2] as any).diagLabel}</strong></p>
+                        <PolicyList items={[...(policy.sections[2] as any).diagItems]} />
+                        <p style={{ marginTop: "0.5rem" }}><strong style={{ color: WHITE }}>{(policy.sections[2] as any).depositLabel}</strong></p>
+                        <PolicyList items={[...(policy.sections[2] as any).depositItems]} />
                       </PolicySection>
 
-                      {/* Section 2 */}
-                      <PolicySection title="2. Processus de service">
-                        <PolicyList items={[
-                          "① Dépôt : Le client dépose son appareil et complète la fiche de réception. L'état physique est consigné et des photos peuvent être prises.",
-                          "② Diagnostic : Le technicien effectue les tests nécessaires afin d'évaluer la panne. Un devis est ensuite soumis au client.",
-                          "③ Autorisation : Aucune réparation n'est entreprise sans l'accord écrit du client sur le devis (prix + délai estimé).",
-                          "④ Réparation : Les travaux sont réalisés selon les standards du prestataire avec des pièces certifiées ou compatibles selon disponibilité et choix du client.",
-                          "⑤ Remise : L'appareil est testé avant remise. La facture et les conditions de garantie sont remises au client.",
-                        ]} />
-                      </PolicySection>
-
-                      {/* Section 3 */}
-                      <PolicySection title="3. Frais de diagnostic et acompte">
-                        <p><strong style={{ color: WHITE }}>Diagnostic :</strong></p>
-                        <PolicyList items={[
-                          "Gratuit si la réparation est effectuée.",
-                          "Des frais fixes peuvent s'appliquer si le client refuse la réparation après diagnostic.",
-                        ]} />
-                        <p style={{ marginTop: "0.5rem" }}><strong style={{ color: WHITE }}>Acompte pour commande de pièces :</strong></p>
-                        <PolicyList items={[
-                          "Un acompte peut être exigé avant toute commande de pièce spéciale.",
-                          "Les pièces commandées spécialement sont non remboursables en cas d'annulation après commande, sauf erreur du prestataire ou pièce confirmée défectueuse.",
-                          "Si le client refuse la réparation après commande, il demeure redevable des frais engagés.",
-                        ]} />
-                      </PolicySection>
-
-                      {/* Section 4 */}
-                      <PolicySection title="4. Garantie">
-                        <p style={{ marginBottom: "0.6rem" }}>Avant toute réparation, Les Entreprises Fall-C inc. présentent systématiquement au client les options de pièces disponibles et l'informent clairement du statut de garantie de chaque pièce.</p>
+                      {/* Section 4 — Garantie */}
+                      <PolicySection title={policy.sections[3].title}>
+                        <p style={{ marginBottom: "0.6rem" }}>{(policy.sections[3] as any).warrantyIntro}</p>
                         <div style={{ background: "rgba(255,255,255,0.04)", padding: "0.7rem 1rem", marginBottom: "0.7rem", fontSize: "0.78rem" }}>
                           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "0.3rem 0.8rem", color: GRAY }}>
-                            <span style={{ color: WHITE, fontWeight: 700 }}>Type de pièce</span>
-                            <span style={{ color: WHITE, fontWeight: 700 }}>Pièce</span>
-                            <span style={{ color: WHITE, fontWeight: 700 }}>Main-d'œuvre</span>
-                            <span>Pièce certifiée (garantie fournisseur)</span>
-                            <span style={{ color: GREEN }}>14 jours</span>
-                            <span style={{ color: GREEN }}>30 jours</span>
-                            <span>Pièce non certifiée (non garantie fournisseur)</span>
-                            <span style={{ color: "#ff6b6b" }}>Aucune</span>
-                            <span style={{ color: GREEN }}>30 jours</span>
+                            <span style={{ color: WHITE, fontWeight: 700 }}>{policy.warranty.typeCol}</span>
+                            <span style={{ color: WHITE, fontWeight: 700 }}>{policy.warranty.partCol}</span>
+                            <span style={{ color: WHITE, fontWeight: 700 }}>{policy.warranty.laborCol}</span>
+                            <span>{policy.warranty.certified}</span>
+                            <span style={{ color: GREEN }}>{policy.warranty.certPart}</span>
+                            <span style={{ color: GREEN }}>{policy.warranty.certLabor}</span>
+                            <span>{policy.warranty.uncertified}</span>
+                            <span style={{ color: "#ff6b6b" }}>{policy.warranty.uncertPart}</span>
+                            <span style={{ color: GREEN }}>{policy.warranty.uncertLabor}</span>
                           </div>
                         </div>
-                        <p><strong style={{ color: WHITE }}>La garantie ne couvre jamais :</strong></p>
-                        <PolicyList items={[
-                          "Dommages physiques, chocs ou bris causés par le client après la réparation",
-                          "Dommages liquides ou oxydation survenant après l'intervention",
-                          "Surtension électrique, usure normale ou mauvaise utilisation",
-                          "Intervention effectuée par un tiers après notre réparation",
-                          "Tout problème non directement lié à l'intervention effectuée",
-                        ]} />
-                        <p style={{ marginTop: "0.5rem", fontSize: "0.78rem", color: GRAY }}>Microsoudure / carte-mère et dommages liquides : réparation au meilleur effort, durée de garantie précisée sur le devis selon le cas.</p>
+                        <p><strong style={{ color: WHITE }}>{policy.warranty.neverCovers}</strong></p>
+                        <PolicyList items={[...(policy.sections[3] as any).warrantyExclusions]} />
+                        <p style={{ marginTop: "0.5rem", fontSize: "0.78rem", color: GRAY }}>{policy.warranty.microNote}</p>
                       </PolicySection>
 
-                      {/* Section 5 */}
-                      <PolicySection title="5. Risques acceptés par le client">
-                        <PolicyList items={[
-                          "État préexistant : L'appareil peut présenter des dommages non visibles (chute, torsion, oxydation, réparation antérieure, pièces non d'origine) pouvant entraîner des complications ou une impossibilité de réparation.",
-                          "Dommages liquides : Si présence d'humidité, l'appareil peut cesser de fonctionner à tout moment, même après intervention. La réparation est réalisée selon un principe de « meilleur effort ».",
-                          "Pièces compatibles : Des pièces OEM ou compatibles peuvent être utilisées selon disponibilité et budget. De légères différences esthétiques (couleur, teinte, luminosité) peuvent exister.",
-                          "Données personnelles : Le client est seul responsable de ses sauvegardes. Une intervention peut entraîner une perte de données. Le prestataire n'est pas responsable de toute perte de données.",
-                          "Récupération de données : Aucune garantie de résultat. Toute récupération dépend de l'état du support (disque, SSD, carte-mère).",
-                        ]} />
+                      {/* Sections 5, 6 */}
+                      {policy.sections.slice(4, 6).map((s: any, i: number) => (
+                        <PolicySection key={i + 4} title={s.title}>
+                          {s.text && <p>{s.text}</p>}
+                          {s.items && <PolicyList items={[...s.items]} />}
+                        </PolicySection>
+                      ))}
+
+                      {/* Section 7 — Limitation */}
+                      <PolicySection title={policy.sections[6].title}>
+                        <p>{(policy.sections[6] as any).text}</p>
+                        <PolicyList items={[...(policy.sections[6] as any).items]} />
+                        <p style={{ marginTop: "0.5rem" }}>{(policy.sections[6] as any).footer}</p>
                       </PolicySection>
 
-                      {/* Section 6 */}
-                      <PolicySection title="6. Appareil non récupéré">
-                        <PolicyList items={[
-                          "Le client s'engage à récupérer son appareil dans un délai de 30 jours suivant l'avis « prêt ».",
-                          "Après 30 jours sans nouvelles, des frais d'entreposage peuvent s'appliquer.",
-                          "Après 60 jours, l'appareil peut être considéré abandonné et traité (recyclage/démontage) afin de couvrir les frais, dans la limite permise par les lois applicables.",
-                        ]} />
-                      </PolicySection>
-
-                      {/* Section 7 */}
-                      <PolicySection title="7. Limitation de responsabilité">
-                        <p>Dans la mesure permise par la loi, Les Entreprises Fall-C inc. ne peut être tenue responsable pour :</p>
-                        <PolicyList items={[
-                          "La perte de données, photos, fichiers ou mots de passe.",
-                          "Les défaillances préexistantes ou ultérieures non directement causées par l'intervention.",
-                          "Les dommages indirects (perte d'usage, perte de revenus, etc.).",
-                        ]} />
-                        <p style={{ marginTop: "0.5rem" }}>Toute responsabilité du prestataire, lorsqu'applicable, est limitée au montant payé pour l'intervention visée.</p>
-                      </PolicySection>
-
-                      {/* Section 8 */}
-                      <PolicySection title="8. Confidentialité et communications" last>
-                        <p>Les informations personnelles collectées (nom, coordonnées, description de l'appareil) sont utilisées exclusivement aux fins de la prestation de service et ne sont pas partagées avec des tiers.</p>
-                        <p style={{ marginTop: "0.5rem" }}>Le client autorise le prestataire à le contacter par appel, SMS ou courriel pour : statut du dossier, devis, autorisation de réparation, avis de récupération et suivi de garantie.</p>
+                      {/* Section 8 — Confidentialité */}
+                      <PolicySection title={policy.sections[7].title} last>
+                        <p>{(policy.sections[7] as any).text}</p>
+                        <p style={{ marginTop: "0.5rem" }}>{(policy.sections[7] as any).text2}</p>
                       </PolicySection>
                     </div>
 
                     {/* ── Cases à cocher ── */}
                     {[
-                      { name: "acceptConditions",   text: "J'ai lu et j'accepte la Politique de Service ci-dessus dans son intégralité (garanties, risques, limitations de responsabilité)." },
-                      { name: "acceptDiagnostic",    text: "J'autorise le diagnostic de mon appareil. Je comprends que des frais peuvent s'appliquer si je refuse la réparation après diagnostic." },
-                      { name: "acceptFacturation",   text: "J'autorise la réparation selon le devis qui me sera présenté et j'accepte les conditions de garantie applicables à ma réparation." },
+                      { name: "acceptConditions", text: t("decharge.step3.cond1") },
+                      { name: "acceptDiagnostic", text: t("decharge.step3.cond2") },
+                      { name: "acceptFacturation", text: t("decharge.step3.cond3") },
                     ].map(({ name, text }) => (
                       <label key={name} style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", cursor: "pointer", marginBottom: "1rem", fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY }}>
                         <input type="checkbox" name={name} checked={(form as any)[name]} onChange={handleChange}
@@ -461,7 +461,7 @@ export function Decharge() {
                       )}
                       {/* Note légale */}
                       <p style={{ fontFamily: FONT_BODY, fontSize: "0.75rem", color: GRAY_DIM, marginTop: "0.6rem", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "0.6rem", lineHeight: 1.5 }}>
-                        En signant, le client reconnaît avoir lu et accepté la Politique de Service des Entreprises Fall-C inc. — Document officiel, version 18/03/2026.
+                        {t("decharge.step3.legal_note")}
                       </p>
                     </div>
 

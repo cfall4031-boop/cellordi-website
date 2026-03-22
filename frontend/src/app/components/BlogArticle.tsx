@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router";
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 import { getArticle, getRelated, ARTICLES } from "../data/articles";
 
@@ -14,6 +15,7 @@ const tagColors: Record<string, string> = {
 export default function BlogArticle() {
   const { slug } = useParams<{ slug: string }>();
   const navigate  = useNavigate();
+  const { t }     = useTranslation();
   const article   = getArticle(slug || "");
   const related   = getRelated(slug || "", 2);
 
@@ -22,9 +24,9 @@ export default function BlogArticle() {
     return (
       <div style={{ minHeight: "100vh", background: NAVY, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1.5rem" }}>
         <div style={{ fontFamily: FONT_DISPLAY, fontSize: "3rem", fontWeight: 900, color: WHITE }}>404</div>
-        <p style={{ fontFamily: FONT_BODY, color: GRAY }}>Article introuvable.</p>
+        <p style={{ fontFamily: FONT_BODY, color: GRAY }}>{t("blog.not_found")}</p>
         <Link to="/blog" style={{ ...btn(GREEN, NAVY), textDecoration: "none", display: "inline-block" }}>
-          ← Retour au blog
+          {t("blog.not_found_back")}
         </Link>
       </div>
     );
@@ -111,10 +113,10 @@ export default function BlogArticle() {
         </Link>
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           <Link to="/blog" style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY, textDecoration: "none" }}>
-            ← Blog
+            {t("blog.back_blog")}
           </Link>
           <Link to="/#rendezvous" style={{ ...btn(GREEN, NAVY), textDecoration: "none", display: "inline-block", fontSize: "0.82rem", padding: "0.5rem 1.2rem" }}>
-            Prendre RDV
+            {t("nav.cta")}
           </Link>
         </div>
       </nav>
@@ -155,7 +157,7 @@ export default function BlogArticle() {
           </h1>
           <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
             <span style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY }}>📅 {article.date}</span>
-            <span style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY }}>⏱ {article.readTime} de lecture</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY }}>⏱ {article.readTime} {t("blog.read_time")}</span>
           </div>
         </div>
       </div>
@@ -220,7 +222,7 @@ export default function BlogArticle() {
             marginBottom: "3rem",
           }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1rem", color: GREEN, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>
-              En résumé
+              {t("blog.summary")}
             </div>
             <p style={{ fontFamily: FONT_BODY, fontSize: "0.97rem", color: GRAY, lineHeight: 1.8, margin: 0 }}>
               {article.conclusion}
@@ -233,14 +235,14 @@ export default function BlogArticle() {
             padding: "2rem", textAlign: "center"
           }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "1.4rem", color: WHITE, textTransform: "uppercase", marginBottom: "0.6rem" }}>
-              Un problème avec votre appareil ?
+              {t("blog.device_problem")}
             </div>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-              Nos techniciens sont disponibles du lundi au samedi. Diagnostic gratuit !
+              {t("blog.techs_available")}
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
               <Link to="/#rendezvous" style={{ ...btn(GREEN, NAVY), textDecoration: "none", display: "inline-block" }}>
-                Prendre rendez-vous
+                {t("blog.book_rdv")}
               </Link>
               <a href="tel:5142375792" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}55`, textDecoration: "none", display: "inline-block" }}>
                 (514) 237-5792
@@ -254,7 +256,7 @@ export default function BlogArticle() {
           {/* Articles similaires */}
           <div style={{ position: "sticky", top: "80px" }}>
             <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1rem", color: GREEN, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.2rem", paddingBottom: "0.6rem", borderBottom: `2px solid rgba(109,212,0,0.2)` }}>
-              Articles similaires
+              {t("blog.similar")}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {related.map(rel => (
@@ -274,7 +276,7 @@ export default function BlogArticle() {
                         {rel.title}
                       </div>
                       <div style={{ fontFamily: FONT_BODY, fontSize: "0.75rem", color: GRAY_DIM, marginTop: "0.4rem" }}>
-                        ⏱ {rel.readTime} de lecture
+                        ⏱ {rel.readTime} {t("blog.read_time")}
                       </div>
                     </div>
                   </div>
@@ -285,13 +287,13 @@ export default function BlogArticle() {
             {/* Infos boutique */}
             <div style={{ marginTop: "1.5rem", background: NAVY_MID, border: "1px solid rgba(109,212,0,0.1)", padding: "1.2rem" }}>
               <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.88rem", color: GREEN, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.8rem" }}>
-                Nous trouver
+                {t("blog.find_us")}
               </div>
               {[
                 ["📍", "5050 QC-132 #203, Sainte-Catherine"],
                 ["📞", "(514) 237-5792"],
-                ["🕐", "Lun–Ven : 10h–19h"],
-                ["🕐", "Sam : 10h–18h"],
+                ["🕐", t("blog.hours1")],
+                ["🕐", t("blog.hours2")],
               ].map(([icon, text], i) => (
                 <div key={i} style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY, marginBottom: "0.4rem" }}>
                   {icon} {text}
@@ -316,11 +318,11 @@ export default function BlogArticle() {
         textAlign: "center",
       }}>
         <p style={{ color: GRAY, fontFamily: FONT_DISPLAY, fontSize: "1rem", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
-          Besoin d'une réparation ? On est là.
+          {t("blog.need_repair")}
         </p>
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>← Retour à l'accueil</a>
-          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>Prendre rendez-vous</a>
+          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>{t("blog.back_home")}</a>
+          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>{t("blog.book_rdv")}</a>
         </div>
       </div>
     </motion.div>

@@ -113,7 +113,9 @@
     "device_problem": "Un problème avec votre appareil ?",
     "techs_available": "Nos techniciens sont disponibles du lundi au samedi. Diagnostic gratuit !",
     "summary": "En résumé",
-    "back_blog": "← Blog"
+    "back_blog": "← Blog",
+    "not_found": "Article introuvable.",
+    "not_found_back": "← Retour au blog"
   },
   "rdv": {
     "tag": "Réservation en ligne",
@@ -259,9 +261,10 @@
     },
     "step3": {
       "title": "Conditions & Signature",
-      "cond1": "J'accepte les conditions générales de réparation et la politique de confidentialité.",
-      "cond2": "J'autorise le technicien à effectuer un diagnostic complet de mon appareil.",
-      "cond3": "Je m'engage à payer le montant convenu lors de la récupération de l'appareil.",
+      "cond1": "J'ai lu et j'accepte la Politique de Service ci-dessus dans son intégralité (garanties, risques, limitations de responsabilité).",
+      "cond2": "J'autorise le diagnostic de mon appareil. Je comprends que des frais peuvent s'appliquer si je refuse la réparation après diagnostic.",
+      "cond3": "J'autorise la réparation selon le devis qui me sera présenté et j'accepte les conditions de garantie applicables à ma réparation.",
+      "legal_note": "En signant, le client reconnaît avoir lu et accepté la Politique de Service des Entreprises Fall-C inc. — Document officiel, version 18/03/2026.",
       "signature": "Signature du client *",
       "clear": "Effacer",
       "sign_hint": "Signez dans le cadre ci-dessus avec votre souris ou doigt",
