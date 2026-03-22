@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 import { ARTICLES } from "../data/articles";
 
@@ -11,9 +12,12 @@ const tagColors: Record<string, string> = {
   "Conseils":   "#a78bfa",
 };
 
+// Tags internes en FR (pour filtrer les articles), affichage traduit via t()
 const TAGS = ["Tous", ...Array.from(new Set(ARTICLES.map(a => a.tag)))];
 
 export default function BlogListing() {
+  const { t } = useTranslation();
+  const tt = (tag: string) => t(`blog.tags.${tag}`, { defaultValue: tag });
   const [activeTag, setActiveTag] = useState("Tous");
   const [hovered, setHovered]     = useState<string | null>(null);
 
@@ -61,10 +65,10 @@ export default function BlogListing() {
         </Link>
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
           <Link to="/#blog" style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY, textDecoration: "none" }}>
-            ← Site principal
+            {t("blog.back_main")}
           </Link>
           <Link to="/#rendezvous" style={{ ...btn(GREEN, NAVY), textDecoration: "none", display: "inline-block", fontSize: "0.82rem", padding: "0.5rem 1.2rem" }}>
-            Prendre RDV
+            {t("nav.cta")}
           </Link>
         </div>
       </nav>
@@ -77,13 +81,13 @@ export default function BlogListing() {
         textAlign: "center"
       }}>
         <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-          Conseils & Actualités
+          {t("blog.tag")}
         </span>
         <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2.5rem, 5vw, 4rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
-          Notre Blog
+          {t("blog.title")}
         </h1>
         <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", maxWidth: "500px", margin: "0 auto" }}>
-          Conseils d'experts, bonnes pratiques et actualités tech — rédigés par notre équipe de techniciens.
+          {t("blog.header_sub")}
         </p>
       </div>
 
@@ -107,7 +111,7 @@ export default function BlogListing() {
                   letterSpacing: "0.03em",
                 }}
               >
-                {tag}
+                {tt(tag)}
                 {tag !== "Tous" && (
                   <span style={{ marginLeft: "0.4rem", fontSize: "0.78rem", opacity: 0.7 }}>
                     ({ARTICLES.filter(a => a.tag === tag).length})
@@ -117,7 +121,7 @@ export default function BlogListing() {
             );
           })}
           <span style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY_DIM, alignSelf: "center", marginLeft: "auto" }}>
-            {filtered.length} article{filtered.length > 1 ? "s" : ""}
+            {t(filtered.length === 1 ? "blog.articles_count_one" : "blog.articles_count_other", { count: filtered.length })}
           </span>
         </div>
 
@@ -162,7 +166,7 @@ export default function BlogListing() {
                     padding: "0.2rem 0.7rem",
                     clipPath: "polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%)",
                   }}>
-                    {art.tag}
+                    {tt(art.tag)}
                   </span>
                 </div>
 
@@ -186,7 +190,7 @@ export default function BlogListing() {
                     color: tagColors[art.tag] || GREEN,
                     letterSpacing: "0.07em", textTransform: "uppercase"
                   }}>
-                    Lire la suite →
+                    {t("blog.read_more")}
                   </span>
                 </div>
               </div>
@@ -203,11 +207,11 @@ export default function BlogListing() {
         textAlign: "center",
       }}>
         <p style={{ color: GRAY, fontFamily: FONT_DISPLAY, fontSize: "1rem", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
-          Besoin d'une réparation ? On est là.
+          {t("blog.need_repair")}
         </p>
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>← Retour à l'accueil</a>
-          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>Prendre rendez-vous</a>
+          <a href="/" style={{ ...btn(GREEN, NAVY), textDecoration: "none" }}>{t("blog.back_home")}</a>
+          <a href="/#rendezvous" style={{ ...btn("transparent", GREEN), border: `1px solid ${GREEN}`, textDecoration: "none" }}>{t("blog.book_rdv")}</a>
         </div>
       </div>
     </motion.div>

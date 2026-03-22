@@ -16,6 +16,7 @@ export default function BlogArticle() {
   const { slug } = useParams<{ slug: string }>();
   const navigate  = useNavigate();
   const { t }     = useTranslation();
+  const tt = (tag: string) => t(`blog.tags.${tag}`, { defaultValue: tag });
   const article   = getArticle(slug || "");
   const related   = getRelated(slug || "", 2);
 
@@ -145,7 +146,7 @@ export default function BlogArticle() {
             padding: "0.25rem 0.9rem", marginBottom: "1rem",
             clipPath: "polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)"
           }}>
-            {article.tag}
+            {tt(article.tag)}
           </span>
           <h1 style={{
             fontFamily: FONT_DISPLAY, fontWeight: 900,
@@ -270,7 +271,7 @@ export default function BlogArticle() {
                     <img src={rel.img} alt={rel.title} style={{ width: "100%", height: "110px", objectFit: "cover", display: "block" }} />
                     <div style={{ padding: "0.9rem" }}>
                       <span style={{ fontFamily: FONT_BODY, fontSize: "0.7rem", color: tagColors[rel.tag] || GREEN, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                        {rel.tag}
+                        {tt(rel.tag)}
                       </span>
                       <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.95rem", color: WHITE, lineHeight: 1.3, marginTop: "0.3rem" }}>
                         {rel.title}

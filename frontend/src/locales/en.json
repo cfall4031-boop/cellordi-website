@@ -11,6 +11,7 @@
   },
   "hero": {
     "tag": "Repair · Optimize · Evolve",
+    "main_title": "Phone & Computer Repair — Experts at Your Service",
     "subtitle": "Hardware & software solutions — experts in phone & computer repair, IT support and web development. Certified parts, precise diagnostics and tailored solutions for individuals and businesses.",
     "cta_rdv": "Book an Appointment",
     "cta_suivi": "Track my repair",
@@ -115,7 +116,14 @@
     "summary": "Summary",
     "back_blog": "← Blog",
     "not_found": "Article not found.",
-    "not_found_back": "← Back to blog"
+    "not_found_back": "← Back to blog",
+    "tags": {
+      "Réparation": "Repair",
+      "Ordinateurs": "Computers",
+      "Sécurité": "Security",
+      "Conseils": "Tips",
+      "Tous": "All"
+    }
   },
   "rdv": {
     "tag": "Online booking",

@@ -223,7 +223,7 @@ export function Hero() {
               margin: "0 0 1.8rem",
             }}
           >
-            Réparation Cellulaires & Ordinateurs — Experts à votre service
+            {t("hero.main_title")}
           </h1>
 
           {/* Description */}

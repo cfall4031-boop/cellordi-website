@@ -11,6 +11,7 @@
   },
   "hero": {
     "tag": "Répare · Optimise · Évolue",
+    "main_title": "Réparation Cellulaires & Ordinateurs — Experts à votre service",
     "subtitle": "Solutions hardware & software — experts en réparation de cellulaires & ordinateurs, soutien informatique et conception web. Pièces certifiées, diagnostics précis et solutions sur mesure pour particuliers et entreprises.",
     "cta_rdv": "Prendre Rendez-vous",
     "cta_suivi": "Suivre ma réparation",
@@ -115,7 +116,14 @@
     "summary": "En résumé",
     "back_blog": "← Blog",
     "not_found": "Article introuvable.",
-    "not_found_back": "← Retour au blog"
+    "not_found_back": "← Retour au blog",
+    "tags": {
+      "Réparation": "Réparation",
+      "Ordinateurs": "Ordinateurs",
+      "Sécurité": "Sécurité",
+      "Conseils": "Conseils",
+      "Tous": "Tous"
+    }
   },
   "rdv": {
     "tag": "Réservation en ligne",

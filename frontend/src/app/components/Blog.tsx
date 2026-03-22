@@ -10,6 +10,7 @@ const PREVIEW = ARTICLES.slice(0, 3);
 
 export function Blog() {
   const { t } = useTranslation();
+  const tt = (tag: string) => t(`blog.tags.${tag}`, { defaultValue: tag });
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
@@ -92,7 +93,7 @@ export function Blog() {
                         clipPath: "polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%)",
                       }}
                     >
-                      {art.tag}
+                      {tt(art.tag)}
                     </span>
                   </div>
 
