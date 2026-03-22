@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { GlowCard } from "./GlowCard";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 import { ARTICLES } from "../data/articles";
 
@@ -44,7 +45,7 @@ export function Blog() {
                 to={`/blog/${art.slug}`}
                 style={{ textDecoration: "none", display: "block" }}
               >
-                <div
+                <GlowCard
                   onMouseEnter={() => setHovered(i)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
@@ -116,7 +117,7 @@ export function Blog() {
                       {t("blog.read_more")}
                     </span>
                   </div>
-                </div>
+                </GlowCard>
               </Link>
             </FadeUp>
           ))}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
+import { GlowCard } from "./GlowCard";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 import { ARTICLES } from "../data/articles";
 
@@ -10,6 +11,13 @@ const tagColors: Record<string, string> = {
   "Ordinateurs": "#38bdf8",
   "Sécurité":   "#f59e0b",
   "Conseils":   "#a78bfa",
+};
+
+const hexToGlow = (hex: string): string => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},0.12)`;
 };
 
 // Tags internes en FR (pour filtrer les articles), affichage traduit via t()
@@ -132,9 +140,10 @@ export default function BlogListing() {
         >
           {filtered.map(art => (
             <Link key={art.slug} to={`/blog/${art.slug}`} style={{ textDecoration: "none", display: "block" }}>
-              <div
+              <GlowCard
                 onMouseEnter={() => setHovered(art.slug)}
                 onMouseLeave={() => setHovered(null)}
+                glowColor={hexToGlow(tagColors[art.tag] || GREEN)}
                 style={{
                   background: NAVY_MID,
                   border: `1px solid ${hovered === art.slug ? (tagColors[art.tag] || GREEN) + "55" : "rgba(255,255,255,0.05)"}`,
@@ -193,7 +202,7 @@ export default function BlogListing() {
                     {t("blog.read_more")}
                   </span>
                 </div>
-              </div>
+              </GlowCard>
             </Link>
           ))}
         </div>

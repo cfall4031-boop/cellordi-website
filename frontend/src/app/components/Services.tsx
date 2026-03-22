@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { GlowCard } from "./GlowCard";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLAY, FONT_BODY } from "../tokens";
 
 // ─── Icônes SVG ──────────────────────────────────────────────────────────────
@@ -96,10 +97,10 @@ export function Services() {
                 <a
                   href={`/services/${slug}`}
                   style={{ textDecoration: "none", display: "block", height: "100%" }}
-                  onMouseEnter={() => setHovered(i)}
-                  onMouseLeave={() => setHovered(null)}
                 >
-                  <div
+                  <GlowCard
+                    onMouseEnter={() => setHovered(i)}
+                    onMouseLeave={() => setHovered(null)}
                     style={{
                       background: hovered === i ? NAVY_LIGHT : NAVY,
                       border: `1px solid ${hovered === i ? GREEN + "66" : "rgba(255,255,255,0.05)"}`,
@@ -181,7 +182,7 @@ export function Services() {
                         <IconArrow />
                       </span>
                     </div>
-                  </div>
+                  </GlowCard>
                 </a>
               </FadeUp>
             );
