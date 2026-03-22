@@ -155,87 +155,21 @@ export function Hero() {
           paddingBottom: "100px",
         }}
       >
-        <div style={{ maxWidth: "600px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.6rem",
-              background: "rgba(109,212,0,0.07)",
-              border: "1px solid rgba(109,212,0,0.22)",
-              borderRadius: "100px",
-              padding: "0.4rem 1.1rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <span style={{ color: GREEN, fontSize: "0.6rem", lineHeight: 1, opacity: 0.85 }}>✦</span>
-            <span
-              style={{
-                fontFamily: FONT_DISPLAY,
-                fontSize: "0.78rem",
-                color: GREEN,
-                letterSpacing: "0.16em",
-                fontWeight: 700,
-                textTransform: "uppercase",
-              }}
-            >
-              {t("hero.tag")}
-            </span>
-            <span style={{ color: GREEN, fontSize: "0.6rem", lineHeight: 1, opacity: 0.85 }}>✦</span>
-          </div>
-
-          <h1
-            style={{
-              fontFamily: FONT_DISPLAY,
-              fontWeight: 900,
-              fontSize: "clamp(3.4rem, 7vw, 6.2rem)",
-              color: WHITE,
-              lineHeight: 1.0,
-              margin: "0 0 1.6rem",
-              textTransform: "uppercase",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            CeLL
-            <span
-              style={{
-                color: GREEN,
-                position: "relative",
-                display: "inline-block",
-                margin: "0 0.08em",
-              }}
-            >
-              &amp;
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  bottom: "-4px",
-                  width: "100%",
-                  height: "3px",
-                  background: `linear-gradient(90deg, ${GREEN}, ${GREEN_GLOW}, transparent)`,
-                  borderRadius: "2px",
-                  animation: "underlineGlow 2.5s ease-in-out infinite",
-                }}
-              />
-            </span>
-            Ordi
-          </h1>
-
+        <div style={{ maxWidth: "700px", textAlign: "center", margin: "0 auto" }}>
           <p
             style={{
               fontFamily: FONT_BODY,
-              fontSize: "1.05rem",
-              color: GRAY,
+              fontSize: "1.15rem",
+              color: WHITE,
               lineHeight: 1.75,
               marginBottom: "2.8rem",
-              maxWidth: "460px",
+              fontWeight: 700,
             }}
           >
             {t("hero.subtitle")}
           </p>
 
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
             <a
               href="#rendezvous"
               style={{
