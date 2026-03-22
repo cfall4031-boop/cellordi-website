@@ -190,10 +190,7 @@ export function Hero() {
               margin: "0 0 1.8rem",
             }}
           >
-            Réparation{" "}
-            <span style={{ color: GREEN }}>Cellulaires</span>
-            {" "}& Ordinateurs —{" "}
-            <span style={{ color: GREEN }}>Experts</span>{" "}à votre service
+            Réparation Cellulaires & Ordinateurs — Experts à votre service
           </h1>
 
           {/* Description */}
