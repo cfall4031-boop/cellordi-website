@@ -155,15 +155,58 @@ export function Hero() {
           paddingBottom: "100px",
         }}
       >
-        <div style={{ maxWidth: "700px", textAlign: "center", margin: "0 auto" }}>
+        <div style={{ maxWidth: "960px", textAlign: "center", margin: "0 auto" }}>
+
+          {/* Badge tag */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              background: "rgba(109,212,0,0.07)",
+              border: "1px solid rgba(109,212,0,0.22)",
+              borderRadius: "100px",
+              padding: "0.4rem 1.2rem",
+              marginBottom: "1.8rem",
+            }}
+          >
+            <span style={{ color: GREEN, fontSize: "0.6rem", opacity: 0.85 }}>✦</span>
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: "0.78rem", color: GREEN, letterSpacing: "0.18em", fontWeight: 700, textTransform: "uppercase" }}>
+              {t("hero.tag")}
+            </span>
+            <span style={{ color: GREEN, fontSize: "0.6rem", opacity: 0.85 }}>✦</span>
+          </div>
+
+          {/* Grand titre d'impact — style iSaute */}
+          <h1
+            style={{
+              fontFamily: FONT_DISPLAY,
+              fontWeight: 900,
+              fontSize: "clamp(3rem, 7.5vw, 6rem)",
+              color: WHITE,
+              lineHeight: 1.05,
+              letterSpacing: "-0.01em",
+              textTransform: "uppercase",
+              margin: "0 0 1.8rem",
+            }}
+          >
+            Réparation{" "}
+            <span style={{ color: GREEN }}>Cellulaires</span>
+            {" "}& Ordinateurs —{" "}
+            <span style={{ color: GREEN }}>Experts</span>{" "}à votre service
+          </h1>
+
+          {/* Description */}
           <p
             style={{
               fontFamily: FONT_BODY,
-              fontSize: "1.15rem",
-              color: WHITE,
+              fontSize: "clamp(1rem, 1.8vw, 1.15rem)",
+              color: "rgba(255,255,255,0.75)",
               lineHeight: 1.75,
               marginBottom: "2.8rem",
-              fontWeight: 700,
+              fontWeight: 500,
+              maxWidth: "680px",
+              margin: "0 auto 2.8rem",
             }}
           >
             {t("hero.subtitle")}
