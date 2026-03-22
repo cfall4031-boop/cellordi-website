@@ -117,7 +117,7 @@ export function Hero() {
           right: "-8%",
           background: NAVY_MID,
           borderRadius: "50% 50% 0 0",
-          paddingTop: "70px",
+          paddingTop: "95px",
           paddingBottom: "44px",
           display: "flex",
           justifyContent: "center",
