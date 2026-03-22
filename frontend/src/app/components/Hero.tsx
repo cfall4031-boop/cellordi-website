@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NAVY, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
+import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1746005718004-1f992c399428?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydHBob25lJTIwcmVwYWlyJTIwdGVjaG5pY2lhbiUyMHNjcmVlbiUyMHJlcGxhY2VtZW50fGVufDF8fHx8MTc3MjAwODQ4OHww&ixlib=rb-4.1.0&q=80&w=1080";
 
@@ -108,19 +108,50 @@ export function Hero() {
         }}
       />
 
-      {/* Fondu bas — fusion fluide avec la section suivante */}
+      {/* Coupure arrondie bas avec CTA — style iSaute */}
       <div
         style={{
           position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "40%",
-          background: `linear-gradient(to bottom, transparent 0%, ${NAVY} 100%)`,
-          zIndex: 4,
-          pointerEvents: "none",
+          bottom: -2,
+          left: "-8%",
+          right: "-8%",
+          background: NAVY_MID,
+          borderRadius: "50% 50% 0 0",
+          paddingTop: "70px",
+          paddingBottom: "44px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "1.2rem",
+          flexWrap: "wrap",
+          zIndex: 6,
         }}
-      />
+      >
+        <a
+          href="#rendezvous"
+          style={{
+            ...btn(hovCta ? GREEN_GLOW : GREEN, "#0c0c12"),
+            fontSize: "1rem",
+            boxShadow: hovCta ? `0 0 24px rgba(109,212,0,0.5)` : `0 0 12px rgba(109,212,0,0.25)`,
+          }}
+          onMouseEnter={() => setHovCta(true)}
+          onMouseLeave={() => setHovCta(false)}
+        >
+          {t("hero.cta_rdv")}
+        </a>
+        <a
+          href="#suivi"
+          style={{
+            ...btn("transparent", hovSec ? GREEN : WHITE),
+            border: `1px solid ${hovSec ? GREEN : "rgba(255,255,255,0.25)"}`,
+            fontSize: "1rem",
+          }}
+          onMouseEnter={() => setHovSec(true)}
+          onMouseLeave={() => setHovSec(false)}
+        >
+          {t("hero.cta_suivi")}
+        </a>
+      </div>
       <div
         style={{
           position: "absolute",
@@ -209,32 +240,6 @@ export function Hero() {
             {t("hero.subtitle")}
           </p>
 
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
-            <a
-              href="#rendezvous"
-              style={{
-                ...btn(hovCta ? GREEN_GLOW : GREEN, "#0c0c12"),
-                fontSize: "1rem",
-                boxShadow: hovCta ? `0 0 24px rgba(109,212,0,0.5)` : `0 0 12px rgba(109,212,0,0.25)`,
-              }}
-              onMouseEnter={() => setHovCta(true)}
-              onMouseLeave={() => setHovCta(false)}
-            >
-              {t("hero.cta_rdv")}
-            </a>
-            <a
-              href="#suivi"
-              style={{
-                ...btn("transparent", hovSec ? GREEN : WHITE),
-                border: `1px solid ${hovSec ? GREEN : "rgba(255,255,255,0.18)"}`,
-                fontSize: "1rem",
-              }}
-              onMouseEnter={() => setHovSec(true)}
-              onMouseLeave={() => setHovSec(false)}
-            >
-              {t("hero.cta_suivi")}
-            </a>
-          </div>
         </div>
       </div>
 
