@@ -110,6 +110,7 @@ export function Hero() {
 
       {/* Coupure arrondie bas avec CTA — style iSaute */}
       <div
+        id="hero-dome"
         style={{
           position: "absolute",
           bottom: -2,
@@ -175,6 +176,7 @@ export function Hero() {
       />
 
       <div
+        id="hero-content"
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
@@ -183,7 +185,7 @@ export function Hero() {
           position: "relative",
           zIndex: 5,
           paddingTop: "100px",
-          paddingBottom: "100px",
+          paddingBottom: "200px",
         }}
       >
         <div style={{ maxWidth: "960px", textAlign: "center", margin: "0 auto" }}>
@@ -259,6 +261,15 @@ export function Hero() {
           }
           section#hero video {
             opacity: 0.22;
+          }
+          #hero-dome {
+            padding-top: 40px !important;
+            padding-bottom: 32px !important;
+            left: -15% !important;
+            right: -15% !important;
+          }
+          #hero-content {
+            padding-bottom: 160px !important;
           }
         }
       `}</style>
