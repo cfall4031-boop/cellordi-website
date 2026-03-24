@@ -264,7 +264,7 @@ export function Decharge() {
                       </div>
                     </div>
                     <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-                      <button onClick={() => { if (form.prenom && form.nom && form.email) setStep(2); }} style={{ ...btn(GREEN, NAVY) }}
+                      <button onClick={() => { if (form.prenom && form.nom && form.telephone) setStep(2); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
                         onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
                         {t("decharge.step1.next")}
