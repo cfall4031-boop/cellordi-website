@@ -7,18 +7,18 @@ export const CONSENT_KEY = "cellordi_cookie_consent";
 export function CookieBanner() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(
-    () => !localStorage.getItem(CONSENT_KEY)
+    () => !sessionStorage.getItem(CONSENT_KEY)
   );
 
   if (!visible) return null;
 
   const accept = () => {
-    localStorage.setItem(CONSENT_KEY, "accepted");
+    sessionStorage.setItem(CONSENT_KEY, "accepted");
     setVisible(false);
   };
 
   const refuse = () => {
-    localStorage.setItem(CONSENT_KEY, "refused");
+    sessionStorage.setItem(CONSENT_KEY, "refused");
     setVisible(false);
   };
 

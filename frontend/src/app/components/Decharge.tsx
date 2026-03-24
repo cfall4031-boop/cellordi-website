@@ -143,7 +143,7 @@ export function Decharge() {
     setSigned(false);
   };
 
-  if (localStorage.getItem(CONSENT_KEY) === "refused") return (
+  if (sessionStorage.getItem(CONSENT_KEY) === "refused") return (
     <section id="decharge" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
       <div style={{ maxWidth: "750px", margin: "0 auto", textAlign: "center", paddingTop: "2rem" }}>
         <FadeUp>
