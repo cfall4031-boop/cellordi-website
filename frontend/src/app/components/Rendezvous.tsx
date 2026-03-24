@@ -167,7 +167,7 @@ export function Rendezvous() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                 <div>
                   <label style={labelStyle}>{t("rdv.fields.email")}</label>
-                  <input name="email" type="email" value={form.email} onChange={handleChange} placeholder={t("rdv.placeholders.email")} required style={inputStyle} />
+                  <input name="email" type="email" value={form.email} onChange={handleChange} placeholder={t("rdv.placeholders.email")} style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>{t("rdv.fields.telephone")}</label>

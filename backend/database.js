@@ -120,6 +120,9 @@ try { db.exec("ALTER TABLE messages_contact ADD COLUMN replied_at DATETIME"); } 
 // Migration: add archived field to messages_contact
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 0"); } catch (_) {}
 
+// Migration: add telephone field to messages_contact
+try { db.exec("ALTER TABLE messages_contact ADD COLUMN telephone TEXT"); } catch (_) {}
+
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (

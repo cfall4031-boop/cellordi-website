@@ -8,7 +8,7 @@ const router = express.Router();
 
 // POST /api/contact — Envoyer un message (public)
 router.post("/", (req, res) => {
-  const { nom, email, sujet, message } = req.body;
+  const { nom, email, telephone, sujet, message } = req.body;
 
   if (!nom || !email || !sujet || !message) {
     return res.status(400).json({ erreur: "Tous les champs sont obligatoires." });
@@ -20,9 +20,9 @@ router.post("/", (req, res) => {
   }
 
   const result = db.prepare(`
-    INSERT INTO messages_contact (nom, email, sujet, message)
-    VALUES (?, ?, ?, ?)
-  `).run(nom, email, sujet, message);
+    INSERT INTO messages_contact (nom, email, telephone, sujet, message)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(nom, email, telephone || null, sujet, message);
 
   // ── Emails de confirmation (fire-and-forget) ─────────────────────
   sendEmail({
@@ -35,7 +35,7 @@ router.post("/", (req, res) => {
     sendEmail({
       to: process.env.ADMIN_NOTIFY_EMAIL,
       subject: `✉️ Nouveau message de ${nom} — ${sujet}`,
-      html: contactAdmin({ nom, email, sujet, message }),
+      html: contactAdmin({ nom, email, telephone, sujet, message }),
     }).catch(console.error);
   }
 

@@ -193,7 +193,7 @@ function contactClient({ nom, sujet }) {
 // ═══════════════════════════════════════════════════════════════
 // 4. EMAIL ADMIN — Nouveau message Contact
 // ═══════════════════════════════════════════════════════════════
-function contactAdmin({ nom, email, sujet, message }) {
+function contactAdmin({ nom, email, telephone, sujet, message }) {
   const content = `
     <div style="background:#38bdf822;border:1px solid #38bdf844;padding:12px 16px;margin-bottom:24px;">
       <div style="color:#38bdf8;font-weight:700;font-size:14px;">✉️ Nouveau message de contact</div>
@@ -202,6 +202,7 @@ function contactAdmin({ nom, email, sujet, message }) {
     <table style="width:100%;border-collapse:collapse;background:#0e2040;margin-bottom:24px;">
       ${detail("De", nom)}
       ${detail("Courriel", `<a href="mailto:${email}" style="color:#6dd400;">${email}</a>`)}
+      ${telephone ? detail("Téléphone", `<a href="tel:${telephone}" style="color:#6dd400;">${telephone}</a>`) : ""}
       ${detail("Sujet", sujet)}
     </table>
 

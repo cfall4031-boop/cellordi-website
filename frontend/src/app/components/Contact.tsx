@@ -51,7 +51,7 @@ const IconSendSvg = () => (
 
 export function Contact() {
   const { t } = useTranslation();
-  const [form, setForm] = useState({ nom: "", email: "", sujet: "", message: "" });
+  const [form, setForm] = useState({ nom: "", email: "", telephone: "", sujet: "", message: "" });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState("");
@@ -76,7 +76,7 @@ export function Contact() {
     setErreur("");
     setLoading(true);
     try {
-      await messagesApi.send({ nom: form.nom, email: form.email, sujet: form.sujet, message: form.message });
+      await messagesApi.send({ nom: form.nom, email: form.email, telephone: form.telephone, sujet: form.sujet, message: form.message });
       setSent(true);
     } catch (err: any) {
       setErreur(err.message || t("contact.form.error_default"));
@@ -162,7 +162,7 @@ export function Contact() {
                 <p style={{ fontFamily: FONT_BODY, color: GRAY }}>
                   {t("contact.success.text")}
                 </p>
-                <button onClick={() => { setSent(false); setForm({ nom: "", email: "", sujet: "", message: "" }); setErreur(""); }} style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}>
+                <button onClick={() => { setSent(false); setForm({ nom: "", email: "", telephone: "", sujet: "", message: "" }); setErreur(""); }} style={{ ...btn(GREEN, NAVY), marginTop: "1.5rem" }}>
                   {t("contact.success.new")}
                 </button>
               </div>
@@ -177,6 +177,11 @@ export function Contact() {
                     <label style={labelStyle}>{t("contact.form.email")}</label>
                     <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder={t("contact.form.email_placeholder")} style={inputStyle} />
                   </div>
+                </div>
+
+                <div style={{ marginBottom: "1.2rem" }}>
+                  <label style={labelStyle}>{t("contact.form.phone")}</label>
+                  <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} placeholder={t("contact.form.phone_placeholder")} style={inputStyle} />
                 </div>
 
                 <div style={{ marginBottom: "1.2rem" }}>

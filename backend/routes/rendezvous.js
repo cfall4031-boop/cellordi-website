@@ -11,16 +11,21 @@ const router = express.Router();
 router.post("/", (req, res) => {
   const { prenom, nom, email, telephone, type_appareil, date_rdv, heure, description } = req.body;
 
-  if (!prenom || !nom || !email || !type_appareil || !date_rdv) {
-    return res.status(400).json({ erreur: "Champs obligatoires manquants (prenom, nom, email, type_appareil, date_rdv)." });
+  if (!prenom || !nom || !type_appareil || !date_rdv) {
+    return res.status(400).json({ erreur: "Champs obligatoires manquants (prenom, nom, type_appareil, date_rdv)." });
   }
 
-  // Chercher ou créer le client
-  let client = db.prepare("SELECT id FROM clients WHERE email = ?").get(email);
+  // Chercher ou créer le client (par email si fourni, sinon par téléphone)
+  let client = null;
+  if (email) {
+    client = db.prepare("SELECT id FROM clients WHERE email = ?").get(email);
+  } else if (telephone) {
+    client = db.prepare("SELECT id FROM clients WHERE telephone = ?").get(telephone);
+  }
   if (!client) {
     const ins = db.prepare(
       "INSERT INTO clients (prenom, nom, email, telephone) VALUES (?, ?, ?, ?)"
-    ).run(prenom, nom, email, telephone || null);
+    ).run(prenom, nom, email || null, telephone || null);
     client = { id: ins.lastInsertRowid };
   }
 
@@ -59,13 +64,15 @@ router.post("/", (req, res) => {
   // ── Emails de confirmation (fire-and-forget) ─────────────────────
   const emailData = { prenom, nom, email, telephone, type_appareil, date_rdv, heure, description, numero_ticket };
 
-  sendEmail({
-    to: email,
-    subject: numero_ticket
-      ? `Confirmation de votre rendez-vous — Ticket ${numero_ticket}`
-      : `Confirmation de votre rendez-vous — Réparation CeLL&Ordi`,
-    html: rdvClient(emailData),
-  }).catch(console.error);
+  if (email) {
+    sendEmail({
+      to: email,
+      subject: numero_ticket
+        ? `Confirmation de votre rendez-vous — Ticket ${numero_ticket}`
+        : `Confirmation de votre rendez-vous — Réparation CeLL&Ordi`,
+      html: rdvClient(emailData),
+    }).catch(console.error);
+  }
 
   if (process.env.ADMIN_NOTIFY_EMAIL) {
     sendEmail({
