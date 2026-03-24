@@ -256,7 +256,7 @@ export function Decharge() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                       <div>
                         <label style={labelStyle}>{t("decharge.step1.email")}</label>
-                        <input name="email" type="email" value={form.email} onChange={handleChange} required style={inputStyle} />
+                        <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
                       </div>
                       <div>
                         <label style={labelStyle}>{t("decharge.step1.telephone")}</label>

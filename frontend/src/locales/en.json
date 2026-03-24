@@ -245,7 +245,7 @@
       "title": "Client Information",
       "prenom": "First name *",
       "nom": "Last name *",
-      "email": "Email *",
+      "email": "Email",
       "telephone": "Phone *",
       "next": "Next →"
     },
