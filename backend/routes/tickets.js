@@ -39,7 +39,7 @@ router.post("/", auth, (req, res) => {
     client_id, rendezvous_id, notes_internes
   } = req.body;
 
-  if (!prenom || !nom || !email || !type_appareil || !probleme) {
+  if (!prenom || !nom || !type_appareil || !probleme) {
     return res.status(400).json({ erreur: "Champs obligatoires manquants." });
   }
 
@@ -60,7 +60,7 @@ router.post("/", auth, (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     numero, client_id || null, rendezvous_id || null,
-    prenom, nom, email, telephone || null,
+    prenom, nom, email || null, telephone || null,
     type_appareil, marque || null, modele || null, probleme,
     diagnostic || null, pieces || null,
     cout_estime || 0, date_estimee || null, notes_internes || null
