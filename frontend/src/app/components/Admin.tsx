@@ -407,8 +407,8 @@ function Rendez_vous() {
 
   // ── Créer RDV ───────────────────────────────────────────────────────────────
   const submitNewRdv = async () => {
-    if (!newRdv.prenom || !newRdv.nom || !newRdv.email || !newRdv.date) {
-      setCreateErr("Prénom, nom, email et date sont requis."); return;
+    if (!newRdv.prenom || !newRdv.nom || !newRdv.date) {
+      setCreateErr("Prénom, nom et date sont requis."); return;
     }
     setCreating(true); setCreateErr(null); setCreateOk(null);
     try {
@@ -542,7 +542,7 @@ function Rendez_vous() {
               </p>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid">
                 {([["Prénom *","prenom","text","Jean"],["Nom *","nom","text","Dupont"],
-                  ["Email *","email","email","client@email.com"],["Téléphone","telephone","tel","(514) 000-0000"]]
+                  ["Email","email","email","client@email.com"],["Téléphone *","telephone","tel","(514) 000-0000"]]
                 ).map(([label,name,type,ph])=>(
                   <div key={name as string}>
                     <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>{label}</label>
@@ -1001,8 +1001,8 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 1rem"}}>
             {field("prenom","Prénom *",{required:true,placeholder:"Jean"})}
             {field("nom","Nom *",{required:true,placeholder:"Dupont"})}
-            {field("email","Email *",{required:true,type:"email",placeholder:"jean@ex.com"})}
-            {field("telephone","Téléphone",{placeholder:"514-555-1234"})}
+            {field("email","Email",{type:"email",placeholder:"jean@ex.com"})}
+            {field("telephone","Téléphone *",{required:true,placeholder:"514-555-1234"})}
             {field("type_appareil","Type d'appareil *",{required:true,placeholder:"iPhone, Laptop..."})}
             {field("marque","Marque",{placeholder:"Apple, Dell..."})}
             {field("modele","Modèle",{placeholder:"14 Pro, XPS 15..."})}
