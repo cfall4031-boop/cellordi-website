@@ -51,7 +51,14 @@ export function Navbar() {
         }}
       >
         {/* Logo */}
-        <a href="#" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <a href="#" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "0.55rem" }}>
+          <svg viewBox="0 0 512 512" style={{ width: "34px", height: "34px", flexShrink: 0 }}>
+            <rect width="512" height="512" rx="80" fill={NAVY}/>
+            <text x="256" y="235" textAnchor="middle" dominantBaseline="central"
+                  fontFamily="'Arial Black',sans-serif" fontWeight={900}
+                  fontSize={240} fill={GREEN} letterSpacing={-10}>CO</text>
+            <rect x="176" y="345" width="160" height="16" rx="8" fill={GREEN}/>
+          </svg>
           <span
             style={{
               fontFamily: FONT_DISPLAY,

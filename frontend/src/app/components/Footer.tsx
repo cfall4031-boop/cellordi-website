@@ -45,7 +45,14 @@ export function Footer() {
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "3rem", marginBottom: "4rem" }} className="footer-grid">
           {/* Brand */}
           <div>
-            <div style={{ marginBottom: "1.2rem" }}>
+            <div style={{ marginBottom: "1.2rem", display: "flex", alignItems: "center", gap: "0.55rem" }}>
+              <svg viewBox="0 0 512 512" style={{ width: "34px", height: "34px", flexShrink: 0 }}>
+                <rect width="512" height="512" rx="80" fill={NAVY}/>
+                <text x="256" y="235" textAnchor="middle" dominantBaseline="central"
+                      fontFamily="'Arial Black',sans-serif" fontWeight={900}
+                      fontSize={240} fill={GREEN} letterSpacing={-10}>CO</text>
+                <rect x="176" y="345" width="160" height="16" rx="8" fill={GREEN}/>
+              </svg>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "1.4rem", color: WHITE, letterSpacing: "0.05em", lineHeight: 1.1 }}>
                 <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>{t("footer.repair")}</span>
                 CeLL<span style={{ color: GREEN }}>&</span>Ordi
