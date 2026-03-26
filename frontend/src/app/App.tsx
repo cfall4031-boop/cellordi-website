@@ -11,7 +11,7 @@ import { Testimonials } from "./components/Testimonials";
 import { Blog } from "./components/Blog";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
-import { CookieBanner } from "./components/CookieBanner";
+
 import "../styles/fonts.css";
 
 export default function App() {
@@ -34,7 +34,6 @@ export default function App() {
       <Blog />
       <Contact />
       <Footer />
-      <CookieBanner />
 
       {/* Global animations injected once */}
       <style>{`

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { messagesApi } from "../../api";
-import { CONSENT_KEY } from "./CookieBanner";
+
 
 const MAPS_URL = "https://www.google.com/maps/search/5050+QC-132+%23203,+Sainte-Catherine,+QC+J5C+1L4";
 
@@ -84,25 +84,6 @@ export function Contact() {
       setLoading(false);
     }
   };
-
-  if (sessionStorage.getItem(CONSENT_KEY) === "refused") return (
-    <section id="contact" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center", paddingTop: "2rem" }}>
-        <FadeUp>
-          <p style={{ fontSize: "2rem", marginBottom: "1rem" }}>⚠️</p>
-          <p style={{ color: WHITE, fontFamily: FONT_DISPLAY, fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-            {t("contact.refused_title")}
-          </p>
-          <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "0.95rem" }}>
-            {t("contact.refused_text")}<br />
-            <strong style={{ color: WHITE }}>📞 (514) 237-5792</strong>
-            &nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong style={{ color: WHITE }}>✉️ info@reparationcellordi.ca</strong>
-          </p>
-        </FadeUp>
-      </div>
-    </section>
-  );
 
   return (
     <section id="contact" style={{ background: NAVY_MID, padding: "7rem 2rem" }}>
