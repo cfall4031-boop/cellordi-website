@@ -10,26 +10,28 @@ const router = express.Router();
 router.post("/", (req, res) => {
   const { nom, email, telephone, sujet, message } = req.body;
 
-  if (!nom || !email || !sujet || !message) {
-    return res.status(400).json({ erreur: "Tous les champs sont obligatoires." });
+  if (!nom || !sujet || !message) {
+    return res.status(400).json({ erreur: "Nom, sujet et message sont obligatoires." });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (email && !emailRegex.test(email)) {
     return res.status(400).json({ erreur: "Format d'email invalide." });
   }
 
   const result = db.prepare(`
     INSERT INTO messages_contact (nom, email, telephone, sujet, message)
     VALUES (?, ?, ?, ?, ?)
-  `).run(nom, email, telephone || null, sujet, message);
+  `).run(nom, email || null, telephone || null, sujet, message);
 
   // ── Emails de confirmation (fire-and-forget) ─────────────────────
-  sendEmail({
-    to: email,
-    subject: `Message reçu — Réparation CeLL&Ordi`,
-    html: contactClient({ nom, sujet }),
-  }).catch(console.error);
+  if (email) {
+    sendEmail({
+      to: email,
+      subject: `Message reçu — Réparation CeLL&Ordi`,
+      html: contactClient({ nom, sujet }),
+    }).catch(console.error);
+  }
 
   if (process.env.ADMIN_NOTIFY_EMAIL) {
     sendEmail({

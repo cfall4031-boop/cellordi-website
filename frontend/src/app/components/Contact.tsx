@@ -175,7 +175,7 @@ export function Contact() {
                   </div>
                   <div>
                     <label style={labelStyle}>{t("contact.form.email")}</label>
-                    <input name="email" type="email" value={form.email} onChange={handleChange} required placeholder={t("contact.form.email_placeholder")} style={inputStyle} />
+                    <input name="email" type="email" value={form.email} onChange={handleChange} placeholder={t("contact.form.email_placeholder")} style={inputStyle} />
                   </div>
                 </div>
 
