@@ -2,11 +2,25 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
-import { rdvApi } from "../../api";
+import { rdvApi, messagesApi } from "../../api";
 
+// Vérifie si on est dans les heures d'ouverture (fuseau Montréal)
+const isBusinessOpen = (): boolean => {
+  const now = new Date();
+  const mtl = new Date(now.toLocaleString("en-US", { timeZone: "America/Montreal" }));
+  const day = mtl.getDay(); // 0=Dim, 1=Lun…6=Sam
+  const t = mtl.getHours() + mtl.getMinutes() / 60;
+  if (day >= 1 && day <= 5) return t >= 10 && t < 19; // Lun–Ven 10h–19h
+  if (day === 6) return t >= 11 && t < 19;             // Sam 11h–19h
+  return false;                                         // Dim fermé
+};
 
 export function Rendezvous() {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(isBusinessOpen);
+  const [callbackPhone, setCallbackPhone] = useState("");
+  const [callbackSent, setCallbackSent] = useState(false);
+  const [callbackLoading, setCallbackLoading] = useState(false);
   const [form, setForm] = useState({
     nom: "", prenom: "", email: "", telephone: "",
     service: "", probleme: "",
@@ -21,6 +35,32 @@ export function Rendezvous() {
   const [hovBtn, setHovBtn] = useState(false);
 
   const SERVICES = t("rdv.services", { returnObjects: true }) as string[];
+
+  // Recalculer l'état ouvert/fermé chaque minute
+  useEffect(() => {
+    const id = setInterval(() => setOpen(isBusinessOpen()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const handleCallback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!callbackPhone.trim()) return;
+    setCallbackLoading(true);
+    try {
+      await messagesApi.send({
+        nom: "Rappel demandé",
+        email: "",
+        telephone: callbackPhone,
+        sujet: "Rappel demandé",
+        message: `Un client demande à être rappelé au ${callbackPhone}.`,
+      });
+      setCallbackSent(true);
+    } catch {
+      setCallbackSent(true); // on confirme quand même côté client
+    } finally {
+      setCallbackLoading(false);
+    }
+  };
 
   // Charger les créneaux disponibles quand la date change
   useEffect(() => {
@@ -91,43 +131,52 @@ export function Rendezvous() {
         <FadeUp delay={0.05}>
           <div style={{
             position: "relative",
-            background: "linear-gradient(135deg, rgba(109,212,0,0.07) 0%, rgba(12,12,18,0.0) 65%)",
-            border: "1px solid rgba(109,212,0,0.22)",
-            borderRadius: "20px",
-            padding: "2.2rem 2.5rem",
-            marginBottom: "2.5rem",
+            background: "linear-gradient(135deg, rgba(109,212,0,0.06) 0%, rgba(12,12,18,0.0) 65%)",
+            border: `1px solid ${open ? "rgba(109,212,0,0.2)" : "rgba(144,144,168,0.15)"}`,
+            borderRadius: "16px",
+            padding: "1.4rem 1.8rem",
+            marginBottom: "2rem",
             overflow: "hidden",
           }}>
             {/* Radial glow déco */}
             <div style={{
-              position: "absolute", top: "-60px", right: "-60px",
-              width: "260px", height: "260px",
-              background: "radial-gradient(circle, rgba(109,212,0,0.13) 0%, transparent 70%)",
+              position: "absolute", top: "-40px", right: "-40px",
+              width: "180px", height: "180px",
+              background: `radial-gradient(circle, ${open ? "rgba(109,212,0,0.1)" : "rgba(144,144,168,0.05)"} 0%, transparent 70%)`,
               pointerEvents: "none",
             }} />
 
-            <div className="call-block-inner" style={{ display: "flex", alignItems: "center", gap: "2rem", flexWrap: "wrap", position: "relative" }}>
+            <div className="call-block-inner" style={{ display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap", position: "relative" }}>
               {/* Colonne gauche */}
-              <div style={{ flex: 1, minWidth: "200px" }}>
-                {/* Badge */}
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", background: "rgba(109,212,0,0.1)", border: "1px solid rgba(109,212,0,0.25)", borderRadius: "50px", padding: "0.3rem 0.85rem", marginBottom: "1rem" }}>
-                  <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: GREEN, animation: "pulse-dot 1.5s ease-in-out infinite" }} />
-                  <span style={{ fontFamily: FONT_BODY, fontSize: "0.73rem", color: GREEN, letterSpacing: "0.13em", textTransform: "uppercase", fontWeight: 700 }}>
-                    {t("rdv.call.badge")}
+              <div style={{ flex: 1, minWidth: "180px" }}>
+                {/* Badge dynamique */}
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.4rem",
+                  background: open ? "rgba(109,212,0,0.1)" : "rgba(144,144,168,0.08)",
+                  border: `1px solid ${open ? "rgba(109,212,0,0.25)" : "rgba(144,144,168,0.2)"}`,
+                  borderRadius: "50px", padding: "0.25rem 0.75rem", marginBottom: "0.75rem"
+                }}>
+                  <span style={{
+                    display: "inline-block", width: "6px", height: "6px", borderRadius: "50%",
+                    background: open ? GREEN : "#9090a8",
+                    animation: open ? "pulse-dot 1.5s ease-in-out infinite" : "none",
+                  }} />
+                  <span style={{ fontFamily: FONT_BODY, fontSize: "0.7rem", color: open ? GREEN : "#9090a8", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700 }}>
+                    {open ? t("rdv.call.badge_open") : t("rdv.call.badge_closed")}
                   </span>
                 </div>
 
-                <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "clamp(1.15rem, 2.5vw, 1.5rem)", color: WHITE, margin: "0 0 1rem", lineHeight: 1.25 }}>
+                <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "clamp(1rem, 2vw, 1.2rem)", color: WHITE, margin: "0 0 0.7rem", lineHeight: 1.3 }}>
                   {t("rdv.call.title")}<br />{t("rdv.call.title2")}
                 </h3>
 
                 {/* Chips info */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                   {(t("rdv.call.chips", { returnObjects: true }) as string[]).map((chip) => (
                     <span key={chip} style={{
-                      fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY,
-                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(144,144,168,0.18)",
-                      borderRadius: "50px", padding: "0.28rem 0.75rem",
+                      fontFamily: FONT_BODY, fontSize: "0.73rem", color: GRAY,
+                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(144,144,168,0.15)",
+                      borderRadius: "50px", padding: "0.22rem 0.65rem",
                     }}>
                       {chip}
                     </span>
@@ -135,31 +184,65 @@ export function Rendezvous() {
                 </div>
               </div>
 
-              {/* Colonne droite — bouton appel */}
-              <div style={{ flexShrink: 0, textAlign: "center" }}>
-                <a
-                  href="tel:5142375792"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.7rem",
-                    background: GREEN, color: NAVY,
-                    fontFamily: FONT_DISPLAY, fontWeight: 800,
-                    fontSize: "1.25rem", letterSpacing: "0.04em",
-                    textDecoration: "none",
-                    padding: "1rem 2rem",
-                    borderRadius: "14px",
-                    boxShadow: "0 0 0 0 rgba(109,212,0,0.5)",
-                    animation: "ring-pulse 2.2s ease-out infinite",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.32.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.01L6.6 10.8z"/>
-                  </svg>
-                  (514) 237-5792
-                </a>
-                <p style={{ fontFamily: FONT_BODY, fontSize: "0.75rem", color: GRAY_DIM, margin: "0.6rem 0 0", letterSpacing: "0.03em" }}>
-                  {t("rdv.call.hint")}
-                </p>
+              {/* Colonne droite */}
+              <div style={{ flexShrink: 0, textAlign: "center", minWidth: "170px" }}>
+                {open ? (
+                  <>
+                    <a
+                      href="tel:5142375792"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "0.55rem",
+                        background: GREEN, color: NAVY,
+                        fontFamily: FONT_DISPLAY, fontWeight: 800,
+                        fontSize: "1rem", letterSpacing: "0.04em",
+                        textDecoration: "none",
+                        padding: "0.75rem 1.4rem",
+                        borderRadius: "12px",
+                        boxShadow: "0 0 0 0 rgba(109,212,0,0.5)",
+                        animation: "ring-pulse 2.2s ease-out infinite",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.32.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.01L6.6 10.8z"/>
+                      </svg>
+                      (514) 237-5792
+                    </a>
+                    <p style={{ fontFamily: FONT_BODY, fontSize: "0.72rem", color: GRAY_DIM, margin: "0.5rem 0 0", letterSpacing: "0.03em" }}>
+                      {t("rdv.call.hint")}
+                    </p>
+                  </>
+                ) : callbackSent ? (
+                  <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GREEN, textAlign: "center", margin: 0 }}>
+                    {t("rdv.call.callback_sent")}
+                  </p>
+                ) : (
+                  <form onSubmit={handleCallback} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <p style={{ fontFamily: FONT_BODY, fontSize: "0.75rem", color: GRAY, margin: "0 0 0.3rem", lineHeight: 1.4 }}>
+                      {t("rdv.call.callback_title")}
+                    </p>
+                    <input
+                      type="tel"
+                      value={callbackPhone}
+                      onChange={e => setCallbackPhone(e.target.value)}
+                      placeholder={t("rdv.call.callback_placeholder")}
+                      required
+                      style={{ ...inputStyle, fontSize: "0.85rem", padding: "0.5rem 0.8rem" }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={callbackLoading}
+                      style={{
+                        ...btn(GREEN, NAVY),
+                        fontSize: "0.82rem", padding: "0.55rem 1rem",
+                        opacity: callbackLoading ? 0.6 : 1,
+                        cursor: callbackLoading ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {callbackLoading ? "…" : t("rdv.call.callback_send")}
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
           </div>

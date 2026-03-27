@@ -130,12 +130,17 @@
     "title": "Book an Appointment",
     "subtitle": "Fill out this form and we'll confirm your appointment within 1 hour.",
     "call": {
-      "badge": "Available now",
-      "title": "Need a quick price?",
-      "title2": "Call us.",
-      "chips": ["✓ Price in 2 min", "✓ Free quote", "✓ Mon–Sat 9am–6pm"],
+      "badge_open": "Available now",
+      "badge_closed": "Unavailable · Leave a message",
+      "title": "Quick price for",
+      "title2": "your situation?",
+      "chips": ["✓ Price in 2 min", "✓ Free quote", "✓ Mon–Fri 10am–7pm · Sat 11am–7pm"],
       "hint": "Direct call · no wait",
-      "divider": "or fill out the form"
+      "divider": "or fill out the form",
+      "callback_title": "Leave your number, we'll call back ASAP",
+      "callback_placeholder": "Your phone number",
+      "callback_send": "Send",
+      "callback_sent": "Got it! We'll call you back when we open."
     },
     "refused_title": "You have declined data processing.",
     "refused_text": "To book an appointment, contact us directly:",
@@ -218,7 +223,7 @@
       "phone_title": "Phone",
       "email_title": "Email",
       "hours_title": "Hours",
-      "hours": ["Mon–Fri: 10am–7pm", "Saturday: 10am–6pm", "Sunday: Closed"]
+      "hours": ["Mon–Fri: 10am–7pm", "Saturday: 11am–7pm", "Sunday: Closed"]
     },
     "form": {
       "name": "Full name *",
