@@ -9,7 +9,7 @@ export function Rendezvous() {
   const { t } = useTranslation();
   const [form, setForm] = useState({
     nom: "", prenom: "", email: "", telephone: "",
-    service: "", appareil: "", probleme: "",
+    service: "", probleme: "",
     date: "", heure: "", urgence: false,
   });
   const [slots, setSlots] = useState<string[]>([]);
@@ -56,10 +56,10 @@ export function Rendezvous() {
         nom: form.nom,
         email: form.email,
         telephone: form.telephone,
-        type_appareil: form.service || form.appareil || "Non spécifié",
+        type_appareil: form.service || "Non spécifié",
         date_rdv: form.date,
         heure: form.heure || undefined,
-        description: `Service: ${form.service} | Appareil: ${form.appareil}${form.urgence ? " | URGENT" : ""} | ${form.probleme}`,
+        description: `Service: ${form.service}${form.urgence ? " | URGENT" : ""} | ${form.probleme}`,
       });
       setTicketNumero(res?.numero_ticket || null);
       setSent(true);
@@ -208,7 +208,7 @@ export function Rendezvous() {
                   setSent(false);
                   setTicketNumero(null);
                   setErreur("");
-                  setForm({ nom: "", prenom: "", email: "", telephone: "", service: "", appareil: "", probleme: "", date: "", heure: "", urgence: false });
+                  setForm({ nom: "", prenom: "", email: "", telephone: "", service: "", probleme: "", date: "", heure: "", urgence: false });
                   setSlots([]);
                 }}
                 style={{ ...btn(GREEN, NAVY), marginTop: "0.5rem" }}
@@ -243,21 +243,15 @@ export function Rendezvous() {
                 </div>
               </div>
 
-              {/* Service + Device */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                <div>
-                  <label style={labelStyle}>{t("rdv.fields.service")}</label>
-                  <select name="service" value={form.service} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="">{t("rdv.fields.select")}</option>
-                    {SERVICES.map((s) => (
-                      <option key={s} value={s} style={{ background: NAVY }}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>{t("rdv.fields.appareil")}</label>
-                  <input name="appareil" value={form.appareil} onChange={handleChange} placeholder={t("rdv.placeholders.appareil")} style={inputStyle} />
-                </div>
+              {/* Service */}
+              <div style={{ marginBottom: "1.2rem" }}>
+                <label style={labelStyle}>{t("rdv.fields.service")}</label>
+                <select name="service" value={form.service} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="">{t("rdv.fields.select")}</option>
+                  {SERVICES.map((s) => (
+                    <option key={s} value={s} style={{ background: NAVY }}>{s}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Description */}
