@@ -42,7 +42,7 @@ export function Process() {
   const steps = t("process.steps", { returnObjects: true }) as Array<{ num: string; title: string; desc: string }>;
 
   return (
-    <section id="process" style={{ background: NAVY, padding: "7rem 2rem", position: "relative", overflow: "hidden" }}>
+    <section id="process" style={{ background: NAVY, padding: "4rem 2rem", position: "relative", overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -58,7 +58,7 @@ export function Process() {
 
       <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 1 }}>
         <FadeUp>
-          <div style={{ textAlign: "center", marginBottom: "5rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
               {t("process.tag")}
             </span>
@@ -102,15 +102,15 @@ export function Process() {
                 >
                   <div
                     style={{
-                      width: "80px",
-                      height: "80px",
+                      width: "64px",
+                      height: "64px",
                       background: `rgba(109,212,0,0.08)`,
                       border: `2px solid ${GREEN}55`,
                       borderRadius: "50%",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      marginBottom: "1.5rem",
+                      marginBottom: "1rem",
                       position: "relative",
                       animation: "glowPulse 3s ease-in-out infinite",
                       animationDelay: `${i * 0.5}s`,
@@ -157,11 +157,11 @@ export function Process() {
                     {step.num}
                   </div>
 
-                  <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.25rem", color: WHITE, marginBottom: "0.8rem", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.1rem", color: WHITE, marginBottom: "0.6rem", letterSpacing: "0.04em", textTransform: "uppercase" }}>
                     {step.title}
                   </h3>
 
-                  <p style={{ fontFamily: FONT_BODY, fontSize: "0.9rem", color: GRAY, lineHeight: 1.65 }}>
+                  <p style={{ fontFamily: FONT_BODY, fontSize: "0.85rem", color: GRAY, lineHeight: 1.55 }}>
                     {step.desc}
                   </p>
                 </div>

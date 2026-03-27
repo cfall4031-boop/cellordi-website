@@ -8,7 +8,6 @@ import { Rendezvous } from "./components/Rendezvous";
 import { Suivi } from "./components/Suivi";
 import { Decharge } from "./components/Decharge";
 import { Testimonials } from "./components/Testimonials";
-import { Blog } from "./components/Blog";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 
@@ -31,7 +30,6 @@ export default function App() {
       <Suivi />
       <Decharge />
       <Testimonials />
-      <Blog />
       <Contact />
       <Footer />
 
