@@ -98,16 +98,19 @@ export default function App() {
           100% { box-shadow: 0 0 0 0 rgba(109,212,0,0), 0 6px 28px rgba(109,212,0,0.4); }
         }
 
-        /* Sticky call button — mobile full-width bar */
+        /* Sticky call button — mobile: pill subtil semi-transparent */
         @media (max-width: 600px) {
           .sticky-call-btn {
-            right: 0 !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            border-radius: 0 !important;
-            justify-content: center !important;
-            padding: 1.1rem 2rem !important;
-            font-size: 1.05rem !important;
+            bottom: 1.2rem !important;
+            right: 1.2rem !important;
+            background: rgba(12,12,18,0.75) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            color: #6dd400 !important;
+            border: 1px solid rgba(109,212,0,0.35) !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+            font-size: 0.88rem !important;
+            padding: 0.7rem 1.25rem !important;
           }
         }
 
