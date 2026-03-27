@@ -129,6 +129,14 @@
     "tag": "Réservation en ligne",
     "title": "Prendre Rendez-vous",
     "subtitle": "Remplissez ce formulaire et nous vous confirmons votre RDV sous 1h.",
+    "call": {
+      "badge": "Disponible maintenant",
+      "title": "Prix rapide ?",
+      "title2": "Appelez-nous.",
+      "chips": ["✓ Prix en 2 min", "✓ Devis gratuit", "✓ Lun–Sam 9h–18h"],
+      "hint": "Appel direct · sans attente",
+      "divider": "ou remplissez le formulaire"
+    },
     "refused_title": "Vous avez refusé le traitement de vos données.",
     "refused_text": "Pour prendre rendez-vous, contactez-nous directement :",
     "services": [

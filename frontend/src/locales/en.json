@@ -129,6 +129,14 @@
     "tag": "Online booking",
     "title": "Book an Appointment",
     "subtitle": "Fill out this form and we'll confirm your appointment within 1 hour.",
+    "call": {
+      "badge": "Available now",
+      "title": "Need a quick price?",
+      "title2": "Call us.",
+      "chips": ["✓ Price in 2 min", "✓ Free quote", "✓ Mon–Sat 9am–6pm"],
+      "hint": "Direct call · no wait",
+      "divider": "or fill out the form"
+    },
     "refused_title": "You have declined data processing.",
     "refused_text": "To book an appointment, contact us directly:",
     "services": [

@@ -113,17 +113,17 @@ export function Rendezvous() {
                 <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", background: "rgba(109,212,0,0.1)", border: "1px solid rgba(109,212,0,0.25)", borderRadius: "50px", padding: "0.3rem 0.85rem", marginBottom: "1rem" }}>
                   <span style={{ display: "inline-block", width: "7px", height: "7px", borderRadius: "50%", background: GREEN, animation: "pulse-dot 1.5s ease-in-out infinite" }} />
                   <span style={{ fontFamily: FONT_BODY, fontSize: "0.73rem", color: GREEN, letterSpacing: "0.13em", textTransform: "uppercase", fontWeight: 700 }}>
-                    Disponible maintenant
+                    {t("rdv.call.badge")}
                   </span>
                 </div>
 
                 <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "clamp(1.15rem, 2.5vw, 1.5rem)", color: WHITE, margin: "0 0 1rem", lineHeight: 1.25 }}>
-                  Prix rapide ?<br />Appelez-nous.
+                  {t("rdv.call.title")}<br />{t("rdv.call.title2")}
                 </h3>
 
                 {/* Chips info */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                  {["✓ Prix en 2 min", "✓ Devis gratuit", "✓ Lun–Sam 9h–18h"].map((chip) => (
+                  {(t("rdv.call.chips", { returnObjects: true }) as string[]).map((chip) => (
                     <span key={chip} style={{
                       fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY,
                       background: "rgba(255,255,255,0.04)", border: "1px solid rgba(144,144,168,0.18)",
@@ -158,7 +158,7 @@ export function Rendezvous() {
                   (514) 237-5792
                 </a>
                 <p style={{ fontFamily: FONT_BODY, fontSize: "0.75rem", color: GRAY_DIM, margin: "0.6rem 0 0", letterSpacing: "0.03em" }}>
-                  Appel direct · sans attente
+                  {t("rdv.call.hint")}
                 </p>
               </div>
             </div>
@@ -168,7 +168,7 @@ export function Rendezvous() {
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
             <div style={{ flex: 1, height: "1px", background: "rgba(109,212,0,0.1)" }} />
             <span style={{ fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY_DIM, letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
-              ou remplissez le formulaire
+              {t("rdv.call.divider")}
             </span>
             <div style={{ flex: 1, height: "1px", background: "rgba(109,212,0,0.1)" }} />
           </div>
