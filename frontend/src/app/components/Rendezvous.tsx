@@ -118,12 +118,12 @@ export function Rendezvous() {
                 </div>
 
                 <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 800, fontSize: "clamp(1.15rem, 2.5vw, 1.5rem)", color: WHITE, margin: "0 0 1rem", lineHeight: 1.25 }}>
-                  Préférez parler<br />à quelqu'un ?
+                  Prix rapide ?<br />Appelez-nous.
                 </h3>
 
                 {/* Chips info */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                  {["✓ Devis gratuit", "✓ Réponse < 1h", "✓ Lun–Sam 9h–18h"].map((chip) => (
+                  {["✓ Prix en 2 min", "✓ Devis gratuit", "✓ Lun–Sam 9h–18h"].map((chip) => (
                     <span key={chip} style={{
                       fontFamily: FONT_BODY, fontSize: "0.78rem", color: GRAY,
                       background: "rgba(255,255,255,0.04)", border: "1px solid rgba(144,144,168,0.18)",
