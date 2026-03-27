@@ -24,8 +24,8 @@ export default function App() {
     >
       <Navbar />
       <Hero />
-      <Services />
       <Process />
+      <Services />
       <Rendezvous />
       <Suivi />
       <Decharge />
