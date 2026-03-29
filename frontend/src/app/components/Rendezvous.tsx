@@ -75,9 +75,8 @@ export function Rendezvous() {
       .finally(() => setSlotsLoading(false));
   }, [selDate]);
 
-  // Formulaire (sans email)
   const [form, setForm] = useState({
-    prenom: "", nom: "", telephone: "",
+    prenom: "", nom: "", email: "", telephone: "",
     service: "", probleme: "", urgence: false,
   });
   const [sent, setSent] = useState(false);
@@ -114,7 +113,7 @@ export function Rendezvous() {
       const res = await rdvApi.create({
         prenom: form.prenom,
         nom: form.nom,
-        email: "",
+        email: form.email || "",
         telephone: form.telephone,
         type_appareil: form.service || "Non spécifié",
         date_rdv: selDate,
@@ -232,7 +231,7 @@ export function Rendezvous() {
                 onClick={() => {
                   setSent(false); setTicket(null); setErreur("");
                   setSelDate(""); setSlots("" as any); setSelHeure("");
-                  setForm({ prenom: "", nom: "", telephone: "", service: "", probleme: "", urgence: false });
+                  setForm({ prenom: "", nom: "", email: "", telephone: "", service: "", probleme: "", urgence: false });
                 }}
                 style={{ ...btn(GREEN, NAVY) }}
               >
@@ -538,6 +537,17 @@ export function Rendezvous() {
                       name="telephone" type="tel" value={form.telephone} onChange={handleChange}
                       placeholder={t("rdv.placeholders.telephone")} required style={inputStyle}
                     />
+                  </div>
+
+                  <div style={{ marginBottom: "0.9rem" }}>
+                    <label style={labelStyle}>{t("rdv.fields.email_label")}</label>
+                    <input
+                      name="email" type="email" value={form.email} onChange={handleChange}
+                      placeholder={t("rdv.placeholders.email")} style={inputStyle}
+                    />
+                    <span style={{ fontSize: "0.72rem", color: GRAY_DIM, marginTop: "0.3rem", display: "block", lineHeight: 1.4 }}>
+                      {t("rdv.fields.email_hint")}
+                    </span>
                   </div>
 
                   <div style={{ marginBottom: "0.9rem" }}>

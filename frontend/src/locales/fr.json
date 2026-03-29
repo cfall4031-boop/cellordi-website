@@ -164,6 +164,8 @@
       "prenom": "Prénom *",
       "nom": "Nom *",
       "email": "Email",
+      "email_label": "Courriel — pour votre confirmation",
+      "email_hint": "Recevez votre numéro de suivi par email · facultatif",
       "telephone": "Téléphone *",
       "service": "Service souhaité *",
       "appareil": "Modèle d'appareil",

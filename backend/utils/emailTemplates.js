@@ -39,7 +39,7 @@ function wrap(content) {
         <a href="${SITE_URL}" style="color:#6dd400;text-decoration:none;">${SITE_URL.replace("https://","").replace("http://","")}</a>
       </div>
       <div style="color:#4a6080;font-size:11px;margin-top:8px;">
-        Lun–Ven : 10h–19h &nbsp;|&nbsp; Sam : 10h–18h
+        Lun–Ven : 10h–19h &nbsp;|&nbsp; Sam : 11h–19h
       </div>
       <div style="color:#4a6080;font-size:10px;margin-top:12px;">
         Vous recevez ce courriel car vous avez interagi avec Réparation CeLL&amp;Ordi.

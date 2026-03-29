@@ -164,6 +164,8 @@
       "prenom": "First name *",
       "nom": "Last name *",
       "email": "Email",
+      "email_label": "Email — for your confirmation",
+      "email_hint": "Receive your tracking number by email · optional",
       "telephone": "Phone *",
       "service": "Desired service *",
       "appareil": "Device model",
