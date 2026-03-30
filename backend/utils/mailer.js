@@ -1,19 +1,8 @@
-// ── Transporteur Email — Réparation CeLL&Ordi ─────────────────
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.resend.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "resend",
-    pass: process.env.RESEND_API_KEY,
-  },
-});
+// ── Mailer — Réparation CeLL&Ordi (Resend HTTP API) ────────────
+const { Resend } = require("resend");
 
 /**
- * Envoie un courriel HTML.
- * Fire-and-forget : n'empêche jamais une réponse HTTP de partir.
+ * Envoie un courriel HTML via l'API HTTP Resend (pas de SMTP).
  *
  * @param {{ to: string, subject: string, html: string }} opts
  * @returns {Promise<void>}
@@ -24,16 +13,19 @@ async function sendEmail({ to, subject, html }) {
     return;
   }
 
-  const mailOptions = {
-    from: `"Réparation CeLL&Ordi" <${process.env.FROM_EMAIL}>`,
-    to,
-    subject,
-    html,
-  };
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`[Mailer] ✅ Email envoyé à ${to} — ${info.messageId}`);
+    const { data, error } = await resend.emails.send({
+      from: `"Réparation CeLL&Ordi" <${process.env.FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+    });
+
+    if (error) throw new Error(error.message);
+
+    console.log(`[Mailer] ✅ Email envoyé à ${to} — ${data.id}`);
   } catch (err) {
     console.error(`[Mailer] ❌ Erreur envoi à ${to}:`, err.message);
   }
