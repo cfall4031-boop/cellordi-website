@@ -1,20 +1,13 @@
 // ── Transporteur Email — Réparation CeLL&Ordi ─────────────────
 const nodemailer = require("nodemailer");
-const dns        = require("dns");
-
-// Force IPv4 partout — Railway ne supporte pas IPv6 sortant
-dns.setDefaultResultOrder("ipv4first");
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,   // STARTTLS
-  // DNS lookup explicitement IPv4 (fix Railway ENETUNREACH IPv6)
-  dnsLookup: (hostname, opts, cb) =>
-    dns.lookup(hostname, { ...opts, family: 4 }, cb),
+  host: "smtp.resend.com",
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: "resend",
+    pass: process.env.RESEND_API_KEY,
   },
 });
 
@@ -26,13 +19,13 @@ const transporter = nodemailer.createTransport({
  * @returns {Promise<void>}
  */
 async function sendEmail({ to, subject, html }) {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn("[Mailer] Variables GMAIL_USER / GMAIL_APP_PASSWORD non configurées — email ignoré.");
+  if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL) {
+    console.warn("[Mailer] RESEND_API_KEY / FROM_EMAIL manquants — email ignoré.");
     return;
   }
 
   const mailOptions = {
-    from: `"Réparation CeLL&Ordi" <${process.env.GMAIL_USER}>`,
+    from: `"Réparation CeLL&Ordi" <${process.env.FROM_EMAIL}>`,
     to,
     subject,
     html,
