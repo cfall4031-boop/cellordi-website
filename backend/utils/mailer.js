@@ -1,13 +1,17 @@
 // ── Transporteur Email — Réparation CeLL&Ordi ─────────────────
 const nodemailer = require("nodemailer");
-const dns = require("dns");
-dns.setDefaultResultOrder("ipv4first"); // Force IPv4 — évite ENETUNREACH sur Railway
+const dns        = require("dns");
+
+// Force IPv4 partout — Railway ne supporte pas IPv6 sortant
+dns.setDefaultResultOrder("ipv4first");
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,   // STARTTLS
-  family: 4,       // Force IPv4 — évite ENETUNREACH sur Railway
+  // DNS lookup explicitement IPv4 (fix Railway ENETUNREACH IPv6)
+  dnsLookup: (hostname, opts, cb) =>
+    dns.lookup(hostname, { ...opts, family: 4 }, cb),
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
