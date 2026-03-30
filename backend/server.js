@@ -1,3 +1,6 @@
+// ── Fix Railway IPv6 — forcer DNS IPv4 avant tout autre require ──
+require("dns").setDefaultResultOrder("ipv4first");
+
 require("dotenv").config();
 const express    = require("express");
 const cors       = require("cors");
