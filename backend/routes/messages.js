@@ -2,7 +2,7 @@ const express = require("express");
 const { db } = require("../database");
 const auth = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
-const { contactClient, contactAdmin, replyToContact } = require("../utils/emailTemplates");
+const { contactClient, contactAdmin, replyToContact, rappelAdmin } = require("../utils/emailTemplates");
 
 const router = express.Router();
 
@@ -22,10 +22,12 @@ router.post("/", (req, res) => {
   const result = db.prepare(`
     INSERT INTO messages_contact (nom, email, telephone, sujet, message)
     VALUES (?, ?, ?, ?, ?)
-  `).run(nom, email || null, telephone || null, sujet, message);
+  `).run(nom, email || "", telephone || null, sujet, message);
 
-  // ── Emails de confirmation (fire-and-forget) ─────────────────────
-  if (email) {
+  // ── Emails de notification (fire-and-forget) ─────────────────────
+  const isRappel = sujet === "Rappel demandé";
+
+  if (!isRappel && email) {
     sendEmail({
       to: email,
       subject: `Message reçu — Réparation CeLL&Ordi`,
@@ -34,11 +36,20 @@ router.post("/", (req, res) => {
   }
 
   if (process.env.ADMIN_NOTIFY_EMAIL) {
-    sendEmail({
-      to: process.env.ADMIN_NOTIFY_EMAIL,
-      subject: `✉️ Nouveau message de ${nom} — ${sujet}`,
-      html: contactAdmin({ nom, email, telephone, sujet, message }),
-    }).catch(console.error);
+    if (isRappel) {
+      // Notif spéciale rappel : juste le numéro à rappeler
+      sendEmail({
+        to: process.env.ADMIN_NOTIFY_EMAIL,
+        subject: `📞 Rappel demandé — ${telephone}`,
+        html: rappelAdmin({ telephone, created_at: new Date().toLocaleString("fr-CA", { timeZone: "America/Toronto" }) }),
+      }).catch(console.error);
+    } else {
+      sendEmail({
+        to: process.env.ADMIN_NOTIFY_EMAIL,
+        subject: `✉️ Nouveau message de ${nom} — ${sujet}`,
+        html: contactAdmin({ nom, email, telephone, sujet, message }),
+      }).catch(console.error);
+    }
   }
 
   res.status(201).json({

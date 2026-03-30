@@ -300,6 +300,36 @@ function replyToContact({ nom, sujet, originalMessage, replyText }) {
   return wrap(content);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 7. EMAIL ADMIN — Rappel demandé (client hors horaires)
+// ═══════════════════════════════════════════════════════════════
+function rappelAdmin({ telephone, created_at }) {
+  const content = `
+    <div style="background:#f59e0b22;border:1px solid #f59e0b44;padding:12px 16px;margin-bottom:24px;">
+      <div style="color:#f59e0b;font-weight:700;font-size:14px;">📞 Rappel demandé — client hors horaires</div>
+    </div>
+
+    <h2 style="font-size:18px;color:#ffffff;margin:0 0 16px;">
+      Un client veut être rappelé à l'ouverture
+    </h2>
+
+    <table style="width:100%;border-collapse:collapse;background:#0e2040;margin-bottom:24px;">
+      ${detail("Numéro", `<a href="tel:${telephone}" style="color:#6dd400;font-size:18px;font-weight:900;">${telephone}</a>`)}
+      ${detail("Reçu le", created_at || "maintenant")}
+    </table>
+
+    <div style="background:rgba(109,212,0,0.06);border-left:3px solid #6dd400;padding:14px 16px;margin-bottom:24px;">
+      <p style="color:#a8b8d0;font-size:13px;line-height:1.6;margin:0;">
+        <strong style="color:#6dd400;">À faire :</strong> Rappeler ce client dès l'ouverture.
+        Le numéro est aussi visible dans le panel admin → Messages.
+      </p>
+    </div>
+
+    ${btnVert("Voir dans le panel admin →", `${SITE_URL}/admin`)}
+  `;
+  return wrap(content);
+}
+
 // ─────────────────────────────────────────────────────────────
 module.exports = {
   rdvClient,
@@ -308,4 +338,5 @@ module.exports = {
   contactAdmin,
   dechargeClient,
   replyToContact,
+  rappelAdmin,
 };
