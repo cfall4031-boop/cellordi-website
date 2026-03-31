@@ -251,6 +251,81 @@ const SERVICES_DB: Record<string, ServiceData> = {
     ],
   },
 
+  web: {
+    title: "Développement Web",
+    subtitle: "Sites vitrine, E-commerce & Applications",
+    tagline: "Votre présence en ligne, conçue pour convertir et performer.",
+    heroImg: "https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    description:
+      "Nous concevons des sites web et applications modernes adaptés aux besoins de votre entreprise. De la maquette Figma au déploiement en production, notre équipe gère l'intégralité de votre projet digital avec une approche orientée résultats et performance.",
+    stats: [
+      { val: "Mobile", label: "First design" },
+      { val: "SEO", label: "Optimisé Google" },
+      { val: "< 2s", label: "Temps chargement" },
+      { val: "HTTPS", label: "Sécurisé SSL" },
+    ],
+    features: [
+      {
+        title: "Site vitrine",
+        desc: "Présence en ligne professionnelle avec design sur mesure, animations fluides, formulaire de contact, intégration Google Maps et Analytics.",
+      },
+      {
+        title: "E-commerce",
+        desc: "Boutique en ligne avec panier, paiement sécurisé (Stripe, PayPal), gestion des stocks, catalogue produits et tableau de bord des ventes.",
+      },
+      {
+        title: "Application web",
+        desc: "Applications React/Next.js avec backend Node.js. Authentification utilisateur, base de données, API REST, déploiement cloud AWS ou Vercel.",
+      },
+      {
+        title: "Refonte & Migration",
+        desc: "Modernisation de votre site existant, migration vers un CMS performant (WordPress, Webflow) ou framework React/Vue pour une meilleure performance.",
+      },
+      {
+        title: "SEO & Performance",
+        desc: "Optimisation technique pour Google : Core Web Vitals, schema markup, sitemap XML, robots.txt, Google Search Console et Google My Business.",
+      },
+      {
+        title: "Maintenance mensuelle",
+        desc: "Mises à jour de sécurité, sauvegardes automatiques, monitoring 24/7, corrections de bugs et ajout de petites fonctionnalités chaque mois.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Brief & Stratégie",
+        desc: "Analyse de vos objectifs, votre audience cible et vos concurrents. Définition de la structure des pages et des fonctionnalités prioritaires.",
+      },
+      {
+        num: "02",
+        title: "Maquette Figma",
+        desc: "Design de toutes les pages en maquette interactive haute fidélité. Vous validez l'apparence visuelle avant le moindre développement.",
+      },
+      {
+        num: "03",
+        title: "Développement",
+        desc: "Code propre, responsive (mobile-first), accessible et optimisé. Tests cross-browser et multi-appareils à chaque étape du développement.",
+      },
+      {
+        num: "04",
+        title: "Contenu & SEO",
+        desc: "Intégration de vos textes et images, optimisation SEO on-page, configuration de Google Analytics, Google Tag Manager et outils de suivi.",
+      },
+      {
+        num: "05",
+        title: "Mise en ligne & Suivi",
+        desc: "Déploiement sur hébergeur performant, configuration DNS, SSL et CDN. Suivi de performance et ajustements le premier mois inclus.",
+      },
+    ],
+    trustPoints: [
+      "Développeurs React & Node.js expérimentés",
+      "Maquette Figma validée avant tout développement",
+      "Devis gratuit, sans engagement",
+      "Support 30 jours post-livraison inclus",
+    ],
+  },
+
   cloud: {
     title: "Solutions Cloud",
     subtitle: "Migration, stockage & synchronisation",
@@ -625,6 +700,81 @@ const SERVICES_DB_EN: Record<string, ServiceData> = {
       "On-site or remote service",
       "Free assessment, no commitment",
       "30-day follow-up included after every installation",
+    ],
+  },
+
+  web: {
+    title: "Web Development",
+    subtitle: "Showcase sites, E-commerce & Applications",
+    tagline: "Your online presence, designed to convert and perform.",
+    heroImg: "https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&w=1400&q=80",
+    sideImg: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    description:
+      "We design modern websites and applications tailored to your business needs. From Figma mockup to production deployment, our team handles your entire digital project with a results-driven and performance-oriented approach.",
+    stats: [
+      { val: "Mobile", label: "First design" },
+      { val: "SEO", label: "Google optimized" },
+      { val: "< 2s", label: "Load time" },
+      { val: "HTTPS", label: "SSL secured" },
+    ],
+    features: [
+      {
+        title: "Showcase Site",
+        desc: "Professional online presence with custom design, smooth animations, contact form, Google Maps and Analytics integration.",
+      },
+      {
+        title: "E-commerce",
+        desc: "Online store with shopping cart, secure payment (Stripe, PayPal), inventory management, product catalog and sales dashboard.",
+      },
+      {
+        title: "Web Application",
+        desc: "React/Next.js applications with Node.js backend. User authentication, database, REST API, cloud deployment on AWS or Vercel.",
+      },
+      {
+        title: "Redesign & Migration",
+        desc: "Modernization of your existing site, migration to a performant CMS (WordPress, Webflow) or React/Vue framework for better performance.",
+      },
+      {
+        title: "SEO & Performance",
+        desc: "Technical optimization for Google: Core Web Vitals, schema markup, XML sitemap, robots.txt, Google Search Console and Google My Business.",
+      },
+      {
+        title: "Monthly Maintenance",
+        desc: "Security updates, automatic backups, 24/7 monitoring, bug fixes and small feature additions every month.",
+      },
+    ],
+    process: [
+      {
+        num: "01",
+        title: "Brief & Strategy",
+        desc: "Analysis of your objectives, target audience and competitors. Definition of page structure and priority features.",
+      },
+      {
+        num: "02",
+        title: "Figma Mockup",
+        desc: "High-fidelity interactive mockup design of all pages. You validate the visual appearance before any development begins.",
+      },
+      {
+        num: "03",
+        title: "Development",
+        desc: "Clean, responsive (mobile-first), accessible and optimized code. Cross-browser and multi-device testing at every stage of development.",
+      },
+      {
+        num: "04",
+        title: "Content & SEO",
+        desc: "Integration of your text and images, on-page SEO optimization, Google Analytics, Google Tag Manager and tracking tools setup.",
+      },
+      {
+        num: "05",
+        title: "Launch & Follow-up",
+        desc: "Deployment on high-performance hosting, DNS, SSL and CDN configuration. Performance monitoring and adjustments included for the first month.",
+      },
+    ],
+    trustPoints: [
+      "Experienced React & Node.js developers",
+      "Figma mockup validated before any development",
+      "Free quote, no commitment",
+      "30-day post-delivery support included",
     ],
   },
 

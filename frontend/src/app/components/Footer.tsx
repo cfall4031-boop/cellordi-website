@@ -22,6 +22,7 @@ export function Footer() {
       { label: t("footer.links.cell"),  href: "/services/cellulaires" },
       { label: t("footer.links.pc"),    href: "/services/ordinateurs" },
       { label: t("footer.links.it"),    href: "/services/informatique" },
+      { label: t("footer.links.web"),   href: "/services/web" },
       { label: t("footer.links.cloud"), href: "/services/cloud" },
     ],
     [t("footer.sections.info")]: [
