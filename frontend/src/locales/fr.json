@@ -39,11 +39,6 @@
         "desc": "Installation OS, configuration réseau, antivirus, sauvegarde automatique.",
         "items": ["Install. Windows / macOS", "Réseau & WiFi sécurisé", "Antivirus entreprise", "Sauvegarde cloud"]
       },
-      "web": {
-        "title": "Développement Web",
-        "desc": "Sites vitrine, e-commerce et applications web sur mesure pour votre entreprise.",
-        "items": ["Site vitrine & SEO", "E-commerce Stripe", "Application web React", "Maintenance mensuelle"]
-      },
       "cloud": {
         "title": "Solutions Cloud",
         "desc": "Migration cloud, stockage sécurisé, synchronisation multi-appareils.",
@@ -90,8 +85,7 @@
     "cta": "Voir tous nos avis Google · 67 avis",
     "categories": {
       "reparation": "Réparation",
-      "informatique": "Informatique",
-      "web": "Développement Web"
+      "informatique": "Informatique"
     }
   },
   "blog": {
@@ -150,7 +144,6 @@
       "Réparation cellulaire",
       "Réparation ordinateur",
       "Service informatique",
-      "Développement web",
       "Solution cloud",
       "Contrat d'entretien",
       "Autre"
@@ -320,7 +313,6 @@
       "cell": "Réparation Cellulaires",
       "pc": "Réparation Ordinateurs",
       "it": "Services Informatiques",
-      "web": "Développement Web",
       "cloud": "Solutions Cloud",
       "about": "À propos",
       "blog": "Blog",

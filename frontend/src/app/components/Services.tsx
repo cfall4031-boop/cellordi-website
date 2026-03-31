@@ -63,7 +63,6 @@ const SERVICE_SLUGS = [
   { slug: "cellulaires", Icon: IconPhone },
   { slug: "ordinateurs", Icon: IconLaptop },
   { slug: "informatique", Icon: IconShield },
-  { slug: "web", Icon: IconGlobe },
   { slug: "cloud", Icon: IconCloud },
   { slug: "entretien", Icon: IconWrench },
 ];

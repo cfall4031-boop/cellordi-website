@@ -25,11 +25,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://reparationcellordi.ca/services/web</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://reparationcellordi.ca/services/cloud</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

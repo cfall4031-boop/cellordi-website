@@ -39,11 +39,6 @@
         "desc": "OS installation, network setup, antivirus, automatic backup.",
         "items": ["Windows / macOS install", "Secure network & WiFi", "Enterprise antivirus", "Cloud backup"]
       },
-      "web": {
-        "title": "Web Development",
-        "desc": "Custom showcase sites, e-commerce and web applications for your business.",
-        "items": ["Showcase site & SEO", "Stripe E-commerce", "React web app", "Monthly maintenance"]
-      },
       "cloud": {
         "title": "Cloud Solutions",
         "desc": "Cloud migration, secure storage, multi-device synchronization.",
@@ -90,8 +85,7 @@
     "cta": "See all our Google reviews · 67 reviews",
     "categories": {
       "reparation": "Repair",
-      "informatique": "IT Services",
-      "web": "Web Development"
+      "informatique": "IT Services"
     }
   },
   "blog": {
@@ -150,7 +144,6 @@
       "Phone repair",
       "Computer repair",
       "IT service",
-      "Web development",
       "Cloud solution",
       "Maintenance contract",
       "Other"
@@ -320,7 +313,6 @@
       "cell": "Phone Repair",
       "pc": "Computer Repair",
       "it": "IT Services",
-      "web": "Web Development",
       "cloud": "Cloud Solutions",
       "about": "About us",
       "blog": "Blog",
