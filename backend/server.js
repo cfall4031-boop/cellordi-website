@@ -75,6 +75,7 @@ app.use("/api/tickets",    require("./routes/tickets"));
 app.use("/api/clients",    require("./routes/clients"));
 app.use("/api/messages",   require("./routes/messages"));
 app.use("/api/decharges",  require("./routes/decharges"));
+app.use("/api/prix",      require("./routes/prix"));
 
 // ── SANTÉ ────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {

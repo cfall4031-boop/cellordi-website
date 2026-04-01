@@ -114,6 +114,39 @@ export const dechargesApi = {
   delete:      (id: number) => req<any>("DELETE", `/decharges/${id}`),
 };
 
+// ── CALCULATEUR DE PRIX ────────────────────────────────────────
+export const prixApi = {
+  getCatalogue:     (params: Record<string, string> = {}) =>
+    req<{ pieces: any[] }>("GET", "/prix/catalogue" + toQuery(params)),
+  addPiece:         (data: Record<string, unknown>) =>
+    req<{ message: string; id: number }>("POST", "/prix/catalogue", data),
+  updatePiece:      (id: number, data: Record<string, unknown>) =>
+    req<{ message: string }>("PATCH", `/prix/catalogue/${id}`, data),
+  deletePiece:      (id: number) =>
+    req<{ message: string }>("DELETE", `/prix/catalogue/${id}`),
+
+  getConcurrents:   (params: Record<string, string> = {}) =>
+    req<{ concurrents: any[] }>("GET", "/prix/concurrents" + toQuery(params)),
+  addConcurrent:    (data: Record<string, unknown>) =>
+    req<{ message: string; id: number }>("POST", "/prix/concurrents", data),
+  updateConcurrent: (id: number, data: Record<string, unknown>) =>
+    req<{ message: string }>("PATCH", `/prix/concurrents/${id}`, data),
+  deleteConcurrent: (id: number) =>
+    req<{ message: string }>("DELETE", `/prix/concurrents/${id}`),
+
+  getAppareils:     (params: Record<string, string> = {}) =>
+    req<{ appareils: any[] }>("GET", "/prix/appareils" + toQuery(params)),
+  addAppareil:      (data: Record<string, unknown>) =>
+    req<{ message: string; id: number }>("POST", "/prix/appareils", data),
+  updateAppareil:   (id: number, data: Record<string, unknown>) =>
+    req<{ message: string }>("PATCH", `/prix/appareils/${id}`, data),
+  deleteAppareil:   (id: number) =>
+    req<{ message: string }>("DELETE", `/prix/appareils/${id}`),
+
+  calculer:         (params: Record<string, string>) =>
+    req<any>("GET", "/prix/calculer" + toQuery(params)),
+};
+
 // ── HELPER ───────────────────────────────────────────────────
 function toQuery(params: Record<string, string>): string {
   const q = new URLSearchParams(

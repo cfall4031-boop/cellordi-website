@@ -123,6 +123,41 @@ try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 
 // Migration: add telephone field to messages_contact
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN telephone TEXT"); } catch (_) {}
 
+// ── CALCULATEUR DE PRIX ────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pieces_catalogue (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    type_appareil    TEXT NOT NULL,
+    modele           TEXT,
+    type_piece       TEXT NOT NULL,
+    cout_fournisseur REAL NOT NULL,
+    fournisseur      TEXT DEFAULT 'Tan Star Trade',
+    notes            TEXT,
+    updated_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS prix_concurrents (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    type_appareil       TEXT NOT NULL,
+    type_reparation     TEXT NOT NULL,
+    prix_cd_solution    REAL,
+    prix_fix_moi        REAL,
+    prix_mobile_klinik  REAL,
+    source              TEXT,
+    updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS appareils_valeur (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    type_appareil   TEXT NOT NULL,
+    valeur_marche   REAL NOT NULL,
+    annee           INTEGER,
+    notes           TEXT,
+    updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   authApi, rdvApi, ticketsApi, clientsApi,
-  messagesApi, dechargesApi, setToken, removeToken, getToken
+  messagesApi, dechargesApi, prixApi, setToken, removeToken, getToken
 } from "../../api";
 
 // ── TOKENS ────────────────────────────────────────────────────
@@ -139,6 +139,7 @@ const NAV_ITEMS = [
   { id:"clients",   icon:"👥", label:"Clients"         },
   { id:"messages",  icon:"✉️", label:"Messages"        },
   { id:"decharges", icon:"📋", label:"Décharges"       },
+  { id:"calculateur", icon:"🧮", label:"Calculateur"   },
 ];
 
 function Sidebar({ active, setActive, adminNom, onLogout }: {
@@ -386,6 +387,15 @@ function Rendez_vous() {
       await rdvApi.updateStatut(id, statut);
       setRdvs(prev => prev.map((x:any) => x.id === id ? {...x, statut} : x));
     } catch (err) { console.error(err); }
+  };
+
+  // ── Supprimer RDV archivé ───────────────────────────────────────────────────
+  const deleteRdv = async (id: number) => {
+    if (!window.confirm("Supprimer définitivement ce rendez-vous ?")) return;
+    try {
+      await rdvApi.delete(id);
+      setRdvs(prev => prev.filter((x:any) => x.id !== id));
+    } catch (e: any) { console.error(e); }
   };
 
   // ── Toggle disponibilité ────────────────────────────────────────────────────
@@ -771,14 +781,23 @@ function Rendez_vous() {
                       </td>
                       <td style={tdStyle}><Badge statut={r.statut}/></td>
                       <td style={tdStyle}>
-                        <select value={r.statut} onChange={e=>changeStatut(r.id,e.target.value)}
-                          style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
-                            fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
-                          <option value="en_attente">En attente</option>
-                          <option value="confirme">Confirmer</option>
-                          <option value="complete">Compléter</option>
-                          <option value="annule">Annuler</option>
-                        </select>
+                        <div style={{display:"flex", gap:"0.4rem", alignItems:"center"}}>
+                          <select value={r.statut} onChange={e=>changeStatut(r.id,e.target.value)}
+                            style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                              fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
+                            <option value="en_attente">En attente</option>
+                            <option value="confirme">Confirmer</option>
+                            <option value="complete">Compléter</option>
+                            <option value="annule">Annuler</option>
+                          </select>
+                          {(r.statut === "complete" || r.statut === "annule") && (
+                            <button onClick={()=>deleteRdv(r.id)} title="Supprimer définitivement"
+                              style={{ background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.25)",
+                                color:"#f87171", cursor:"pointer", fontSize:"0.85rem", padding:"0.25rem 0.5rem", lineHeight:1 }}>
+                              🗑
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -838,6 +857,15 @@ function Tickets() {
       setTickets(prev => prev.map((x:any) => x.id === id ? {...x, statut, ...extra} : x));
       if (selected?.id === id) setSelected((s:any) => ({...s, statut, ...extra}));
     } catch (err) { console.error(err); }
+  };
+
+  const deleteTicket = async (id: number) => {
+    if (!window.confirm("Supprimer définitivement ce ticket ?")) return;
+    try {
+      await ticketsApi.delete(id);
+      setTickets(prev => prev.filter((x:any) => x.id !== id));
+      if (selected?.id === id) setSelected(null);
+    } catch (e: any) { console.error(e); }
   };
 
   const statutsList = ["recu","diagnostic","en_cours","termine","pret","livre"];
@@ -908,12 +936,21 @@ function Tickets() {
                       {t.cout_estime>0?`${t.cout_estime} $`:"—"}
                     </td>
                     <td style={tdStyle}>
-                      <select value={t.statut} onChange={e=>{e.stopPropagation();changeStatut(t.id,e.target.value);}}
-                        onClick={e=>e.stopPropagation()}
-                        style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
-                          fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
-                        {statutsList.map(s=><option key={s} value={s}>{statutColors[s]?.label||s}</option>)}
-                      </select>
+                      <div style={{display:"flex", gap:"0.4rem", alignItems:"center"}}>
+                        <select value={t.statut} onChange={e=>{e.stopPropagation();changeStatut(t.id,e.target.value);}}
+                          onClick={e=>e.stopPropagation()}
+                          style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                            fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
+                          {statutsList.map(s=><option key={s} value={s}>{statutColors[s]?.label||s}</option>)}
+                        </select>
+                        {showArchived && t.statut === "livre" && (
+                          <button onClick={e=>{e.stopPropagation();deleteTicket(t.id);}} title="Supprimer définitivement"
+                            style={{ background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.25)",
+                              color:"#f87171", cursor:"pointer", fontSize:"0.85rem", padding:"0.25rem 0.5rem", lineHeight:1 }}>
+                            🗑
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1029,6 +1066,393 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// ── CALCULATEUR DE PRIX ──────────────────────────────────────────
+function Calculateur() {
+  const [subTab, setSubTab] = useState<"calculer"|"catalogue"|"concurrents"|"appareils">("calculer");
+  const tabs = [
+    { id:"calculer" as const, icon:"🧮", label:"Calculer" },
+    { id:"catalogue" as const, icon:"📦", label:"Catalogue pièces" },
+    { id:"concurrents" as const, icon:"🏪", label:"Prix concurrents" },
+    { id:"appareils" as const, icon:"📱", label:"Valeur appareils" },
+  ];
+  return (
+    <div>
+      <div style={{display:"flex",gap:"0.5rem",marginBottom:"2rem",flexWrap:"wrap"}}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setSubTab(t.id)}
+            style={{background:subTab===t.id?GREEN:"rgba(255,255,255,0.04)",color:subTab===t.id?NAVY:GRAY,
+              border:`1px solid ${subTab===t.id?GREEN:"rgba(109,212,0,0.2)"}`,padding:"0.5rem 1.1rem",
+              cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:subTab===t.id?700:400,
+              fontSize:"0.9rem",letterSpacing:"0.05em"}}>
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+      {subTab==="calculer" && <CalculerPrix/>}
+      {subTab==="catalogue" && <CataloguePieces/>}
+      {subTab==="concurrents" && <PrixConcurrents/>}
+      {subTab==="appareils" && <ValeurAppareils/>}
+    </div>
+  );
+}
+
+function CalculerPrix() {
+  const [appareil, setAppareil] = useState("");
+  const [reparation, setReparation] = useState("");
+  const [mainOeuvre, setMainOeuvre] = useState(100);
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [appareils, setAppareils] = useState<string[]>([]);
+  const [reparations, setReparations] = useState<string[]>([]);
+
+  useEffect(()=>{
+    prixApi.getCatalogue().then((d:any)=>{
+      const a = [...new Set((d.pieces||[]).map((p:any)=>p.type_appareil))];
+      const r = [...new Set((d.pieces||[]).map((p:any)=>p.type_piece))];
+      setAppareils(a as string[]);
+      setReparations(r as string[]);
+    }).catch(()=>{});
+  },[]);
+
+  const calculer = async () => {
+    if(!appareil||!reparation) return;
+    setLoading(true);
+    try {
+      const data = await prixApi.calculer({appareil,reparation,main_oeuvre:String(mainOeuvre)});
+      setResult(data);
+    } catch(e) { console.error(e); }
+    setLoading(false);
+  };
+
+  const copier = () => {
+    if(result?.prix_suggere) {
+      navigator.clipboard.writeText(String(result.prix_suggere));
+      setCopied(true);
+      setTimeout(()=>setCopied(false),2000);
+    }
+  };
+
+  const compBadge = (c:string) => {
+    if(c==="vert") return {bg:"rgba(109,212,0,0.15)",color:GREEN,text:"COMPÉTITIF ✅"};
+    if(c==="orange") return {bg:"rgba(245,158,11,0.15)",color:"#f59e0b",text:"BORDERLINE ⚠️"};
+    if(c==="rouge") return {bg:"rgba(239,68,68,0.15)",color:RED,text:"TROP CHER ❌"};
+    return {bg:"rgba(255,255,255,0.05)",color:GRAY,text:"DONNÉES MANQUANTES"};
+  };
+
+  const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2rem"}}>
+      {/* LEFT — Inputs */}
+      <div>
+        <div style={{marginBottom:"1.2rem"}}>
+          <label style={labelSt}>Appareil</label>
+          <input value={appareil} onChange={e=>setAppareil(e.target.value)} list="dl-appareils" placeholder="iPhone 15 Pro Max" style={inputSt}/>
+          <datalist id="dl-appareils">{appareils.map(a=><option key={a} value={a}/>)}</datalist>
+        </div>
+        <div style={{marginBottom:"1.2rem"}}>
+          <label style={labelSt}>Type de réparation</label>
+          <input value={reparation} onChange={e=>setReparation(e.target.value)} list="dl-reparations" placeholder="Écran, Batterie..." style={inputSt}/>
+          <datalist id="dl-reparations">{reparations.map(r=><option key={r} value={r}/>)}</datalist>
+        </div>
+        <div style={{marginBottom:"1.2rem"}}>
+          <label style={labelSt}>Main d'œuvre ($)</label>
+          <input type="number" value={mainOeuvre} onChange={e=>setMainOeuvre(Number(e.target.value))} style={{...inputSt,marginBottom:"0.5rem"}}/>
+          <div style={{display:"flex",gap:"0.4rem"}}>
+            {[50,75,100,125,150].map(v=>(
+              <button key={v} type="button" onClick={()=>setMainOeuvre(v)}
+                style={{background:mainOeuvre===v?GREEN:"rgba(255,255,255,0.06)",color:mainOeuvre===v?NAVY:GRAY,
+                  border:`1px solid ${mainOeuvre===v?GREEN:"rgba(255,255,255,0.1)"}`,padding:"0.3rem 0.7rem",
+                  cursor:"pointer",fontSize:"0.8rem",fontFamily:"'DM Sans',sans-serif",fontWeight:mainOeuvre===v?700:400}}>
+                {v}$
+              </button>
+            ))}
+          </div>
+        </div>
+        <button onClick={calculer} disabled={loading||!appareil||!reparation}
+          style={{width:"100%",background:loading?"rgba(109,212,0,0.5)":GREEN,color:NAVY,
+            fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",letterSpacing:"0.08em",
+            padding:"0.9rem",border:"none",cursor:loading?"wait":"pointer",marginTop:"0.5rem"}}>
+          {loading?"CALCUL...":"🧮 CALCULER LE PRIX"}
+        </button>
+      </div>
+
+      {/* RIGHT — Results */}
+      <div>
+        {!result && <div style={{color:GRAY,fontSize:"0.9rem",textAlign:"center",paddingTop:"3rem"}}>Sélectionnez un appareil et une réparation puis cliquez "Calculer"</div>}
+        {result && (
+          <div>
+            {/* Big price */}
+            <div style={{textAlign:"center",marginBottom:"1.5rem"}}>
+              <div style={{fontSize:"0.7rem",fontWeight:700,color:GRAY,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:"0.3rem"}}>Votre prix</div>
+              <div style={{fontSize:"2.5rem",fontWeight:900,fontFamily:"'Barlow Condensed',sans-serif",color:GREEN}}>
+                {result.prix_suggere!=null?`${result.prix_suggere} $`:"—"}
+              </div>
+              <button onClick={copier} style={{background:"rgba(109,212,0,0.1)",border:"1px solid rgba(109,212,0,0.3)",color:GREEN,padding:"0.3rem 1rem",cursor:"pointer",fontSize:"0.8rem",fontFamily:"'DM Sans',sans-serif",marginTop:"0.3rem"}}>
+                {copied?"✅ Copié!":"📋 Copier"}
+              </button>
+            </div>
+
+            {/* Cost breakdown */}
+            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"1rem",marginBottom:"1rem"}}>
+              <div style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.3rem"}}><span>Pièce</span><span>{result.cout_piece!=null?`${result.cout_piece} $`:"—"}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.3rem"}}><span>Main d'œuvre</span><span>{result.main_oeuvre} $</span></div>
+              <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",paddingTop:"0.4rem",display:"flex",justifyContent:"space-between",color:"#fff",fontSize:"0.9rem",fontWeight:700}}><span>Coût total</span><span>{result.cout_total!=null?`${result.cout_total} $`:"—"}</span></div>
+            </div>
+
+            {/* Competitiveness badge */}
+            {(()=>{const b=compBadge(result.competitivite);return(
+              <div style={{background:b.bg,border:`1px solid ${b.color}33`,padding:"0.8rem",marginBottom:"1rem",textAlign:"center"}}>
+                <div style={{color:b.color,fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",letterSpacing:"0.08em"}}>{b.text}</div>
+              </div>
+            );})()}
+
+            {/* Competitors */}
+            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"1rem",marginBottom:"1rem"}}>
+              <div style={{fontSize:"0.7rem",fontWeight:700,color:GRAY,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"0.5rem"}}>Concurrents</div>
+              {[["CD Solution",result.concurrents?.cd_solution],["Fix Moi",result.concurrents?.fix_moi],["Mobile Klinik",result.concurrents?.mobile_klinik]].map(([name,val])=>(
+                <div key={name as string} style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.2rem"}}><span>{name}</span><span>{val!=null?`${val} $`:"—"}</span></div>
+              ))}
+              <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",paddingTop:"0.3rem",marginTop:"0.3rem",display:"flex",justifyContent:"space-between",color:"#fff",fontSize:"0.88rem",fontWeight:600}}><span>Moyenne</span><span>{result.concurrents?.moyenne!=null?`${result.concurrents.moyenne} $`:"—"}</span></div>
+            </div>
+
+            {/* Device value & ratio */}
+            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"1rem",marginBottom:"1rem"}}>
+              <div style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.3rem"}}><span>Valeur appareil</span><span>{result.valeur_appareil!=null?`${result.valeur_appareil} $`:"—"}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",color:result.ratio_reparation_valeur>50?"#f59e0b":result.ratio_reparation_valeur>75?RED:GRAY,fontSize:"0.85rem",fontWeight:result.ratio_reparation_valeur>50?700:400}}><span>Ratio réparation/valeur</span><span>{result.ratio_reparation_valeur!=null?`${result.ratio_reparation_valeur}%`:"—"}</span></div>
+              {result.ratio_reparation_valeur>50 && <div style={{color:"#f59e0b",fontSize:"0.78rem",marginTop:"0.4rem"}}>⚠️ La réparation coûte plus de 50% de la valeur. Envisager une réduction.</div>}
+              {result.ratio_reparation_valeur>75 && <div style={{color:RED,fontSize:"0.78rem",marginTop:"0.2rem"}}>🚨 Le client risque de refuser — proposer un prix réduit.</div>}
+            </div>
+
+            {/* Margin */}
+            <div style={{color:GRAY,fontSize:"0.8rem",textAlign:"center"}}>Marge : {result.marge_pct!=null?`${result.marge_pct}%`:"—"}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CataloguePieces() {
+  const [pieces, setPieces] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"Tan Star Trade",notes:""});
+  const [loading, setLoading] = useState(true);
+  const [editId, setEditId] = useState<number|null>(null);
+
+  const load = () => { prixApi.getCatalogue().then((d:any)=>setPieces(d.pieces||[])).catch(console.error).finally(()=>setLoading(false)); };
+  useEffect(load,[]);
+
+  const handleAdd = async () => {
+    if(!form.type_appareil||!form.type_piece||!form.cout_fournisseur) return;
+    await prixApi.addPiece({...form,cout_fournisseur:Number(form.cout_fournisseur)});
+    setForm({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"Tan Star Trade",notes:""});
+    setShowAdd(false); load();
+  };
+
+  const handleDelete = async (id:number) => { if(confirm("Supprimer cette pièce?")) { await prixApi.deletePiece(id); load(); } };
+
+  const filtered = pieces.filter(p=>`${p.type_appareil} ${p.modele||""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase()));
+  const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
+
+  const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." style={{...inputSt,maxWidth:300}}/>
+        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
+          {showAdd?"✕ Fermer":"+ Ajouter une pièce"}
+        </button>
+      </div>
+
+      {showAdd && (
+        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
+            <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
+            <div><label style={labelSt}>Type de pièce *</label><input value={form.type_piece} onChange={e=>setForm(p=>({...p,type_piece:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div><label style={labelSt}>Coût ($) *</label><input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/></div>
+            <div><label style={labelSt}>Fournisseur</label><input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
+            <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
+          </div>
+          <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+        </div>
+      )}
+
+      {loading?<div style={{color:GRAY}}>Chargement...</div>:(
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
+            {["Appareil","Modèle","Pièce","Coût ($)","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {filtered.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
+            {filtered.map(p=>{const days=daysSince(p.updated_at);return(
+              <tr key={p.id} style={{cursor:"default"}}>
+                <td style={tdSt}>{p.type_appareil}</td>
+                <td style={tdSt}>{p.modele||"—"}</td>
+                <td style={tdSt}>{p.type_piece}</td>
+                <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
+                <td style={tdSt}>{p.fournisseur}</td>
+                <td style={{...tdSt,color:days>30?"#f59e0b":GRAY,fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
+                <td style={tdSt}><button onClick={()=>handleDelete(p.id)} style={{background:"transparent",border:"none",color:RED,cursor:"pointer",fontSize:"0.85rem"}}>🗑</button></td>
+              </tr>
+            );})}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+function PrixConcurrents() {
+  const [items, setItems] = useState<any[]>([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({type_appareil:"",type_reparation:"",prix_cd_solution:"",prix_fix_moi:"",prix_mobile_klinik:"",source:""});
+  const [loading, setLoading] = useState(true);
+
+  const load = () => { prixApi.getConcurrents().then((d:any)=>setItems(d.concurrents||[])).catch(console.error).finally(()=>setLoading(false)); };
+  useEffect(load,[]);
+
+  const handleAdd = async () => {
+    if(!form.type_appareil||!form.type_reparation) return;
+    await prixApi.addConcurrent({
+      ...form,
+      prix_cd_solution:form.prix_cd_solution?Number(form.prix_cd_solution):null,
+      prix_fix_moi:form.prix_fix_moi?Number(form.prix_fix_moi):null,
+      prix_mobile_klinik:form.prix_mobile_klinik?Number(form.prix_mobile_klinik):null,
+    });
+    setForm({type_appareil:"",type_reparation:"",prix_cd_solution:"",prix_fix_moi:"",prix_mobile_klinik:"",source:""});
+    setShowAdd(false); load();
+  };
+
+  const handleDelete = async (id:number) => { if(confirm("Supprimer?")) { await prixApi.deleteConcurrent(id); load(); } };
+
+  const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.2rem"}}>
+        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
+          {showAdd?"✕ Fermer":"+ Ajouter prix concurrent"}
+        </button>
+      </div>
+
+      {showAdd && (
+        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
+            <div><label style={labelSt}>Réparation *</label><input value={form.type_reparation} onChange={e=>setForm(p=>({...p,type_reparation:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
+            <div><label style={labelSt}>Source</label><input value={form.source} onChange={e=>setForm(p=>({...p,source:e.target.value}))} placeholder="site web, appel..." style={inputSt}/></div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div><label style={labelSt}>CD Solution ($)</label><input type="number" value={form.prix_cd_solution} onChange={e=>setForm(p=>({...p,prix_cd_solution:e.target.value}))} style={inputSt}/></div>
+            <div><label style={labelSt}>Fix Moi ($)</label><input type="number" value={form.prix_fix_moi} onChange={e=>setForm(p=>({...p,prix_fix_moi:e.target.value}))} style={inputSt}/></div>
+            <div><label style={labelSt}>Mobile Klinik ($)</label><input type="number" value={form.prix_mobile_klinik} onChange={e=>setForm(p=>({...p,prix_mobile_klinik:e.target.value}))} style={inputSt}/></div>
+          </div>
+          <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+        </div>
+      )}
+
+      {loading?<div style={{color:GRAY}}>Chargement...</div>:(
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
+            {["Appareil","Réparation","CD Solution","Fix Moi","Mobile Klinik","Source",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {items.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune donnée</td></tr>}
+            {items.map(c=>(
+              <tr key={c.id}>
+                <td style={tdSt}>{c.type_appareil}</td>
+                <td style={tdSt}>{c.type_reparation}</td>
+                <td style={{...tdSt,color:c.prix_cd_solution?"#fff":GRAY}}>{c.prix_cd_solution?`${c.prix_cd_solution} $`:"—"}</td>
+                <td style={{...tdSt,color:c.prix_fix_moi?"#fff":GRAY}}>{c.prix_fix_moi?`${c.prix_fix_moi} $`:"—"}</td>
+                <td style={{...tdSt,color:c.prix_mobile_klinik?"#fff":GRAY}}>{c.prix_mobile_klinik?`${c.prix_mobile_klinik} $`:"—"}</td>
+                <td style={tdSt}>{c.source||"—"}</td>
+                <td style={tdSt}><button onClick={()=>handleDelete(c.id)} style={{background:"transparent",border:"none",color:RED,cursor:"pointer",fontSize:"0.85rem"}}>🗑</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+function ValeurAppareils() {
+  const [items, setItems] = useState<any[]>([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({type_appareil:"",valeur_marche:"",annee:"",notes:""});
+  const [loading, setLoading] = useState(true);
+
+  const load = () => { prixApi.getAppareils().then((d:any)=>setItems(d.appareils||[])).catch(console.error).finally(()=>setLoading(false)); };
+  useEffect(load,[]);
+
+  const handleAdd = async () => {
+    if(!form.type_appareil||!form.valeur_marche) return;
+    await prixApi.addAppareil({...form,valeur_marche:Number(form.valeur_marche),annee:form.annee?Number(form.annee):null});
+    setForm({type_appareil:"",valeur_marche:"",annee:"",notes:""});
+    setShowAdd(false); load();
+  };
+
+  const handleDelete = async (id:number) => { if(confirm("Supprimer?")) { await prixApi.deleteAppareil(id); load(); } };
+
+  const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.2rem"}}>
+        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
+          {showAdd?"✕ Fermer":"+ Ajouter un appareil"}
+        </button>
+      </div>
+
+      {showAdd && (
+        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro Max" style={inputSt}/></div>
+            <div><label style={labelSt}>Valeur ($) *</label><input type="number" value={form.valeur_marche} onChange={e=>setForm(p=>({...p,valeur_marche:e.target.value}))} placeholder="650" style={inputSt}/></div>
+            <div><label style={labelSt}>Année</label><input type="number" value={form.annee} onChange={e=>setForm(p=>({...p,annee:e.target.value}))} placeholder="2023" style={inputSt}/></div>
+            <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="128GB, usagé..." style={inputSt}/></div>
+          </div>
+          <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+        </div>
+      )}
+
+      {loading?<div style={{color:GRAY}}>Chargement...</div>:(
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
+            {["Appareil","Valeur marché ($)","Année","Notes",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {items.length===0 && <tr><td colSpan={5} style={{...tdSt,textAlign:"center"}}>Aucun appareil</td></tr>}
+            {items.map(a=>(
+              <tr key={a.id}>
+                <td style={tdSt}>{a.type_appareil}</td>
+                <td style={{...tdSt,color:GREEN,fontWeight:600}}>{a.valeur_marche} $</td>
+                <td style={tdSt}>{a.annee||"—"}</td>
+                <td style={tdSt}>{a.notes||"—"}</td>
+                <td style={tdSt}><button onClick={()=>handleDelete(a.id)} style={{background:"transparent",border:"none",color:RED,cursor:"pointer",fontSize:"0.85rem"}}>🗑</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
@@ -1181,8 +1605,29 @@ function Messages() {
     } catch (e: any) { console.error(e); }
   };
 
+  const deleteMsg = async (m: any) => {
+    if (!window.confirm("Supprimer définitivement ce message ?")) return;
+    try {
+      await messagesApi.delete(m.id);
+      setMsgs(prev => prev.filter((x:any) => x.id !== m.id));
+      if (selected?.id === m.id) setSelected(null);
+    } catch (e: any) { console.error(e); }
+  };
+
+  const isRappel = (m: any) => m.sujet === "Rappel demandé";
+
+  const markRappele = async (m: any) => {
+    try {
+      await messagesApi.markRepondu(m.id);
+      const updated = { ...m, repondu: 1, lu: 1 };
+      setMsgs(prev => prev.map((x:any) => x.id === m.id ? updated : x));
+      setSelected(updated);
+    } catch (e: any) { console.error(e); }
+  };
+
   const visibleMsgs = msgs.filter((m:any) => showArchived ? m.archived === 1 : !m.archived);
   const nonLus = msgs.filter((m:any)=>!m.lu && !m.archived).length;
+  const rappelsEnAttente = msgs.filter((m:any) => isRappel(m) && !m.repondu && !m.archived).length;
 
   return (
     <div className="admin-fade" style={{display:"flex",height:"100%"}}>
@@ -1194,6 +1639,12 @@ function Messages() {
               <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.4rem", fontWeight:900, margin:0 }}>Messages</h2>
               <p style={{ fontSize:"0.8rem", color:GRAY, marginTop:"0.2rem", margin:0 }}>
                 {showArchived ? `${visibleMsgs.length} archivé${visibleMsgs.length !== 1 ? "s" : ""}` : `${nonLus} non lu${nonLus !== 1 ? "s" : ""}`}
+                {!showArchived && rappelsEnAttente > 0 && (
+                  <span style={{ marginLeft:"0.5rem", background:"rgba(109,212,0,0.15)", color:GREEN,
+                    padding:"1px 7px", borderRadius:2, fontSize:"0.72rem", fontWeight:700 }}>
+                    📞 {rappelsEnAttente} rappel{rappelsEnAttente !== 1 ? "s" : ""} en attente
+                  </span>
+                )}
               </p>
             </div>
             <button onClick={() => { setShowArchived(p=>!p); setSelected(null); }} style={{
@@ -1217,20 +1668,41 @@ function Messages() {
                 opacity: m.archived ? 0.65 : 1,
                 transition:"all 0.15s" }}>
               <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"0.3rem", alignItems:"center" }}>
-                <span style={{ fontWeight:m.lu?400:600, fontSize:"0.9rem" }}>{m.nom}</span>
+                <span style={{ fontWeight:m.lu?400:600, fontSize:"0.9rem" }}>
+                  {isRappel(m) ? `📞 ${m.telephone || "—"}` : m.nom}
+                </span>
                 <div style={{ display:"flex", gap:"0.3rem", alignItems:"center" }}>
                   {m.archived === 1
-                    ? <span style={{ fontSize:"0.65rem", background:"rgba(255,255,255,0.06)", color:GRAY_DIM, padding:"1px 6px", borderRadius:2 }}>Archivé</span>
+                    ? <>
+                        <span style={{ fontSize:"0.65rem", background:"rgba(255,255,255,0.06)", color:GRAY_DIM, padding:"1px 6px", borderRadius:2 }}>Archivé</span>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteMsg(m); }}
+                          title="Supprimer définitivement"
+                          style={{ background:"transparent", border:"none", color:"#f87171", cursor:"pointer",
+                            fontSize:"0.85rem", padding:"1px 3px", opacity:0.7, lineHeight:1 }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = "0.7")}
+                        >🗑</button>
+                      </>
                     : m.repondu
-                      ? <span style={{ fontSize:"0.65rem", background:"rgba(109,212,0,0.15)", color:GREEN, padding:"1px 6px", borderRadius:2, fontWeight:600 }}>Répondu</span>
+                      ? <span style={{ fontSize:"0.65rem", background:"rgba(109,212,0,0.15)", color:GREEN, padding:"1px 6px", borderRadius:2, fontWeight:600 }}>{isRappel(m) ? "✓ Rappelé" : "Répondu"}</span>
                       : !m.lu && <span style={{ width:8,height:8,borderRadius:"50%",background:GREEN,display:"inline-block" }}/>
                   }
                 </div>
               </div>
-              <div style={{ fontSize:"0.82rem", color:GREEN, marginBottom:"0.3rem", fontWeight:500 }}>{m.sujet}</div>
-              <div style={{ fontSize:"0.78rem", color:GRAY, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.message}</div>
+              {isRappel(m) ? (
+                <div style={{ fontSize:"0.75rem", background:"rgba(109,212,0,0.08)", color:GREEN,
+                  padding:"2px 8px", borderRadius:2, display:"inline-block", fontWeight:700, letterSpacing:"0.06em" }}>
+                  📞 RAPPEL
+                </div>
+              ) : (
+                <div style={{ fontSize:"0.82rem", color:GREEN, marginBottom:"0.3rem", fontWeight:500 }}>{m.sujet}</div>
+              )}
+              {!isRappel(m) && (
+                <div style={{ fontSize:"0.78rem", color:GRAY, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{m.message}</div>
+              )}
               <div style={{ fontSize:"0.72rem", color:GRAY_DIM, marginTop:"0.3rem" }}>
-                {new Date(m.created_at).toLocaleDateString("fr-CA")}
+                {new Date(m.created_at).toLocaleString("fr-CA", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" })}
               </div>
             </div>
           ))}
@@ -1249,109 +1721,211 @@ function Messages() {
           <>
             {/* En-tête */}
             <div style={{ padding:"1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)", flexShrink:0 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:"0.8rem", flexWrap:"wrap" }}>
-                <h3 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.3rem", fontWeight:700, margin:0 }}>{selected.sujet}</h3>
-                {selected.repondu === 1 && (
-                  <span style={{ fontSize:"0.72rem", background:"rgba(109,212,0,0.12)", color:GREEN,
-                    border:"1px solid rgba(109,212,0,0.3)", padding:"2px 10px", fontWeight:700, letterSpacing:"0.07em" }}>
-                    ✓ RÉPONDU
-                  </span>
-                )}
-              </div>
-              <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginTop:"0.3rem" }}>
-                <span style={{ fontSize:"0.82rem", color:GRAY }}>
-                  De : <strong style={{color:"#fff"}}>{selected.nom}</strong> — {selected.email}
-                </span>
-                <button onClick={() => toggleArchive(selected)} style={{
-                  marginLeft:"auto", background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(255,255,255,0.05)",
-                  color: selected.archived ? GREEN : GRAY,
-                  border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(255,255,255,0.1)"}`,
-                  padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
-                  fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
-                }}>
-                  {selected.archived ? "↩ Désarchiver" : "🗃 Archiver"}
-                </button>
-              </div>
+              {isRappel(selected) ? (
+                <>
+                  <div style={{ display:"flex", alignItems:"center", gap:"0.8rem", flexWrap:"wrap" }}>
+                    <h3 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.3rem", fontWeight:700, margin:0 }}>
+                      📞 Rappel téléphonique
+                    </h3>
+                    {selected.repondu === 1 && (
+                      <span style={{ fontSize:"0.72rem", background:"rgba(109,212,0,0.12)", color:GREEN,
+                        border:"1px solid rgba(109,212,0,0.3)", padding:"2px 10px", fontWeight:700, letterSpacing:"0.07em" }}>
+                        ✓ RAPPELÉ
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginTop:"0.3rem" }}>
+                    <span style={{ fontSize:"0.82rem", color:GRAY }}>
+                      {new Date(selected.created_at).toLocaleString("fr-CA", { day:"2-digit", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" })}
+                    </span>
+                    <div style={{ marginLeft:"auto", display:"flex", gap:"0.5rem" }}>
+                      <button onClick={() => toggleArchive(selected)} style={{
+                        background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(255,255,255,0.05)",
+                        color: selected.archived ? GREEN : GRAY,
+                        border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(255,255,255,0.1)"}`,
+                        padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
+                        fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
+                      }}>
+                        {selected.archived ? "↩ Désarchiver" : "🗃 Archiver"}
+                      </button>
+                      {selected.archived === 1 && (
+                        <button onClick={() => deleteMsg(selected)} style={{
+                          background:"rgba(248,113,113,0.08)", color:"#f87171",
+                          border:"1px solid rgba(248,113,113,0.25)",
+                          padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
+                          fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
+                        }}>🗑 Supprimer</button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display:"flex", alignItems:"center", gap:"0.8rem", flexWrap:"wrap" }}>
+                    <h3 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.3rem", fontWeight:700, margin:0 }}>{selected.sujet}</h3>
+                    {selected.repondu === 1 && (
+                      <span style={{ fontSize:"0.72rem", background:"rgba(109,212,0,0.12)", color:GREEN,
+                        border:"1px solid rgba(109,212,0,0.3)", padding:"2px 10px", fontWeight:700, letterSpacing:"0.07em" }}>
+                        ✓ RÉPONDU
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"1rem", marginTop:"0.3rem" }}>
+                    <span style={{ fontSize:"0.82rem", color:GRAY }}>
+                      De : <strong style={{color:"#fff"}}>{selected.nom}</strong> — {selected.email}
+                    </span>
+                    <div style={{ marginLeft:"auto", display:"flex", gap:"0.5rem" }}>
+                    <button onClick={() => toggleArchive(selected)} style={{
+                      background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(255,255,255,0.05)",
+                      color: selected.archived ? GREEN : GRAY,
+                      border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(255,255,255,0.1)"}`,
+                      padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
+                      fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
+                    }}>
+                      {selected.archived ? "↩ Désarchiver" : "🗃 Archiver"}
+                    </button>
+                    {selected.archived === 1 && (
+                      <button onClick={() => deleteMsg(selected)} style={{
+                        background:"rgba(248,113,113,0.08)", color:"#f87171",
+                        border:"1px solid rgba(248,113,113,0.25)",
+                        padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
+                        fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
+                      }}>🗑 Supprimer</button>
+                    )}
+                    </div>
+                  </div>{/* fin flex row */}
+                </>
+              )}
             </div>
 
             {/* Contenu scrollable */}
             <div style={{ flex:1, padding:"2rem", overflowY:"auto", display:"flex", flexDirection:"column", gap:"1.5rem" }}>
 
-              {/* Message original */}
-              <div>
-                <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
-                  Message reçu · {new Date(selected.created_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
-                </div>
-                <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem",
-                  fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640 }}>
-                  {selected.message}
-                </div>
-              </div>
+              {isRappel(selected) ? (
+                /* ── Affichage spécial rappel ── */
+                <>
+                  {/* Numéro proéminent */}
+                  <div style={{ background:NAVY_MID, border:`2px solid ${GREEN}`, padding:"2rem",
+                    display:"flex", flexDirection:"column", alignItems:"center", gap:"0.8rem", maxWidth:400 }}>
+                    <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.12em", textTransform:"uppercase" }}>
+                      Numéro à rappeler
+                    </div>
+                    <a href={`tel:${selected.telephone}`} style={{
+                      fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2rem", fontWeight:900,
+                      color:GREEN, letterSpacing:"0.06em", textDecoration:"none",
+                    }}>
+                      {selected.telephone || "—"}
+                    </a>
+                    <div style={{ fontSize:"0.78rem", color:GRAY_DIM }}>
+                      Demande reçue le {new Date(selected.created_at).toLocaleString("fr-CA", { day:"2-digit", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" })}
+                    </div>
+                  </div>
 
-              {/* Réponse déjà envoyée */}
-              {selected.reply_text && (
-                <div>
-                  <div style={{ fontSize:"0.72rem", color:GREEN, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
-                    ✓ Votre réponse envoyée
-                    {selected.replied_at && (
-                      <span style={{ color:GRAY_DIM, fontWeight:400, marginLeft:8 }}>
-                        · {new Date(selected.replied_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ background:"rgba(109,212,0,0.06)", border:"1px solid rgba(109,212,0,0.25)",
-                    borderLeft:"3px solid " + GREEN, padding:"1.5rem",
-                    fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640, color:"#e8f4e0" }}>
-                    {selected.reply_text}
-                  </div>
-                </div>
-              )}
-
-              {/* Zone de réponse (si pas encore répondu) */}
-              {!selected.repondu && (
-                <div style={{ maxWidth:640 }}>
-                  <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
-                    Votre réponse — un email sera envoyé à {selected.email}
-                  </div>
-                  <textarea
-                    value={replyText}
-                    onChange={e => setReplyText(e.target.value)}
-                    placeholder={`Bonjour ${selected.nom},\n\nMerci pour votre message...`}
-                    rows={7}
-                    style={{
-                      width:"100%", background:NAVY_MID,
-                      border:`1px solid ${replyError ? "#f87171" : "rgba(109,212,0,0.2)"}`,
-                      color:"#fff", fontFamily:"'DM Sans',sans-serif", fontSize:"0.92rem",
-                      lineHeight:1.7, padding:"1rem", resize:"vertical",
-                      outline:"none", boxSizing:"border-box",
-                    }}
-                    onFocus={e => { e.currentTarget.style.borderColor = GREEN; }}
-                    onBlur={e => { e.currentTarget.style.borderColor = replyError ? "#f87171" : "rgba(109,212,0,0.2)"; }}
-                  />
-                  {replyError && (
-                    <div style={{ fontSize:"0.82rem", color:"#f87171", marginTop:"0.4rem" }}>⚠ {replyError}</div>
+                  {/* Bouton / statut rappelé */}
+                  {selected.repondu === 1 ? (
+                    <div style={{ display:"flex", alignItems:"center", gap:"0.6rem", color:GREEN, fontSize:"0.9rem", fontWeight:600 }}>
+                      <span style={{ fontSize:"1.1rem" }}>✓</span> Ce client a été rappelé.
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.8rem" }}>
+                        Une fois le client rappelé, marquez-le comme traité
+                      </div>
+                      <button
+                        onClick={() => markRappele(selected)}
+                        style={{
+                          background:GREEN, color:NAVY,
+                          fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700,
+                          fontSize:"0.95rem", letterSpacing:"0.08em",
+                          padding:"0.7rem 2rem", border:"none", cursor:"pointer",
+                          clipPath:"polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)",
+                        }}
+                      >
+                        ✓ MARQUER COMME RAPPELÉ
+                      </button>
+                    </div>
                   )}
-                  <div style={{ marginTop:"0.8rem", display:"flex", gap:"0.8rem", alignItems:"center" }}>
-                    <button
-                      onClick={sendReply}
-                      disabled={replying || !replyText.trim()}
-                      style={{
-                        background: replying || !replyText.trim() ? "rgba(109,212,0,0.35)" : GREEN,
-                        color: NAVY, fontFamily:"'Barlow Condensed',sans-serif",
-                        fontWeight:700, fontSize:"0.95rem", letterSpacing:"0.08em",
-                        padding:"0.65rem 1.8rem", border:"none",
-                        cursor: replying || !replyText.trim() ? "not-allowed" : "pointer",
-                        clipPath:"polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)",
-                        transition:"all 0.18s",
-                      }}
-                    >
-                      {replying ? "ENVOI…" : "✉ ENVOYER LA RÉPONSE"}
-                    </button>
-                    <span style={{ fontSize:"0.78rem", color:GRAY_DIM }}>
-                      Un email de notification sera envoyé automatiquement.
-                    </span>
+                </>
+              ) : (
+                /* ── Affichage message classique ── */
+                <>
+                  {/* Message original */}
+                  <div>
+                    <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
+                      Message reçu · {new Date(selected.created_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
+                    </div>
+                    <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem",
+                      fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640 }}>
+                      {selected.message}
+                    </div>
                   </div>
-                </div>
+
+                  {/* Réponse déjà envoyée */}
+                  {selected.reply_text && (
+                    <div>
+                      <div style={{ fontSize:"0.72rem", color:GREEN, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
+                        ✓ Votre réponse envoyée
+                        {selected.replied_at && (
+                          <span style={{ color:GRAY_DIM, fontWeight:400, marginLeft:8 }}>
+                            · {new Date(selected.replied_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ background:"rgba(109,212,0,0.06)", border:"1px solid rgba(109,212,0,0.25)",
+                        borderLeft:"3px solid " + GREEN, padding:"1.5rem",
+                        fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640, color:"#e8f4e0" }}>
+                        {selected.reply_text}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Zone de réponse (si pas encore répondu) */}
+                  {!selected.repondu && (
+                    <div style={{ maxWidth:640 }}>
+                      <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
+                        Votre réponse — un email sera envoyé à {selected.email}
+                      </div>
+                      <textarea
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                        placeholder={`Bonjour ${selected.nom},\n\nMerci pour votre message...`}
+                        rows={7}
+                        style={{
+                          width:"100%", background:NAVY_MID,
+                          border:`1px solid ${replyError ? "#f87171" : "rgba(109,212,0,0.2)"}`,
+                          color:"#fff", fontFamily:"'DM Sans',sans-serif", fontSize:"0.92rem",
+                          lineHeight:1.7, padding:"1rem", resize:"vertical",
+                          outline:"none", boxSizing:"border-box",
+                        }}
+                        onFocus={e => { e.currentTarget.style.borderColor = GREEN; }}
+                        onBlur={e => { e.currentTarget.style.borderColor = replyError ? "#f87171" : "rgba(109,212,0,0.2)"; }}
+                      />
+                      {replyError && (
+                        <div style={{ fontSize:"0.82rem", color:"#f87171", marginTop:"0.4rem" }}>⚠ {replyError}</div>
+                      )}
+                      <div style={{ marginTop:"0.8rem", display:"flex", gap:"0.8rem", alignItems:"center" }}>
+                        <button
+                          onClick={sendReply}
+                          disabled={replying || !replyText.trim()}
+                          style={{
+                            background: replying || !replyText.trim() ? "rgba(109,212,0,0.35)" : GREEN,
+                            color: NAVY, fontFamily:"'Barlow Condensed',sans-serif",
+                            fontWeight:700, fontSize:"0.95rem", letterSpacing:"0.08em",
+                            padding:"0.65rem 1.8rem", border:"none",
+                            cursor: replying || !replyText.trim() ? "not-allowed" : "pointer",
+                            clipPath:"polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)",
+                            transition:"all 0.18s",
+                          }}
+                        >
+                          {replying ? "ENVOI…" : "✉ ENVOYER LA RÉPONSE"}
+                        </button>
+                        <span style={{ fontSize:"0.78rem", color:GRAY_DIM }}>
+                          Un email de notification sera envoyé automatiquement.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </>
@@ -1501,6 +2075,7 @@ export default function Admin() {
     clients:   <Clients/>,
     messages:  <Messages/>,
     decharges: <Decharges/>,
+    calculateur: <Calculateur/>,
   };
 
   if (checking) return (
