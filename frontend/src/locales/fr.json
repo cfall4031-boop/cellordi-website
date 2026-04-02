@@ -213,7 +213,8 @@
       "device": "Appareil",
       "problem": "Problème",
       "progress": "Progression",
-      "in_progress": "← En cours"
+      "in_progress": "← En cours",
+      "updates_title": "Historique des mises à jour"
     }
   },
   "contact": {

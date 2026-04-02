@@ -7,7 +7,7 @@ const router = express.Router();
 // GET /api/tickets/suivi/:numero — Suivi public par numéro de ticket
 router.get("/suivi/:numero", (req, res) => {
   const ticket = db.prepare(`
-    SELECT numero, prenom, nom, type_appareil, marque, modele,
+    SELECT id, numero, prenom, nom, type_appareil, marque, modele,
            probleme, statut, date_reception, date_estimee, cout_estime
     FROM tickets WHERE numero = ?
   `).get(req.params.numero.toUpperCase());
@@ -23,10 +23,19 @@ router.get("/suivi/:numero", (req, res) => {
     livre:       { label: "Livré",     index: 5 },
   };
 
+  // Fetch tracking updates for this ticket
+  const updates = db.prepare(
+    "SELECT id, message, created_at FROM ticket_updates WHERE ticket_id = ? ORDER BY created_at DESC"
+  ).all(ticket.id);
+
+  // Don't expose internal ticket id to public
+  const { id, ...publicTicket } = ticket;
+
   res.json({
-    ...ticket,
+    ...publicTicket,
     etape_actuelle: etapes[ticket.statut] || { label: ticket.statut, index: 0 },
-    toutes_etapes: Object.values(etapes)
+    toutes_etapes: Object.values(etapes),
+    updates
   });
 });
 
@@ -96,6 +105,42 @@ router.get("/", auth, (req, res) => {
   query += " ORDER BY date_reception DESC";
   const tickets = db.prepare(query).all(...params);
   res.json({ total: tickets.length, tickets });
+});
+
+// ── MISES À JOUR / TRACKING UPDATES ─────────────────────────────
+
+// GET /api/tickets/:id/updates — Lister les updates d'un ticket (admin)
+router.get("/:id/updates", auth, (req, res) => {
+  const updates = db.prepare(
+    "SELECT * FROM ticket_updates WHERE ticket_id = ? ORDER BY created_at DESC"
+  ).all(req.params.id);
+  res.json({ updates });
+});
+
+// POST /api/tickets/:id/updates — Ajouter une update (admin)
+router.post("/:id/updates", auth, (req, res) => {
+  const { message } = req.body;
+  if (!message || !message.trim()) {
+    return res.status(400).json({ erreur: "Le message est requis." });
+  }
+  const ticket = db.prepare("SELECT id FROM tickets WHERE id = ?").get(req.params.id);
+  if (!ticket) return res.status(404).json({ erreur: "Ticket introuvable." });
+
+  const result = db.prepare(
+    "INSERT INTO ticket_updates (ticket_id, message) VALUES (?, ?)"
+  ).run(req.params.id, message.trim());
+
+  const update = db.prepare("SELECT * FROM ticket_updates WHERE id = ?").get(result.lastInsertRowid);
+  res.status(201).json({ message: "Mise à jour ajoutée.", update });
+});
+
+// DELETE /api/tickets/:id/updates/:updateId — Supprimer une update (admin)
+router.delete("/:id/updates/:updateId", auth, (req, res) => {
+  const result = db.prepare(
+    "DELETE FROM ticket_updates WHERE id = ? AND ticket_id = ?"
+  ).run(req.params.updateId, req.params.id);
+  if (result.changes === 0) return res.status(404).json({ erreur: "Mise à jour introuvable." });
+  res.json({ message: "Mise à jour supprimée." });
 });
 
 // GET /api/tickets/:id — Détail d'un ticket (admin)

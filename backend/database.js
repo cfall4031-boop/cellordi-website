@@ -123,6 +123,16 @@ try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 
 // Migration: add telephone field to messages_contact
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN telephone TEXT"); } catch (_) {}
 
+// ── MISES À JOUR TICKET (tracking updates) ────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ticket_updates (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id  INTEGER NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+    message    TEXT    NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // ── CALCULATEUR DE PRIX ────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS pieces_catalogue (

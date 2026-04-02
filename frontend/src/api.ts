@@ -76,6 +76,10 @@ export const ticketsApi = {
   update:  (id: number, data: Record<string, unknown>) =>
     req<{ message: string }>("PATCH", `/tickets/${id}`, data),
   delete:  (id: number) => req<{ message: string }>("DELETE", `/tickets/${id}`),
+  // Tracking updates
+  getUpdates:   (id: number) => req<{ updates: any[] }>("GET", `/tickets/${id}/updates`),
+  addUpdate:    (id: number, message: string) => req<any>("POST", `/tickets/${id}/updates`, { message }),
+  deleteUpdate: (id: number, updateId: number) => req<any>("DELETE", `/tickets/${id}/updates/${updateId}`),
 };
 
 // ── CLIENTS ──────────────────────────────────────────────────

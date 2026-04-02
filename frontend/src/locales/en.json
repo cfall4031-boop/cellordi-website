@@ -213,7 +213,8 @@
       "device": "Device",
       "problem": "Problem",
       "progress": "Progress",
-      "in_progress": "← In progress"
+      "in_progress": "← In progress",
+      "updates_title": "Update History"
     }
   },
   "contact": {

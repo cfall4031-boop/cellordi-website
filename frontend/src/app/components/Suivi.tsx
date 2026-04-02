@@ -4,6 +4,12 @@ import { FadeUp } from "./FadeUp";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { ticketsApi } from "../../api";
 
+type TicketUpdate = {
+  id: number;
+  message: string;
+  created_at: string;
+};
+
 type TicketResult = {
   numero: string;
   prenom: string;
@@ -14,6 +20,7 @@ type TicketResult = {
   date_estimee?: string;
   etape_actuelle: { label: string; index: number };
   toutes_etapes: { label: string }[];
+  updates?: TicketUpdate[];
 };
 
 export function Suivi() {
@@ -172,6 +179,33 @@ export function Suivi() {
                   );
                 })}
               </div>
+
+              {/* Tracking updates timeline */}
+              {result.updates && result.updates.length > 0 && (
+                <div style={{ marginTop: "1.8rem", borderTop: `1px solid ${GREEN}22`, paddingTop: "1.5rem" }}>
+                  <div style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.85rem", color: GREEN,
+                    letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
+                    {t("suivi.result.updates_title")}
+                  </div>
+                  <div style={{ borderLeft: `2px solid ${GREEN}33`, paddingLeft: "1.2rem", display: "flex",
+                    flexDirection: "column", gap: "1rem" }}>
+                    {result.updates.map((u) => (
+                      <div key={u.id} style={{ position: "relative" }}>
+                        <div style={{ position: "absolute", left: "-1.55rem", top: "0.35rem", width: "10px",
+                          height: "10px", borderRadius: "50%", background: GREEN }} />
+                        <div style={{ fontFamily: FONT_BODY, fontSize: "0.72rem", color: GRAY_DIM, marginBottom: "0.25rem" }}>
+                          {new Date(u.created_at).toLocaleString("fr-CA", {
+                            day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
+                          })}
+                        </div>
+                        <div style={{ fontFamily: FONT_BODY, fontSize: "0.9rem", color: WHITE, lineHeight: 1.5 }}>
+                          {u.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </FadeUp>
         )}

@@ -832,6 +832,37 @@ function Tickets() {
   const [loading, setLoading]   = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [updates, setUpdates] = useState<any[]>([]);
+  const [newUpdate, setNewUpdate] = useState("");
+
+  // Load updates when a ticket is selected
+  useEffect(() => {
+    if (selected) {
+      ticketsApi.getUpdates(selected.id)
+        .then((d: any) => setUpdates(d.updates || []))
+        .catch(console.error);
+    } else {
+      setUpdates([]);
+      setNewUpdate("");
+    }
+  }, [selected?.id]);
+
+  const addUpdate = async () => {
+    if (!newUpdate.trim() || !selected) return;
+    try {
+      const res = await ticketsApi.addUpdate(selected.id, newUpdate.trim());
+      setUpdates(prev => [res.update, ...prev]);
+      setNewUpdate("");
+    } catch (err) { console.error(err); }
+  };
+
+  const removeUpdate = async (updateId: number) => {
+    if (!selected) return;
+    try {
+      await ticketsApi.deleteUpdate(selected.id, updateId);
+      setUpdates(prev => prev.filter(u => u.id !== updateId));
+    } catch (err) { console.error(err); }
+  };
 
   const load = useCallback(() => {
     setLoading(true);
@@ -964,7 +995,7 @@ function Tickets() {
 
       {/* Panneau détail */}
       {selected && (
-        <div style={{ width:300, background:NAVY_MID, borderLeft:"1px solid rgba(109,212,0,0.15)",
+        <div style={{ width:380, background:NAVY_MID, borderLeft:"1px solid rgba(109,212,0,0.15)",
           padding:"1.5rem", overflowY:"auto", flexShrink:0 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1.5rem" }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700 }}>Détail Ticket</div>
@@ -994,6 +1025,56 @@ function Tickets() {
                 }}>{statutColors[s]?.label||s}</button>
               ))}
             </div>
+          </div>
+
+          {/* ── Mises à jour (tracking) ── */}
+          <div style={{ marginTop:"1.5rem", borderTop:"1px solid rgba(109,212,0,0.12)", paddingTop:"1.2rem" }}>
+            <div style={{ fontSize:"0.7rem", fontWeight:700, letterSpacing:"0.1em", color:GRAY_DIM, textTransform:"uppercase", marginBottom:"0.8rem" }}>
+              📋 Mises à jour {updates.length > 0 && <span style={{ color:GREEN, marginLeft:"0.3rem" }}>({updates.length})</span>}
+            </div>
+            {/* Add update form */}
+            <div style={{ display:"flex", gap:"0.5rem", marginBottom:"1rem" }}>
+              <textarea
+                value={newUpdate}
+                onChange={e => setNewUpdate(e.target.value)}
+                placeholder="Ex: Écran commandé, arrivée prévue jeudi..."
+                rows={2}
+                style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)",
+                  color:WHITE, padding:"0.5rem 0.7rem", fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif",
+                  resize:"vertical", minHeight:"50px" }}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addUpdate(); } }}
+              />
+            </div>
+            <button onClick={addUpdate} disabled={!newUpdate.trim()} style={{
+              background: newUpdate.trim() ? GREEN : "rgba(255,255,255,0.05)",
+              color: newUpdate.trim() ? NAVY : GRAY_DIM,
+              border:"none", padding:"0.45rem 1rem", fontSize:"0.8rem", fontWeight:700,
+              cursor: newUpdate.trim() ? "pointer" : "default", fontFamily:"'DM Sans',sans-serif",
+              width:"100%", marginBottom:"1rem", transition:"all 0.15s"
+            }}>+ Ajouter une mise à jour</button>
+
+            {/* Updates list */}
+            {updates.length === 0 ? (
+              <div style={{ fontSize:"0.8rem", color:GRAY_DIM, fontStyle:"italic" }}>Aucune mise à jour</div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:"0.6rem", borderLeft:`2px solid ${GREEN}33`, paddingLeft:"1rem" }}>
+                {updates.map((u: any) => (
+                  <div key={u.id} style={{ position:"relative", background:"rgba(255,255,255,0.02)", padding:"0.6rem 0.7rem", borderRadius:"4px" }}>
+                    <div style={{ position:"absolute", left:"-1.35rem", top:"0.7rem", width:"8px", height:"8px", borderRadius:"50%", background:GREEN }} />
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                      <div style={{ fontSize:"0.7rem", color:GRAY_DIM, marginBottom:"0.3rem" }}>
+                        {new Date(u.created_at).toLocaleString("fr-CA", { day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" })}
+                      </div>
+                      <button onClick={() => removeUpdate(u.id)} style={{
+                        background:"transparent", border:"none", color:"rgba(255,100,100,0.5)", cursor:"pointer",
+                        fontSize:"0.75rem", padding:"0 0.3rem", lineHeight:1
+                      }} title="Supprimer">✕</button>
+                    </div>
+                    <div style={{ fontSize:"0.85rem", color:WHITE, lineHeight:1.4 }}>{u.message}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
