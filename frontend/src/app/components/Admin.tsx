@@ -836,16 +836,18 @@ function Tickets() {
   const [newUpdate, setNewUpdate] = useState("");
 
   // Load updates when a ticket is selected
+  const selectedId = selected?.id ?? null;
   useEffect(() => {
-    if (selected) {
-      ticketsApi.getUpdates(selected.id)
-        .then((d: any) => setUpdates(d.updates || []))
-        .catch(console.error);
-    } else {
-      setUpdates([]);
-      setNewUpdate("");
-    }
-  }, [selected?.id]);
+    if (!selectedId) { setUpdates([]); setNewUpdate(""); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const d = await ticketsApi.getUpdates(selectedId);
+        if (!cancelled) setUpdates(d.updates || []);
+      } catch { if (!cancelled) setUpdates([]); }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedId]);
 
   const addUpdate = async () => {
     if (!newUpdate.trim() || !selected) return;
