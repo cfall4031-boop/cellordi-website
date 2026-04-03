@@ -1042,7 +1042,7 @@ function Tickets() {
                 placeholder="Ex: Écran commandé, arrivée prévue jeudi..."
                 rows={2}
                 style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)",
-                  color:WHITE, padding:"0.5rem 0.7rem", fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif",
+                  color:"#fff", padding:"0.5rem 0.7rem", fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif",
                   resize:"vertical", minHeight:"50px" }}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addUpdate(); } }}
               />
@@ -1072,7 +1072,7 @@ function Tickets() {
                         fontSize:"0.75rem", padding:"0 0.3rem", lineHeight:1
                       }} title="Supprimer">✕</button>
                     </div>
-                    <div style={{ fontSize:"0.85rem", color:WHITE, lineHeight:1.4 }}>{u.message}</div>
+                    <div style={{ fontSize:"0.85rem", color:"#fff", lineHeight:1.4 }}>{u.message}</div>
                   </div>
                 ))}
               </div>
