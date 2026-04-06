@@ -227,11 +227,11 @@ export function Decharge() {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
                       <div>
                         <label style={labelStyle}>{t("decharge.step1.prenom")}</label>
-                        <input name="prenom" value={form.prenom} onChange={handleChange} required placeholder="Jean" style={inputStyle} />
+                        <input name="prenom" value={form.prenom} onChange={handleChange} required style={inputStyle} />
                       </div>
                       <div>
                         <label style={labelStyle}>{t("decharge.step1.nom")}</label>
-                        <input name="nom" value={form.nom} onChange={handleChange} required placeholder="Dupont" style={inputStyle} />
+                        <input name="nom" value={form.nom} onChange={handleChange} required style={inputStyle} />
                       </div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">

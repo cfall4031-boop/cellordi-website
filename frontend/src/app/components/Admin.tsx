@@ -1119,10 +1119,10 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
         </div>
         <form onSubmit={handle}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 1rem"}}>
-            {field("prenom","Prénom *",{required:true,placeholder:"Jean"})}
-            {field("nom","Nom *",{required:true,placeholder:"Dupont"})}
+            {field("prenom","Prénom *",{required:true})}
+            {field("nom","Nom *",{required:true})}
             {field("email","Email",{type:"email",placeholder:"jean@ex.com"})}
-            {field("telephone","Téléphone *",{required:true,placeholder:"514-555-1234"})}
+            {field("telephone","Téléphone *",{required:true})}
             {field("type_appareil","Type d'appareil *",{required:true,placeholder:"iPhone, Laptop..."})}
             {field("marque","Marque",{placeholder:"Apple, Dell..."})}
             {field("modele","Modèle",{placeholder:"14 Pro, XPS 15..."})}
