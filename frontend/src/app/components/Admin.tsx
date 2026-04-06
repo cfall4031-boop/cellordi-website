@@ -350,7 +350,7 @@ function Rendez_vous() {
   // ── Tableau dispo ───────────────────────────────────────────────────────────
   const [showDispo, setShowDispo] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const HEURES = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
+  const HEURES = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
   const JOURS_DISPO = [1,2,3,4,5,6]; // Lun–Sam
 
   // ── Chargement ──────────────────────────────────────────────────────────────
@@ -551,8 +551,8 @@ function Rendez_vous() {
                 👤 Étape 2 — Informations client
               </p>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid">
-                {([["Prénom *","prenom","text","Jean"],["Nom *","nom","text","Dupont"],
-                  ["Email","email","email","client@email.com"],["Téléphone *","telephone","tel","(514) 000-0000"]]
+                {([["Prénom *","prenom","text",""],["Nom *","nom","text",""],
+                  ["Email","email","email",""],["Téléphone *","telephone","tel",""]]
                 ).map(([label,name,type,ph])=>(
                   <div key={name as string}>
                     <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>{label}</label>

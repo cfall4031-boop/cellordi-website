@@ -183,8 +183,8 @@ db.exec(`
 function seedHoraires() {
   const count = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo").get();
   if (count.c > 0) return;
-  const heuresLV  = ["10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00"];
-  const heuresSam = ["11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
+  const heuresLV  = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
+  const heuresSam = ["11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
   const insert = db.prepare("INSERT OR IGNORE INTO horaires_dispo (jour, heure, actif) VALUES (?, ?, ?)");
   const insertMany = db.transaction(() => {
     for (let jour = 1; jour <= 5; jour++) {   // Lun–Ven actifs 10h–19h
@@ -198,11 +198,12 @@ function seedHoraires() {
   console.log("✅ Horaires initialisés : Lun–Ven 10h–19h, Sam 11h–18h, Dim fermé.");
 }
 
-// Migration : si l'ancien schedule (09:00 actif) est détecté, effacer et re-seeder
+// Migration : si l'ancien schedule (sans :30) est détecté, effacer et re-seeder
 const hasOldSchedule = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '09:00' AND actif = 1").get();
-if (hasOldSchedule.c > 0) {
+const has30min = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '10:30'").get();
+if (hasOldSchedule.c > 0 || has30min.c === 0) {
   db.prepare("DELETE FROM horaires_dispo").run();
-  console.log("🔄 Anciens horaires détectés — réinitialisation aux nouveaux horaires.");
+  console.log("🔄 Migration horaires → créneaux de 30 min.");
 }
 seedHoraires();
 
