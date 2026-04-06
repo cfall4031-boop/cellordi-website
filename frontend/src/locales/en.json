@@ -148,6 +148,7 @@
     "refused_text": "To book an appointment, contact us directly:",
     "services": [
       "Phone repair",
+      "Tablet repair",
       "Computer repair",
       "IT service",
       "Web development",
@@ -177,10 +178,10 @@
       "choose": "-- Choose --"
     },
     "placeholders": {
-      "prenom": "John",
-      "nom": "Smith",
-      "email": "john@example.com",
-      "telephone": "514-555-1234",
+      "prenom": "",
+      "nom": "",
+      "email": "",
+      "telephone": "",
       "appareil": "e.g. iPhone 14, Dell XPS 15",
       "probleme": "Briefly describe the issue..."
     },

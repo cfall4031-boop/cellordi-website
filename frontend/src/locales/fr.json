@@ -148,6 +148,7 @@
     "refused_text": "Pour prendre rendez-vous, contactez-nous directement :",
     "services": [
       "Réparation cellulaire",
+      "Réparation tablette",
       "Réparation ordinateur",
       "Service informatique",
       "Développement web",
@@ -177,10 +178,10 @@
       "choose": "-- Choisir --"
     },
     "placeholders": {
-      "prenom": "Jean",
-      "nom": "Dupont",
-      "email": "jean@exemple.com",
-      "telephone": "514-555-1234",
+      "prenom": "",
+      "nom": "",
+      "email": "",
+      "telephone": "",
       "appareil": "Ex: iPhone 14, Dell XPS 15",
       "probleme": "Décrivez brièvement le problème rencontré..."
     },

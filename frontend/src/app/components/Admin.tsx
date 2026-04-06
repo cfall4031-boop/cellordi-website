@@ -452,7 +452,7 @@ function Rendez_vous() {
   const prevMonth = () => { if (calMonth === 0) { setCalYear(y=>y-1); setCalMonth(11); } else setCalMonth(m=>m-1); };
   const nextMonth = () => { if (calMonth === 11) { setCalYear(y=>y+1); setCalMonth(0); } else setCalMonth(m=>m+1); };
 
-  const SERVICES = ["Réparation cellulaire","Réparation ordinateur","Service informatique","Développement web","Solution cloud","Contrat d'entretien","Autre"];
+  const SERVICES = ["Réparation cellulaire","Réparation tablette","Réparation ordinateur","Service informatique","Développement web","Solution cloud","Contrat d'entretien","Autre"];
 
   return (
     <div className="admin-fade">
