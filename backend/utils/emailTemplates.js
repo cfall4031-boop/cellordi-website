@@ -96,11 +96,12 @@ function detail(label, valeur) {
 function rdvClient({ prenom, nom, email, telephone, type_appareil, date_rdv, heure, description, numero_ticket }) {
   const content = `
     <h1 style="font-size:20px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:0.03em;margin:0 0 8px;">
-      Demande de rendez-vous reçue ✓
+      Rendez-vous confirmé ✓
     </h1>
     <p style="color:#a8b8d0;font-size:14px;line-height:1.7;margin:0 0 24px;">
-      Bonjour <strong style="color:#ffffff;">${prenom}</strong>, nous avons bien reçu votre demande de rendez-vous.
-      Notre équipe la traitera dans les meilleurs délais et vous contactera pour confirmation.
+      Bonjour <strong style="color:#ffffff;">${prenom}</strong>, votre rendez-vous est confirmé !
+      Nous vous attendons le <strong style="color:#ffffff;">${date_rdv}</strong>${heure ? ` à <strong style="color:#ffffff;">${heure}</strong>` : ""}
+      pour votre <strong style="color:#6dd400;">${type_appareil}</strong>.
     </p>
 
     ${numero_ticket ? blocTicket(numero_ticket) : ""}
@@ -125,9 +126,9 @@ function rdvClient({ prenom, nom, email, telephone, type_appareil, date_rdv, heu
 
     <div style="background:rgba(109,212,0,0.06);border-left:3px solid #6dd400;padding:14px 16px;margin-top:24px;">
       <p style="color:#a8b8d0;font-size:13px;line-height:1.6;margin:0;">
-        <strong style="color:#6dd400;">Prochaine étape :</strong> Un de nos techniciens vous contactera sous
-        <strong style="color:#ffffff;">1 heure</strong> pour confirmer votre rendez-vous.
-        Si vous avez des questions, appelez-nous au <strong style="color:#6dd400;">(514) 237-5792</strong>.
+        <strong style="color:#6dd400;">📍 Adresse :</strong> 5050 QC-132 #203, Sainte-Catherine, QC.<br/>
+        N'oubliez pas d'apporter votre appareil et son chargeur.
+        Pour toute question, appelez-nous au <strong style="color:#6dd400;">(514) 237-5792</strong>.
       </p>
     </div>
   `;
