@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   authApi, rdvApi, ticketsApi, clientsApi,
-  messagesApi, dechargesApi, prixApi, setToken, removeToken, getToken
+  messagesApi, dechargesApi, prixApi, notificationsApi, setToken, removeToken, getToken
 } from "../../api";
+
+// ── MOBILE CONTEXT ───────────────────────────────────────────
+const MobileCtx = React.createContext<{ isMobile: boolean; openSidebar: () => void }>({ isMobile: false, openSidebar: () => {} });
 
 // ── TOKENS ────────────────────────────────────────────────────
 const NAVY       = "#0b1c35";
@@ -142,74 +145,165 @@ const NAV_ITEMS = [
   { id:"calculateur", icon:"🧮", label:"Calculateur"   },
 ];
 
-function Sidebar({ active, setActive, adminNom, onLogout }: {
+// ── Helpers pour push notifications ──────────────────────────
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+const pushSupported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+
+function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen, setSidebarOpen }: {
   active: string; setActive: (s: string) => void;
   adminNom: string; onLogout: () => void;
+  isMobile: boolean; sidebarOpen: boolean; setSidebarOpen: (v: boolean) => void;
 }) {
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
+  useEffect(() => {
+    if (!pushSupported) return;
+    navigator.serviceWorker.ready.then(reg =>
+      reg.pushManager.getSubscription().then(sub => setPushEnabled(!!sub))
+    ).catch(() => {});
+  }, []);
+
+  const togglePush = async () => {
+    if (!pushSupported) return;
+    setPushLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        await existing.unsubscribe();
+        await notificationsApi.unsubscribe(existing.endpoint).catch(() => {});
+        setPushEnabled(false);
+      } else {
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") { setPushLoading(false); return; }
+        const { publicKey } = await notificationsApi.getVapidKey();
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+        await notificationsApi.subscribe(sub.toJSON() as any);
+        setPushEnabled(true);
+      }
+    } catch (e) { console.error("Push toggle error:", e); }
+    setPushLoading(false);
+  };
+
+  const handleNavClick = (id: string) => {
+    setActive(id);
+    if (isMobile) setSidebarOpen(false);
+  };
+
   return (
-    <aside style={{
-      width:240, flexShrink:0, background:NAVY_MID,
-      borderRight:"1px solid rgba(109,212,0,0.1)",
-      display:"flex", flexDirection:"column",
-      position:"fixed", top:0, left:0, bottom:0, zIndex:50
-    }}>
-      <div style={{ padding:"1.5rem 1.2rem", borderBottom:"1px solid rgba(109,212,0,0.1)" }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:"1.1rem" }}>
-          RÉPARATION <span style={{color:GREEN}}>CeLL&amp;Ordi</span>
+    <>
+      {/* Overlay mobile */}
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{
+          position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:99
+        }}/>
+      )}
+      <aside style={{
+        width:240, flexShrink:0, background:NAVY_MID,
+        borderRight:"1px solid rgba(109,212,0,0.1)",
+        display:"flex", flexDirection:"column",
+        position:"fixed", top:0, left:0, bottom:0, zIndex:100,
+        transform: isMobile && !sidebarOpen ? "translateX(-240px)" : "translateX(0)",
+        transition: "transform 0.25s ease"
+      }}>
+        <div style={{ padding:"1.5rem 1.2rem", borderBottom:"1px solid rgba(109,212,0,0.1)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:"1.1rem" }}>
+              RÉPARATION <span style={{color:GREEN}}>CeLL&amp;Ordi</span>
+            </div>
+            <div style={{ fontSize:"0.7rem", color:GRAY_DIM, letterSpacing:"0.08em", marginTop:"0.2rem" }}>ADMIN PANEL</div>
+          </div>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(false)} style={{
+              background:"none", border:"none", color:GRAY, fontSize:"1.4rem", cursor:"pointer", padding:"0.2rem"
+            }}>✕</button>
+          )}
         </div>
-        <div style={{ fontSize:"0.7rem", color:GRAY_DIM, letterSpacing:"0.08em", marginTop:"0.2rem" }}>ADMIN PANEL</div>
-      </div>
 
-      <nav style={{ flex:1, padding:"1rem 0", overflowY:"auto" }}>
-        {NAV_ITEMS.map(item => (
-          <button key={item.id} onClick={()=>setActive(item.id)} style={{
-            width:"100%", display:"flex", alignItems:"center", gap:"0.75rem",
-            padding:"0.75rem 1.2rem",
-            background:active===item.id?"rgba(109,212,0,0.1)":"transparent",
-            borderTop:"none", borderRight:"none", borderBottom:"none",
-            borderLeft:`3px solid ${active===item.id?GREEN:"transparent"}`,
-            color:active===item.id?"#fff":GRAY, cursor:"pointer",
-            fontSize:"0.88rem", fontWeight:active===item.id?600:400,
-            textAlign:"left", transition:"all 0.15s"
+        <nav style={{ flex:1, padding:"1rem 0", overflowY:"auto" }}>
+          {NAV_ITEMS.map(item => (
+            <button key={item.id} onClick={()=>handleNavClick(item.id)} style={{
+              width:"100%", display:"flex", alignItems:"center", gap:"0.75rem",
+              padding:"0.75rem 1.2rem",
+              background:active===item.id?"rgba(109,212,0,0.1)":"transparent",
+              borderTop:"none", borderRight:"none", borderBottom:"none",
+              borderLeft:`3px solid ${active===item.id?GREEN:"transparent"}`,
+              color:active===item.id?"#fff":GRAY, cursor:"pointer",
+              fontSize:"0.88rem", fontWeight:active===item.id?600:400,
+              textAlign:"left", transition:"all 0.15s"
+            }}>
+              <span style={{fontSize:"1rem"}}>{item.icon}</span>
+              <span style={{flex:1}}>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div style={{ padding:"1rem 1.2rem", borderTop:"1px solid rgba(109,212,0,0.1)" }}>
+          {/* Push notification toggle */}
+          {pushSupported && (
+            <button onClick={togglePush} disabled={pushLoading} style={{
+              width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem",
+              background: pushEnabled ? GREEN_DIM : "transparent",
+              border:`1px solid ${pushEnabled ? GREEN : GRAY_DIM}`,
+              color: pushEnabled ? GREEN : GRAY,
+              fontSize:"0.78rem", padding:"0.5rem", cursor: pushLoading ? "wait" : "pointer",
+              marginBottom:"0.6rem", fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
+            }}>
+              {pushLoading ? "..." : pushEnabled ? "🔔 Notifications ON" : "🔕 Notifications OFF"}
+            </button>
+          )}
+          <div style={{ fontSize:"0.78rem", color:GRAY, marginBottom:"0.6rem" }}>
+            Connecté : <strong style={{color:"#fff"}}>{adminNom}</strong>
+          </div>
+          <a href="/" style={{
+            display:"block", textAlign:"center", textDecoration:"none",
+            background:"transparent", border:"1px solid rgba(109,212,0,0.3)",
+            color:GREEN, fontSize:"0.78rem", padding:"0.4rem", marginBottom:"0.4rem", cursor:"pointer"
+          }}>← Site public</a>
+          <button onClick={onLogout} style={{
+            width:"100%", background:"transparent", border:"1px solid rgba(255,77,77,0.3)",
+            color:RED, fontSize:"0.82rem", padding:"0.5rem", cursor:"pointer",
+            fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
           }}>
-            <span style={{fontSize:"1rem"}}>{item.icon}</span>
-            <span style={{flex:1}}>{item.label}</span>
+            Déconnexion
           </button>
-        ))}
-      </nav>
-
-      <div style={{ padding:"1rem 1.2rem", borderTop:"1px solid rgba(109,212,0,0.1)" }}>
-        <div style={{ fontSize:"0.78rem", color:GRAY, marginBottom:"0.6rem" }}>
-          Connecté : <strong style={{color:"#fff"}}>{adminNom}</strong>
         </div>
-        <a href="/" style={{
-          display:"block", textAlign:"center", textDecoration:"none",
-          background:"transparent", border:"1px solid rgba(109,212,0,0.3)",
-          color:GREEN, fontSize:"0.78rem", padding:"0.4rem", marginBottom:"0.4rem", cursor:"pointer"
-        }}>← Site public</a>
-        <button onClick={onLogout} style={{
-          width:"100%", background:"transparent", border:"1px solid rgba(255,77,77,0.3)",
-          color:RED, fontSize:"0.82rem", padding:"0.5rem", cursor:"pointer",
-          fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
-        }}>
-          Déconnexion
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
 // ── TOPBAR ────────────────────────────────────────────────────
 function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
+  const { isMobile, openSidebar } = React.useContext(MobileCtx);
   const now = new Date().toLocaleDateString("fr-CA", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
   return (
-    <div style={{ padding:"1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)",
-      display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-      <div>
-        <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.6rem", fontWeight:900, margin:0 }}>{title}</h1>
-        {subtitle && <p style={{ fontSize:"0.82rem", color:GRAY, marginTop:"0.1rem", margin:0 }}>{subtitle}</p>}
+    <div style={{ padding: isMobile ? "1rem" : "1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)",
+      display:"flex", alignItems:"center", justifyContent:"space-between", gap:"0.75rem" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
+        {isMobile && (
+          <button onClick={openSidebar} style={{
+            background:"none", border:"none", color:"#fff", fontSize:"1.5rem", cursor:"pointer", padding:"0.2rem"
+          }}>☰</button>
+        )}
+        <div>
+          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: isMobile ? "1.2rem" : "1.6rem", fontWeight:900, margin:0 }}>{title}</h1>
+          {subtitle && <p style={{ fontSize:"0.82rem", color:GRAY, marginTop:"0.1rem", margin:0 }}>{subtitle}</p>}
+        </div>
       </div>
-      <div style={{ fontSize:"0.82rem", color:GRAY_DIM }}>{now}</div>
+      {!isMobile && <div style={{ fontSize:"0.82rem", color:GRAY_DIM }}>{now}</div>}
     </div>
   );
 }
@@ -2124,6 +2218,14 @@ export default function Admin() {
   const [adminNom, setAdminNom] = useState("Admin");
   const [active, setActive]     = useState("overview");
   const [checking, setChecking] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // Vérifier si déjà connecté (token en localStorage)
   useEffect(() => {
@@ -2176,12 +2278,15 @@ export default function Admin() {
   );
 
   return (
-    <div className="admin-wrap" style={{ display:"flex", height:"100vh", overflow:"hidden" }}>
-      <style>{globalStyles}</style>
-      <Sidebar active={active} setActive={setActive} adminNom={adminNom} onLogout={handleLogout}/>
-      <main style={{ flex:1, marginLeft:240, display:"flex", flexDirection:"column", overflow:"auto", background:NAVY }}>
-        {sections[active]}
-      </main>
-    </div>
+    <MobileCtx.Provider value={{ isMobile, openSidebar: () => setSidebarOpen(true) }}>
+      <div className="admin-wrap" style={{ display:"flex", height:"100vh", overflow:"hidden" }}>
+        <style>{globalStyles}</style>
+        <Sidebar active={active} setActive={setActive} adminNom={adminNom} onLogout={handleLogout}
+          isMobile={isMobile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}/>
+        <main style={{ flex:1, marginLeft: isMobile ? 0 : 240, display:"flex", flexDirection:"column", overflow:"auto", background:NAVY }}>
+          {sections[active]}
+        </main>
+      </div>
+    </MobileCtx.Provider>
   );
 }

@@ -1,6 +1,10 @@
 {
   "name": "Réparation CeLL&Ordi",
   "short_name": "CeLL&Ordi",
+  "start_url": "/admin",
+  "scope": "/",
+  "id": "/admin",
+  "description": "Panel d'administration — Réparation CeLL&Ordi",
   "icons": [
     {
       "src": "/favicon-48x48.png",

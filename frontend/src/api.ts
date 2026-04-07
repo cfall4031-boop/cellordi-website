@@ -151,6 +151,15 @@ export const prixApi = {
     req<any>("GET", "/prix/calculer" + toQuery(params)),
 };
 
+// ── NOTIFICATIONS PUSH ──────────────────────────────────────
+export const notificationsApi = {
+  getVapidKey:  () => req<{ publicKey: string }>("GET", "/notifications/vapid-key", null, true),
+  subscribe:    (subscription: PushSubscriptionJSON) =>
+    req<{ message: string }>("POST", "/notifications/subscribe", subscription),
+  unsubscribe:  (endpoint: string) =>
+    req<{ message: string }>("DELETE", "/notifications/unsubscribe", { endpoint }),
+};
+
 // ── HELPER ───────────────────────────────────────────────────
 function toQuery(params: Record<string, string>): string {
   const q = new URLSearchParams(

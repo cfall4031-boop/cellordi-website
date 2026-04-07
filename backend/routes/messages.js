@@ -3,6 +3,7 @@ const { db } = require("../database");
 const auth = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
 const { contactClient, contactAdmin, replyToContact, rappelAdmin } = require("../utils/emailTemplates");
+const { sendPushToAll } = require("../utils/pushService");
 
 const router = express.Router();
 
@@ -51,6 +52,14 @@ router.post("/", (req, res) => {
       }).catch(console.error);
     }
   }
+
+  // ── Push notification admin (fire-and-forget) ────────────────────
+  sendPushToAll({
+    title: isRappel ? "📞 Rappel demandé" : "✉️ Nouveau message",
+    body: isRappel ? `Téléphone: ${telephone}` : `${nom} — ${sujet}`,
+    url: "/admin",
+    tag: "message",
+  }).catch(console.error);
 
   res.status(201).json({
     message: "Message envoyé avec succès ! Nous vous répondrons sous 24h.",

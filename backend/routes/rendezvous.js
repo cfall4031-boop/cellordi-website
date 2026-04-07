@@ -4,6 +4,7 @@ const auth = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
 const { sendSMS }   = require("../utils/smsService");
 const { rdvClient, rdvAdmin } = require("../utils/emailTemplates");
+const { sendPushToAll } = require("../utils/pushService");
 
 const router = express.Router();
 
@@ -92,6 +93,14 @@ router.post("/", (req, res) => {
       message: `Réparation CeLL&Ordi ✅ RDV confirmé!${ticketTxt}${dateTxt}${heureTxt}. Appareil: ${type_appareil}. Nous vous attendons! 📍5050 QC-132 #203, Ste-Catherine. Questions? (514) 237-5792`,
     }).catch(console.error);
   }
+
+  // ── Push notification admin (fire-and-forget) ────────────────────
+  sendPushToAll({
+    title: "📅 Nouveau rendez-vous",
+    body: `${prenom} ${nom} — ${type_appareil} (${date_rdv}${heure ? " à " + heure : ""})`,
+    url: "/admin",
+    tag: "rdv",
+  }).catch(console.error);
 
   res.status(201).json({
     message: "Rendez-vous soumis avec succès ! Un courriel de confirmation vous a été envoyé.",
