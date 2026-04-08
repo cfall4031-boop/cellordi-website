@@ -7,9 +7,7 @@ const router = express.Router();
 
 // GET /api/notifications/vapid-key — Clé publique VAPID (public)
 router.get("/vapid-key", (req, res) => {
-  const raw = (process.env.VAPID_PUBLIC_KEY || "").replace(/\s/g, "");
-  const key = raw.length > 20 ? raw : "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
-  res.json({ publicKey: key });
+  res.json({ publicKey: "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs" });
 });
 
 // POST /api/notifications/subscribe — Enregistrer un abonnement push (admin)
