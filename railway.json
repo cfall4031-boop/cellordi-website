@@ -6,6 +6,5 @@
   },
   "deploy": {
     "restartPolicyType": "ON_FAILURE"
-  },
-  "rootDirectory": "backend"
+  }
 }
