@@ -55,6 +55,26 @@ const globalStyles = `
   .admin-fade { animation: adminFadeIn 0.35s ease both; }
   .admin-wrap input::placeholder { color: ${GRAY_DIM}; }
   .admin-wrap input:focus, .admin-wrap textarea:focus { outline: none; border-color: ${GREEN} !important; }
+
+  /* ── MOBILE RESPONSIVE ──────────────────────────────────── */
+  @media (max-width: 768px) {
+    .admin-wrap table { font-size: 0.8rem; }
+    .admin-wrap th, .admin-wrap td { padding: 0.5rem 0.6rem !important; font-size: 0.78rem !important; }
+    .admin-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .admin-login-box { width: 92vw !important; max-width: 400px !important; }
+    .admin-login-inner { padding: 1.5rem !important; }
+    .admin-content-pad { padding: 1rem !important; }
+    .admin-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    .admin-grid-2 { grid-template-columns: 1fr !important; }
+    .admin-grid-3 { grid-template-columns: 1fr !important; }
+    .admin-cal-grid { grid-template-columns: 1fr !important; }
+    .admin-modal { width: 92vw !important; max-width: 500px !important; padding: 1.2rem !important; }
+    .admin-modal-grid { grid-template-columns: 1fr !important; }
+    .admin-detail-panel { width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; border-left: none !important; }
+    .admin-detail-inner { padding: 1rem !important; }
+    .admin-topbar-title { font-size: 1.1rem !important; }
+    .admin-flex-col-mobile { flex-direction: column !important; }
+  }
 `;
 
 const thStyle: React.CSSProperties = {
@@ -97,7 +117,7 @@ function Login({ onLogin }: { onLogin: (token: string, nom: string) => void }) {
   return (
     <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
       background:`radial-gradient(ellipse 80% 80% at 50% 0%, rgba(109,212,0,0.06) 0%, transparent 60%), ${NAVY}` }}>
-      <div style={{ width:400, animation:"adminFadeIn 0.5s ease" }}>
+      <div className="admin-login-box" style={{ width:400, animation:"adminFadeIn 0.5s ease" }}>
         <div style={{ textAlign:"center", marginBottom:"2.5rem" }}>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.8rem", fontWeight:900, marginBottom:"0.3rem" }}>
             RÉPARATION <span style={{color:GREEN}}>CeLL&amp;Ordi</span>
@@ -106,7 +126,7 @@ function Login({ onLogin }: { onLogin: (token: string, nom: string) => void }) {
             Panneau d'administration
           </div>
         </div>
-        <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.15)", padding:"2.5rem" }}>
+        <div className="admin-login-inner" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.15)", padding:"2.5rem" }}>
           <div style={{ marginBottom:"1.2rem" }}>
             <label style={{ display:"block", fontSize:"0.75rem", fontWeight:600, letterSpacing:"0.1em", color:GRAY, textTransform:"uppercase", marginBottom:"0.4rem" }}>Courriel</label>
             <input value={email} onChange={e=>setEmail(e.target.value)} type="email"
@@ -352,8 +372,8 @@ function Overview() {
   return (
     <div className="admin-fade">
       <Topbar title="Vue d'ensemble" subtitle="Tableau de bord — Réparation CeLL&Ordi"/>
-      <div style={{ padding:"2rem" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
+      <div className="admin-content-pad" style={{ padding:"2rem" }}>
+        <div className="admin-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
           {statCards.map((s,i) => (
             <div key={i} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)",
               borderTop:`3px solid ${s.color}`, padding:"1.4rem" }}>
@@ -366,7 +386,7 @@ function Overview() {
           ))}
         </div>
 
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
+        <div className="admin-grid-2" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
           <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem" }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700, marginBottom:"1rem" }}>
               RDV Aujourd'hui ({rdvsAujourdhui.length})
@@ -551,7 +571,7 @@ function Rendez_vous() {
   return (
     <div className="admin-fade">
       <Topbar title="Rendez-vous" subtitle={selDate ? `Vue du ${selDate}` : `${filtered.length} rendez-vous`}/>
-      <div style={{ padding:"1.5rem 2rem" }}>
+      <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
 
         {/* ── Bouton Nouveau RDV + Dispo ── */}
         <div style={{ display:"flex", gap:"0.75rem", marginBottom:"1.25rem", flexWrap:"wrap", alignItems:"center" }}>
@@ -585,7 +605,7 @@ function Rendez_vous() {
               <p style={{ color:GREEN, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
                 📅 Étape 1 — Date &amp; Créneau
               </p>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem", alignItems:"start" }} className="rdv-grid">
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1rem", alignItems:"start" }} className="rdv-grid admin-grid-2">
                 <div>
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif" }}>Date du rendez-vous *</label>
                   <input type="date" value={newRdv.date}
@@ -644,7 +664,7 @@ function Rendez_vous() {
               <p style={{ color:GRAY, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
                 👤 Étape 2 — Informations client
               </p>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid">
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid admin-grid-2">
                 {([["Prénom *","prenom","text",""],["Nom *","nom","text",""],
                   ["Email","email","email",""],["Téléphone *","telephone","tel",""]]
                 ).map(([label,name,type,ph])=>(
@@ -657,7 +677,7 @@ function Rendez_vous() {
                   </div>
                 ))}
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid">
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }} className="rdv-grid admin-grid-2">
                 <div>
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Service</label>
                   <select value={newRdv.service} onChange={e=>setNewRdv(p=>({...p,service:e.target.value}))}
@@ -768,7 +788,7 @@ function Rendez_vous() {
         )}
 
         {/* ── Calendrier + liste ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:"1.5rem", alignItems:"start" }} className="cal-grid">
+        <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:"1.5rem", alignItems:"start" }} className="cal-grid admin-cal-grid">
 
           {/* Calendrier */}
           <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1rem", flexShrink:0 }}>
@@ -1001,8 +1021,8 @@ function Tickets() {
     <div className="admin-fade" style={{display:"flex", height:"100%"}}>
       <div style={{flex:1, overflow:"auto"}}>
         <Topbar title="Tickets de Réparation" subtitle={`${filtered.length} ticket${filtered.length !== 1 ? "s" : ""} actif${filtered.length !== 1 ? "s" : ""}${!showArchived ? " — livrés masqués" : ""}`}/>
-        <div style={{ padding:"1.5rem 2rem" }}>
-          <div style={{display:"flex", gap:"0.8rem", marginBottom:"1.2rem"}}>
+        <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
+          <div className="admin-flex-col-mobile" style={{display:"flex", gap:"0.8rem", marginBottom:"1.2rem"}}>
             <input value={search} onChange={e=>setSearch(e.target.value)}
               placeholder="🔍  Rechercher par nom, numéro, appareil..."
               style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(109,212,0,0.2)",
@@ -1091,7 +1111,7 @@ function Tickets() {
 
       {/* Panneau détail */}
       {selected && (
-        <div style={{ width:380, background:NAVY_MID, borderLeft:"1px solid rgba(109,212,0,0.15)",
+        <div className="admin-detail-panel" style={{ width:380, background:NAVY_MID, borderLeft:"1px solid rgba(109,212,0,0.15)",
           padding:"1.5rem", overflowY:"auto", flexShrink:0 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1.5rem" }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700 }}>Détail Ticket</div>
@@ -1206,13 +1226,13 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}
       onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
-      <div style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.2)",padding:"2rem",width:500,maxHeight:"85vh",overflowY:"auto"}}>
+      <div className="admin-modal" style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.2)",padding:"2rem",width:500,maxHeight:"85vh",overflowY:"auto"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.5rem"}}>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:"1.3rem",fontWeight:900}}>Nouveau Ticket</div>
           <button onClick={onClose} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.3rem"}}>✕</button>
         </div>
         <form onSubmit={handle}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 1rem"}}>
+          <div className="admin-modal-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 1rem"}}>
             {field("prenom","Prénom *",{required:true})}
             {field("nom","Nom *",{required:true})}
             {field("email","Email",{type:"email",placeholder:"jean@ex.com"})}
@@ -1325,7 +1345,7 @@ function CalculerPrix() {
   const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
 
   return (
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2rem"}}>
+    <div className="admin-grid-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2rem"}}>
       {/* LEFT — Inputs */}
       <div>
         <div style={{marginBottom:"1.2rem"}}>
@@ -1655,7 +1675,7 @@ function Clients() {
     <div className="admin-fade" style={{display:"flex",height:"100%"}}>
       <div style={{flex:1,overflow:"auto"}}>
         <Topbar title="Clients" subtitle={`${clients.length} clients enregistrés`}/>
-        <div style={{ padding:"1.5rem 2rem" }}>
+        <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
           <input value={search} onChange={e=>setSearch(e.target.value)}
             placeholder="🔍  Rechercher un client..."
             style={{ width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(109,212,0,0.2)",
@@ -1694,7 +1714,7 @@ function Clients() {
       </div>
 
       {selected && (
-        <div style={{ width:300, background:NAVY_MID, borderLeft:"1px solid rgba(109,212,0,0.15)",
+        <div className="admin-detail-panel" style={{ width:300, background:NAVY_MID, borderLeft:"1px solid rgba(109,212,0,0.15)",
           padding:"1.5rem", overflowY:"auto", flexShrink:0 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1.5rem" }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700 }}>Profil Client</div>
@@ -2140,7 +2160,7 @@ function Decharges() {
   return (
     <div className="admin-fade">
       <Topbar title="Décharges" subtitle={`${decharges.length} décharges`}/>
-      <div style={{ padding:"1.5rem 2rem" }}>
+      <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
         {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
         <>
         <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
