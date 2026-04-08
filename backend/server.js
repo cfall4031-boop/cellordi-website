@@ -10,6 +10,7 @@ const compression = require("compression");
 const { initAdmin } = require("./database");
 
 const app  = express();
+app.set("trust proxy", 1); // Railway/Vercel proxy — requis pour express-rate-limit
 const PORT = process.env.PORT || 3001;
 
 // ── SÉCURITÉ ─────────────────────────────────────────────────
