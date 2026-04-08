@@ -2,8 +2,12 @@
 const webpush = require("web-push");
 const { db } = require("../database");
 
-const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY  || "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "_KK7oE2ZucaN1Kkv_tSDfvxJpyQ41azPcif7669Y3No";
+const DEFAULT_PUB  = "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
+const DEFAULT_PRIV = "_KK7oE2ZucaN1Kkv_tSDfvxJpyQ41azPcif7669Y3No";
+const rawPub  = (process.env.VAPID_PUBLIC_KEY  || "").replace(/\s/g, "");
+const rawPriv = (process.env.VAPID_PRIVATE_KEY || "").replace(/\s/g, "");
+const VAPID_PUBLIC  = rawPub.length > 20 ? rawPub : DEFAULT_PUB;
+const VAPID_PRIVATE = rawPriv.length > 20 ? rawPriv : DEFAULT_PRIV;
 const VAPID_EMAIL   = process.env.VAPID_EMAIL || "mailto:admin@reparationcellordi.ca";
 
 let pushEnabled = false;
