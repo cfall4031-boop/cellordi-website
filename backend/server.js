@@ -29,6 +29,8 @@ app.use(cors({
       "http://localhost:5173",
       "https://reparationcellordi.ca",
       "https://www.reparationcellordi.ca",
+      "https://cellordi.ca",
+      "https://www.cellordi.ca",
       ...extraOrigins,
     ];
     // Autoriser les requêtes sans origin (ex: Postman, mobile)

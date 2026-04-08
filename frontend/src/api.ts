@@ -158,6 +158,8 @@ export const notificationsApi = {
     req<{ message: string }>("POST", "/notifications/subscribe", subscription),
   unsubscribe:  (endpoint: string) =>
     req<{ message: string }>("DELETE", "/notifications/unsubscribe", { endpoint }),
+  status:       () => req<{ pushEnabled: boolean; subscriberCount: number }>("GET", "/notifications/status"),
+  test:         () => req<{ message: string; sent: number }>("POST", "/notifications/test"),
 };
 
 // ── HELPER ───────────────────────────────────────────────────

@@ -184,6 +184,7 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
 }) {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
+  const [pushMsg, setPushMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   useEffect(() => {
     if (!pushSupported) return;
@@ -195,6 +196,7 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
   const togglePush = async () => {
     if (!pushSupported) return;
     setPushLoading(true);
+    setPushMsg(null);
     try {
       const reg = await navigator.serviceWorker.ready;
       const existing = await reg.pushManager.getSubscription();
@@ -202,9 +204,14 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
         await existing.unsubscribe();
         await notificationsApi.unsubscribe(existing.endpoint).catch(() => {});
         setPushEnabled(false);
+        setPushMsg({ text: "Notifications désactivées", ok: true });
       } else {
         const perm = await Notification.requestPermission();
-        if (perm !== "granted") { setPushLoading(false); return; }
+        if (perm !== "granted") {
+          setPushMsg({ text: "Permission refusée par le navigateur. Vérifie les réglages.", ok: false });
+          setPushLoading(false);
+          return;
+        }
         const { publicKey } = await notificationsApi.getVapidKey();
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -212,9 +219,23 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
         });
         await notificationsApi.subscribe(sub.toJSON() as any);
         setPushEnabled(true);
+        setPushMsg({ text: "Notifications activées !", ok: true });
       }
-    } catch (e) { console.error("Push toggle error:", e); }
+    } catch (e: any) {
+      console.error("Push toggle error:", e);
+      setPushMsg({ text: `Erreur: ${e.message || e}`, ok: false });
+    }
     setPushLoading(false);
+  };
+
+  const testPush = async () => {
+    setPushMsg(null);
+    try {
+      const res = await notificationsApi.test();
+      setPushMsg({ text: `${res.message} (${res.sent} abonné${res.sent > 1 ? "s" : ""})`, ok: true });
+    } catch (e: any) {
+      setPushMsg({ text: `Test échoué: ${e.message || e}`, ok: false });
+    }
   };
 
   const handleNavClick = (id: string) => {
@@ -271,18 +292,41 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
         </nav>
 
         <div style={{ padding:"1rem 1.2rem", borderTop:"1px solid rgba(109,212,0,0.1)" }}>
-          {/* Push notification toggle */}
+          {/* Push notification toggle + test */}
           {pushSupported && (
-            <button onClick={togglePush} disabled={pushLoading} style={{
-              width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem",
-              background: pushEnabled ? GREEN_DIM : "transparent",
-              border:`1px solid ${pushEnabled ? GREEN : GRAY_DIM}`,
-              color: pushEnabled ? GREEN : GRAY,
-              fontSize:"0.78rem", padding:"0.5rem", cursor: pushLoading ? "wait" : "pointer",
-              marginBottom:"0.6rem", fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
-            }}>
-              {pushLoading ? "..." : pushEnabled ? "🔔 Notifications ON" : "🔕 Notifications OFF"}
-            </button>
+            <>
+              <button onClick={togglePush} disabled={pushLoading} style={{
+                width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem",
+                background: pushEnabled ? GREEN_DIM : "transparent",
+                border:`1px solid ${pushEnabled ? GREEN : GRAY_DIM}`,
+                color: pushEnabled ? GREEN : GRAY,
+                fontSize:"0.78rem", padding:"0.5rem", cursor: pushLoading ? "wait" : "pointer",
+                marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
+              }}>
+                {pushLoading ? "..." : pushEnabled ? "🔔 Notifications ON" : "🔕 Notifications OFF"}
+              </button>
+              {pushEnabled && (
+                <button onClick={testPush} style={{
+                  width:"100%", background:"transparent",
+                  border:`1px solid ${GRAY_DIM}`, color:GRAY,
+                  fontSize:"0.72rem", padding:"0.35rem", cursor:"pointer",
+                  marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif"
+                }}>
+                  🧪 Tester notification
+                </button>
+              )}
+              {pushMsg && (
+                <div style={{
+                  fontSize:"0.7rem", padding:"0.3rem 0.5rem", marginBottom:"0.4rem",
+                  background: pushMsg.ok ? "rgba(109,212,0,0.1)" : "rgba(255,77,77,0.1)",
+                  border: `1px solid ${pushMsg.ok ? GREEN : RED}`,
+                  color: pushMsg.ok ? GREEN : RED,
+                  wordBreak:"break-word"
+                }}>
+                  {pushMsg.text}
+                </div>
+              )}
+            </>
           )}
           <div style={{ fontSize:"0.78rem", color:GRAY, marginBottom:"0.6rem" }}>
             Connecté : <strong style={{color:"#fff"}}>{adminNom}</strong>

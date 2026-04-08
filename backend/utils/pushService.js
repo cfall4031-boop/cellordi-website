@@ -53,4 +53,4 @@ async function sendPushToAll(payload) {
       );
 }
 
-module.exports = { sendPushToAll };
+module.exports = { sendPushToAll, isPushEnabled: () => pushEnabled };
