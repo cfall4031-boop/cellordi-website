@@ -41,10 +41,18 @@ router.delete("/unsubscribe", auth, (req, res) => {
 // GET /api/notifications/status — État du système push (admin)
 router.get("/status", auth, (req, res) => {
   const row = db.prepare("SELECT COUNT(*) as count FROM push_subscriptions").get();
+  const vapidKey = process.env.VAPID_PUBLIC_KEY || "";
   res.json({
     pushEnabled: isPushEnabled(),
     subscriberCount: row.count,
+    vapidKeyPrefix: vapidKey.slice(0, 12) + "...",
   });
+});
+
+// DELETE /api/notifications/purge — Supprimer TOUS les abonnements (admin)
+router.delete("/purge", auth, (req, res) => {
+  const result = db.prepare("DELETE FROM push_subscriptions").run();
+  res.json({ message: `${result.changes} abonnement(s) supprimé(s).`, deleted: result.changes });
 });
 
 // POST /api/notifications/test — Envoyer une notification test avec diagnostic détaillé (admin)

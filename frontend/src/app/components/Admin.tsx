@@ -238,6 +238,41 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
     }
   };
 
+  const resetPush = async () => {
+    setPushLoading(true);
+    setPushMsg(null);
+    try {
+      // 1. Désabonner le navigateur actuel
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) await existing.unsubscribe();
+
+      // 2. Purger tous les anciens abonnements du serveur
+      await notificationsApi.purge();
+
+      // 3. Re-souscrire avec la clé VAPID actuelle
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        setPushMsg({ text: "Permission refusée. Va dans Réglages > Safari > cellordi.ca > Notifications.", ok: false });
+        setPushEnabled(false);
+        setPushLoading(false);
+        return;
+      }
+      const { publicKey } = await notificationsApi.getVapidKey();
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
+      });
+      await notificationsApi.subscribe(sub.toJSON() as any);
+      setPushEnabled(true);
+      setPushMsg({ text: "Anciens abonnements purgés + nouveau créé ! Clique Tester.", ok: true });
+    } catch (e: any) {
+      console.error("Reset push error:", e);
+      setPushMsg({ text: `Erreur reset: ${e.message || e}`, ok: false });
+    }
+    setPushLoading(false);
+  };
+
   const handleNavClick = (id: string) => {
     setActive(id);
     if (isMobile) setSidebarOpen(false);
@@ -306,14 +341,24 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
                 {pushLoading ? "..." : pushEnabled ? "🔔 Notifications ON" : "🔕 Notifications OFF"}
               </button>
               {pushEnabled && (
-                <button onClick={testPush} style={{
-                  width:"100%", background:"transparent",
-                  border:`1px solid ${GRAY_DIM}`, color:GRAY,
-                  fontSize:"0.72rem", padding:"0.35rem", cursor:"pointer",
-                  marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif"
-                }}>
-                  🧪 Tester notification
-                </button>
+                <div style={{ display:"flex", gap:"0.3rem", marginBottom:"0.4rem" }}>
+                  <button onClick={testPush} style={{
+                    flex:1, background:"transparent",
+                    border:`1px solid ${GRAY_DIM}`, color:GRAY,
+                    fontSize:"0.72rem", padding:"0.35rem", cursor:"pointer",
+                    fontFamily:"'DM Sans',sans-serif"
+                  }}>
+                    🧪 Tester
+                  </button>
+                  <button onClick={resetPush} disabled={pushLoading} style={{
+                    flex:1, background:"transparent",
+                    border:`1px solid ${GRAY_DIM}`, color:GRAY,
+                    fontSize:"0.72rem", padding:"0.35rem", cursor: pushLoading ? "wait" : "pointer",
+                    fontFamily:"'DM Sans',sans-serif"
+                  }}>
+                    🔄 Reset
+                  </button>
+                </div>
               )}
               {pushMsg && (
                 <div style={{
