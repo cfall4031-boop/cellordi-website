@@ -33,36 +33,6 @@ export default function App() {
       <Contact />
       <Footer />
 
-      {/* === BOUTON STICKY "APPELER" — optimisé Meta Ads mobile === */}
-      <a
-        href="tel:5142375792"
-        className="sticky-call-btn"
-        style={{
-          position: "fixed",
-          zIndex: 9999,
-          bottom: "1.8rem",
-          right: "1.8rem",
-          background: "#6dd400",
-          color: "#0c0c12",
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontWeight: 800,
-          fontSize: "0.95rem",
-          letterSpacing: "0.07em",
-          textDecoration: "none",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.55rem",
-          padding: "0.85rem 1.5rem",
-          borderRadius: "50px",
-          boxShadow: "0 6px 28px rgba(109,212,0,0.4)",
-          animation: "ring-pulse 2.2s ease-out infinite",
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.32.57 3.58.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.29 21 3 13.71 3 4.5c0-.55.45-1 1-1H7.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.01L6.6 10.8z"/>
-        </svg>
-        Appeler
-      </a>
 
       {/* Global animations injected once */}
       <style>{`
