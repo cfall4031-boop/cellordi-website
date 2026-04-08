@@ -2244,6 +2244,12 @@ export default function Admin() {
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
+
+    // Effacer le badge de l'app quand on ouvre le panel
+    if ('clearAppBadge' in navigator) {
+      (navigator as any).clearAppBadge().catch(() => {});
+    }
+
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
