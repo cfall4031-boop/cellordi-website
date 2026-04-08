@@ -232,7 +232,12 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
     setPushMsg(null);
     try {
       const res = await notificationsApi.test() as any;
-      setPushMsg({ text: res.message, ok: res.sent > 0 });
+      let txt = res.message;
+      if (res.details) {
+        const errs = res.details.filter((d: any) => d.status !== "ok");
+        if (errs.length > 0) txt += "\n" + errs.map((d: any) => d.status).join("; ");
+      }
+      setPushMsg({ text: txt, ok: res.sent > 0 });
     } catch (e: any) {
       setPushMsg({ text: `Test échoué: ${e.message || e}`, ok: false });
     }
