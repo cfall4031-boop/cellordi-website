@@ -63,17 +63,29 @@ const globalStyles = `
     .admin-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .admin-login-box { width: 92vw !important; max-width: 400px !important; }
     .admin-login-inner { padding: 1.5rem !important; }
-    .admin-content-pad { padding: 1rem !important; }
+    .admin-content-pad { padding: 1rem 0.75rem !important; padding-bottom: 2rem !important; }
     .admin-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
     .admin-grid-2 { grid-template-columns: 1fr !important; }
     .admin-grid-3 { grid-template-columns: 1fr !important; }
     .admin-cal-grid { grid-template-columns: 1fr !important; }
     .admin-modal { width: 92vw !important; max-width: 500px !important; padding: 1.2rem !important; }
     .admin-modal-grid { grid-template-columns: 1fr !important; }
-    .admin-detail-panel { width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; border-left: none !important; }
+    .admin-detail-panel { width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; border-left: none !important; overflow-y: auto !important; }
     .admin-detail-inner { padding: 1rem !important; }
     .admin-topbar-title { font-size: 1.1rem !important; }
     .admin-flex-col-mobile { flex-direction: column !important; }
+    .admin-wrap select { font-size: 16px !important; min-height: 44px !important; padding: 0.5rem 0.8rem !important; }
+    .admin-wrap input, .admin-wrap textarea { font-size: 16px !important; }
+    .admin-wrap button { min-height: 44px; }
+    .admin-mobile-hide-table { display: none !important; }
+    .admin-mobile-cards { display: flex !important; }
+    .admin-desktop-only { display: none !important; }
+    .admin-msg-list { width: 100% !important; border-right: none !important; }
+    .admin-msg-detail { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; background: ${NAVY} !important; }
+  }
+  @media (min-width: 769px) {
+    .admin-mobile-cards { display: none !important; }
+    .admin-mobile-only { display: none !important; }
   }
 `;
 
@@ -914,9 +926,9 @@ function Rendez_vous() {
                       background: isSel ? "rgba(109,212,0,0.2)" : "transparent",
                       border: isSel ? `1px solid ${GREEN}` : isToday ? "1px solid rgba(109,212,0,0.35)" : "1px solid transparent",
                       color: isSel ? GREEN : isToday ? GREEN : "#fff",
-                      padding:"0.25rem 0", textAlign:"center", cursor:"pointer",
-                      fontSize:"0.8rem", fontFamily:"'DM Sans',sans-serif",
-                      position:"relative" as const, display:"flex", flexDirection:"column" as const, alignItems:"center", gap:"1px",
+                      padding:"0.4rem 0", textAlign:"center", cursor:"pointer",
+                      fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", minHeight:44, borderRadius:6,
+                      position:"relative" as const, display:"flex", flexDirection:"column" as const, alignItems:"center", justifyContent:"center", gap:"2px",
                     }}>
                     {dayNum}
                     {count > 0 && (
@@ -964,7 +976,9 @@ function Rendez_vous() {
               ))}
             </div>
             {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
-            <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+            <>
+            {/* Desktop table */}
+            <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
               <table>
                 <thead>
                   <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -1017,6 +1031,48 @@ function Rendez_vous() {
                 </div>
               )}
             </div>
+            {/* Mobile cards */}
+            <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
+              {filtered.map((r:any)=>(
+                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:8, padding:"1rem" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.5rem" }}>
+                    <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{r.prenom} {r.nom}</span>
+                    {r.telephone && <a href={`tel:${r.telephone}`} style={{ color:GREEN, fontSize:"1.1rem", textDecoration:"none" }}>📞</a>}
+                  </div>
+                  <div style={{ fontSize:"0.82rem", color:GRAY, marginBottom:"0.4rem" }}>{r.type_appareil}</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"0.6rem", marginBottom:"0.6rem" }}>
+                    <span style={{ fontSize:"0.82rem", color:GRAY }}>{r.date_rdv}</span>
+                    <span style={{background:GREEN_DIM,color:GREEN,padding:"0.15rem 0.5rem",fontWeight:600,fontSize:"0.82rem",borderRadius:4}}>
+                      {r.heure || "—"}
+                    </span>
+                    <Badge statut={r.statut}/>
+                  </div>
+                  <div style={{ display:"flex", gap:"0.4rem", alignItems:"center" }}>
+                    <select value={r.statut} onChange={e=>changeStatut(r.id,e.target.value)}
+                      style={{ flex:1, background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                        fontSize:"0.88rem", padding:"0.6rem 0.8rem", cursor:"pointer", outline:"none", borderRadius:4 }}>
+                      <option value="en_attente">En attente</option>
+                      <option value="confirme">Confirmer</option>
+                      <option value="complete">Compléter</option>
+                      <option value="annule">Annuler</option>
+                    </select>
+                    {(r.statut === "complete" || r.statut === "annule") && (
+                      <button onClick={()=>deleteRdv(r.id)} title="Supprimer"
+                        style={{ background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.25)",
+                          color:"#f87171", cursor:"pointer", fontSize:"1rem", padding:"0.6rem 0.8rem", borderRadius:4 }}>
+                        🗑
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <div style={{ textAlign:"center", padding:"2rem", color:GRAY }}>
+                  {selDate ? `Aucun rendez-vous le ${selDate}.` : "Aucun rendez-vous pour ce filtre."}
+                </div>
+              )}
+            </div>
+            </>
             )}
           </div>
         </div>
@@ -1142,7 +1198,9 @@ function Tickets() {
           </div>
 
           {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+          <>
+          {/* Desktop table */}
+          <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
             <table>
               <thead>
                 <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -1199,6 +1257,35 @@ function Tickets() {
             </table>
             {filtered.length === 0 && <div style={{textAlign:"center",padding:"3rem",color:GRAY}}>Aucun ticket trouvé.</div>}
           </div>
+          {/* Mobile cards */}
+          <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
+            {filtered.map((t:any)=>(
+              <div key={t.id} onClick={()=>setSelected(t)}
+                style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:8, padding:"1rem", cursor:"pointer" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.3rem" }}>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",color:GREEN,fontWeight:700,fontSize:"0.85rem"}}>{t.numero}</span>
+                  <Badge statut={t.statut}/>
+                </div>
+                <div style={{ fontWeight:600, fontSize:"0.95rem", marginBottom:"0.3rem" }}>{t.prenom} {t.nom}</div>
+                <div style={{ fontSize:"0.82rem", color:GRAY, marginBottom:"0.5rem" }}>
+                  {t.type_appareil} {t.probleme ? `— ${t.probleme.slice(0,40)}${t.probleme.length>40?"...":""}` : ""}
+                </div>
+                <div style={{ display:"flex", gap:"0.5rem", alignItems:"center" }}>
+                  <select value={t.statut} onChange={e=>{e.stopPropagation();changeStatut(t.id,e.target.value);}}
+                    onClick={e=>e.stopPropagation()}
+                    style={{ flex:1, background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                      fontSize:"0.88rem", padding:"0.6rem 0.8rem", cursor:"pointer", outline:"none", borderRadius:4 }}>
+                    {statutsList.map(s=><option key={s} value={s}>{statutColors[s]?.label||s}</option>)}
+                  </select>
+                  <span style={{ color:t.cout_estime>0?GREEN:GRAY_DIM, fontWeight:600, fontSize:"0.9rem", minWidth:50, textAlign:"right" }}>
+                    {t.cout_estime>0?`${t.cout_estime} $`:"—"}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && <div style={{textAlign:"center",padding:"2rem",color:GRAY}}>Aucun ticket trouvé.</div>}
+          </div>
+          </>
           )}
         </div>
       </div>
@@ -1923,7 +2010,7 @@ function Messages() {
   return (
     <div className="admin-fade" style={{display:"flex",height:"100%"}}>
       {/* ── Liste des messages ── */}
-      <div style={{width:340,borderRight:"1px solid rgba(109,212,0,0.1)",display:"flex",flexDirection:"column"}}>
+      <div className="admin-msg-list" style={{width:340,borderRight:"1px solid rgba(109,212,0,0.1)",display:"flex",flexDirection:"column"}}>
         <div style={{ padding:"1.2rem 1.5rem", borderBottom:"1px solid rgba(109,212,0,0.1)" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div>
@@ -2007,9 +2094,14 @@ function Messages() {
       </div>
 
       {/* ── Panneau de détail + réponse ── */}
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div className="admin-msg-detail" style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         {selected ? (
           <>
+          {/* Mobile back button */}
+          <button className="admin-mobile-only" onClick={()=>setSelected(null)} style={{
+            background:"transparent", border:"none", color:GREEN, fontSize:"0.9rem", padding:"0.8rem 1rem",
+            cursor:"pointer", textAlign:"left", fontFamily:"'DM Sans',sans-serif", display:"none"
+          }}>← Retour aux messages</button>
             {/* En-tête */}
             <div style={{ padding:"1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)", flexShrink:0 }}>
               {isRappel(selected) ? (
@@ -2257,7 +2349,8 @@ function Decharges() {
       <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
         {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
         <>
-        <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+        {/* Desktop table */}
+        <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
           <table>
             <thead>
               <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -2303,8 +2396,33 @@ function Decharges() {
           </table>
           {decharges.length === 0 && <div style={{textAlign:"center",padding:"3rem",color:GRAY}}>Aucune décharge.</div>}
         </div>
+        {/* Mobile cards */}
+        <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
+          {decharges.map((d:any)=>(
+            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:8, padding:"1rem" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.4rem" }}>
+                <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{d.nom}</span>
+                <Badge statut={d.statut}/>
+              </div>
+              <div style={{ fontSize:"0.82rem", color:GRAY, marginBottom:"0.3rem" }}>{d.type_appareil || d.type}</div>
+              {d.telephone && <div style={{ fontSize:"0.82rem", color:GRAY, marginBottom:"0.3rem" }}>📞 {d.telephone}</div>}
+              <div style={{ display:"flex", gap:"0.8rem", marginBottom:"0.5rem", fontSize:"0.82rem" }}>
+                <span>Diag: <strong style={{color:d.auth_diag==="OUI"||d.auth_diag===1?GREEN:RED}}>{d.auth_diag==="OUI"||d.auth_diag===1?"OUI":"NON"}</strong></span>
+                <span>Rép: <strong style={{color:d.auth_rep==="OUI"||d.auth_rep===1?GREEN:RED}}>{d.auth_rep==="OUI"||d.auth_rep===1?"OUI":"NON"}</strong></span>
+                <span style={{ color:GRAY_DIM }}>{new Date(d.created_at).toLocaleDateString("fr-CA")}</span>
+              </div>
+              <select value={d.statut} onChange={e=>changeStatut(d.id,e.target.value)}
+                style={{ width:"100%", background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                  fontSize:"0.88rem", padding:"0.6rem 0.8rem", cursor:"pointer", outline:"none", borderRadius:4 }}>
+                <option value="en_attente">En attente</option>
+                <option value="traitee">Traitée</option>
+              </select>
+            </div>
+          ))}
+          {decharges.length === 0 && <div style={{textAlign:"center",padding:"2rem",color:GRAY}}>Aucune décharge.</div>}
+        </div>
 
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginTop:"1.5rem" }}>
+        <div className="admin-grid-3" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginTop:"1.5rem" }}>
           {[
             ["📋","Total décharges", decharges.length, GREEN],
             ["✅","Traitées", decharges.filter((d:any)=>d.statut==="traitee").length, BLUE],
