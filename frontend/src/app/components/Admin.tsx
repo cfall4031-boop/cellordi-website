@@ -231,8 +231,8 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
   const testPush = async () => {
     setPushMsg(null);
     try {
-      const res = await notificationsApi.test();
-      setPushMsg({ text: `${res.message} (${res.sent} abonné${res.sent > 1 ? "s" : ""})`, ok: true });
+      const res = await notificationsApi.test() as any;
+      setPushMsg({ text: res.message, ok: res.sent > 0 });
     } catch (e: any) {
       setPushMsg({ text: `Test échoué: ${e.message || e}`, ok: false });
     }

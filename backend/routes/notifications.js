@@ -47,8 +47,10 @@ router.get("/status", auth, (req, res) => {
   });
 });
 
-// POST /api/notifications/test — Envoyer une notification test (admin)
+// POST /api/notifications/test — Envoyer une notification test avec diagnostic détaillé (admin)
 router.post("/test", auth, async (req, res) => {
+  const webpush = require("web-push");
+
   if (!isPushEnabled()) {
     return res.status(503).json({
       erreur: "Push désactivé — les clés VAPID sont invalides ou manquantes sur le serveur.",
@@ -56,8 +58,8 @@ router.post("/test", auth, async (req, res) => {
     });
   }
 
-  const row = db.prepare("SELECT COUNT(*) as count FROM push_subscriptions").get();
-  if (row.count === 0) {
+  const subs = db.prepare("SELECT * FROM push_subscriptions").all();
+  if (subs.length === 0) {
     return res.status(404).json({
       erreur: "Aucun abonnement push trouvé. Active d'abord les notifications avec le bouton dans la sidebar.",
       pushEnabled: true,
@@ -65,17 +67,43 @@ router.post("/test", auth, async (req, res) => {
     });
   }
 
-  try {
-    await sendPushToAll({
-      title: "🧪 Test notification",
-      body: "Si tu vois ceci, les notifications fonctionnent !",
-      url: "/admin",
-      tag: "test",
-    });
-    res.json({ message: "Notification test envoyée !", sent: row.count });
-  } catch (err) {
-    res.status(500).json({ erreur: `Erreur envoi: ${err.message}` });
+  const payload = JSON.stringify({
+    title: "🧪 Test notification",
+    body: "Si tu vois ceci, les notifications fonctionnent !",
+    url: "/admin",
+    tag: "test",
+  });
+
+  const results = [];
+  for (const sub of subs) {
+    const subscription = {
+      endpoint: sub.endpoint,
+      keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth },
+    };
+    try {
+      await webpush.sendNotification(subscription, payload);
+      results.push({ endpoint: sub.endpoint.slice(0, 60), status: "ok" });
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(sub.endpoint);
+        results.push({ endpoint: sub.endpoint.slice(0, 60), status: "expiré — supprimé" });
+      } else {
+        results.push({ endpoint: sub.endpoint.slice(0, 60), status: `erreur ${err.statusCode}: ${err.message}` });
+      }
+    }
   }
+
+  const ok = results.filter(r => r.status === "ok").length;
+  const expired = results.filter(r => r.status.includes("expiré")).length;
+  const failed = results.filter(r => r.status.startsWith("erreur")).length;
+
+  res.json({
+    message: `Envoyé: ${ok} ✅ | Expiré: ${expired} 🗑️ | Échoué: ${failed} ❌`,
+    sent: ok,
+    expired,
+    failed,
+    details: results,
+  });
 });
 
 module.exports = router;
