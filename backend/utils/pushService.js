@@ -2,8 +2,8 @@
 const webpush = require("web-push");
 const { db } = require("../database");
 
-const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY;
-const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY  || "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || "_KK7oE2ZucaN1Kkv_tSDfvxJpyQ41azPcif7669Y3No";
 const VAPID_EMAIL   = process.env.VAPID_EMAIL || "mailto:admin@reparationcellordi.ca";
 
 let pushEnabled = false;
