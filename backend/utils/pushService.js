@@ -4,7 +4,7 @@ const { db } = require("../database");
 
 const VAPID_PUBLIC  = "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
 const VAPID_PRIVATE = "_KK7oE2ZucaN1Kkv_tSDfvxJpyQ41azPcif7669Y3No";
-const VAPID_EMAIL   = process.env.VAPID_EMAIL || "mailto:admin@reparationcellordi.ca";
+const VAPID_EMAIL   = "mailto:admin@cellordi.ca";
 
 let pushEnabled = false;
 
@@ -12,7 +12,7 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
     try {
           webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
           pushEnabled = true;
-          console.log("🔔 Push notifications: configuré");
+          console.log("🔔 Push notifications: configuré (clé: " + VAPID_PUBLIC.slice(0, 12) + "...)");
     } catch (err) {
           console.warn("⚠️ Push notifications: clé VAPID invalide —", err.message, "— push désactivé");
     }
@@ -46,7 +46,7 @@ async function sendPushToAll(payload) {
                                       db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(sub.endpoint);
                                       console.log(`🗑️ Push subscription expirée supprimée: ${sub.endpoint.slice(0, 60)}…`);
                           } else {
-                                      console.error(`❌ Push error (${err.statusCode}):`, err.message);
+                                      console.error(`❌ Push error (${err.statusCode}):`, err.message, err.body || "");
                           }
                 }
         })
