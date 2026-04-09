@@ -63,12 +63,12 @@ const globalStyles = `
     .admin-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .admin-login-box { width: 92vw !important; max-width: 400px !important; }
     .admin-login-inner { padding: 1.5rem !important; }
-    .admin-content-pad { padding: 1rem 0.75rem !important; padding-bottom: 2rem !important; }
+    .admin-content-pad { padding: 0.75rem 0.4rem !important; padding-bottom: 5rem !important; }
     .admin-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
     .admin-grid-2 { grid-template-columns: 1fr !important; }
     .admin-grid-3 { grid-template-columns: 1fr !important; }
     .admin-cal-grid { grid-template-columns: 1fr !important; }
-    .admin-modal { width: 92vw !important; max-width: 500px !important; padding: 1.2rem !important; }
+    .admin-modal { width: 96vw !important; max-width: 500px !important; padding: 1rem !important; margin: 0 auto !important; }
     .admin-modal-grid { grid-template-columns: 1fr !important; }
     .admin-detail-panel { width: 100% !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; border-left: none !important; overflow-y: auto !important; }
     .admin-detail-inner { padding: 1rem !important; }
@@ -76,12 +76,15 @@ const globalStyles = `
     .admin-flex-col-mobile { flex-direction: column !important; }
     .admin-wrap select { font-size: 16px !important; min-height: 44px !important; padding: 0.5rem 0.8rem !important; }
     .admin-wrap input, .admin-wrap textarea { font-size: 16px !important; }
-    .admin-wrap button { min-height: 44px; }
+    .admin-wrap button { min-height: 44px; border-radius: 10px !important; }
+    .admin-wrap select { border-radius: 10px !important; }
+    .admin-wrap input, .admin-wrap textarea { border-radius: 10px !important; }
     .admin-mobile-hide-table { display: none !important; }
     .admin-mobile-cards { display: flex !important; }
     .admin-desktop-only { display: none !important; }
     .admin-msg-list { width: 100% !important; border-right: none !important; }
     .admin-msg-detail { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; background: ${NAVY} !important; }
+    .admin-mobile-hide-table { border-radius: 14px !important; }
   }
   @media (min-width: 769px) {
     .admin-mobile-cards { display: none !important; }
@@ -416,7 +419,7 @@ function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
   const { isMobile, openSidebar } = React.useContext(MobileCtx);
   const now = new Date().toLocaleDateString("fr-CA", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
   return (
-    <div style={{ padding: isMobile ? "1rem" : "1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)",
+    <div style={{ padding: isMobile ? "0.85rem 0.6rem" : "1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)",
       display:"flex", alignItems:"center", justifyContent:"space-between", gap:"0.75rem" }}>
       <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
         {isMobile && (
@@ -683,18 +686,18 @@ function Rendez_vous() {
         <div style={{ display:"flex", gap:"0.75rem", marginBottom:"1.25rem", flexWrap:"wrap", alignItems:"center" }}>
           <button onClick={()=>{ setShowForm(f=>!f); setCreateErr(null); setCreateOk(null); }}
             style={{ background:showForm ? GREEN : "rgba(109,212,0,0.12)", color:showForm ? NAVY : GREEN,
-              border:`1px solid ${GREEN}44`, padding:"0.45rem 1.1rem", fontSize:"0.84rem",
-              cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
+              border:`1px solid ${GREEN}44`, padding:"0.55rem 1.2rem", fontSize:"0.84rem",
+              cursor:"pointer", fontFamily:"'DM Sans',sans-serif", fontWeight:600, borderRadius:12, flex:"1 1 auto" }}>
             ＋ Nouveau rendez-vous
           </button>
           <button onClick={()=>setShowDispo(d=>!d)}
             style={{ background:showDispo ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)", color:GRAY,
-              border:"1px solid rgba(255,255,255,0.12)", padding:"0.45rem 1.1rem", fontSize:"0.84rem",
-              cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+              border:"1px solid rgba(255,255,255,0.12)", padding:"0.55rem 1.2rem", fontSize:"0.84rem",
+              cursor:"pointer", fontFamily:"'DM Sans',sans-serif", borderRadius:12 }}>
             🗓 {showDispo ? "Masquer disponibilités" : "Gérer disponibilités"}
           </button>
           <button onClick={load} style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
-            padding:"0.4rem 0.9rem", fontSize:"0.82rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", marginLeft:"auto" }}>
+            padding:"0.5rem 1rem", fontSize:"0.82rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", marginLeft:"auto", borderRadius:12 }}>
             ↻ Actualiser
           </button>
         </div>
@@ -897,7 +900,7 @@ function Rendez_vous() {
         <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:"1.5rem", alignItems:"start" }} className="cal-grid admin-cal-grid">
 
           {/* Calendrier */}
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1rem", flexShrink:0 }}>
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1rem", flexShrink:0, borderRadius:16 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.75rem" }}>
               <button onClick={prevMonth} style={{ background:"transparent", border:"none", color:GRAY, cursor:"pointer", fontSize:"1rem", padding:"0.2rem 0.5rem" }}>◀</button>
               <span style={{ color:"#fff", fontWeight:700, fontSize:"0.88rem", fontFamily:"'DM Sans',sans-serif" }}>
@@ -968,8 +971,8 @@ function Rendez_vous() {
                   background:filter===f ? (f==="archives"?"rgba(255,255,255,0.12)":GREEN) : "rgba(255,255,255,0.05)",
                   color:filter===f ? (f==="archives"?"#fff":NAVY) : (f==="archives"?GRAY:"#fff"),
                   border:`1px solid ${f==="archives"?"rgba(255,255,255,0.15)":"rgba(109,212,0,0.2)"}`,
-                  padding:"0.35rem 0.85rem", fontSize:"0.8rem", cursor:"pointer",
-                  fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
+                  padding:"0.45rem 0.95rem", fontSize:"0.8rem", cursor:"pointer",
+                  fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s", borderRadius:10
                 }}>
                   {f==="actifs" ? "✓ Actifs" : f==="archives" ? "🗃 Archives" : f==="tous" ? "Tous" : statutColors[f]?.label||f}
                 </button>
@@ -1034,7 +1037,7 @@ function Rendez_vous() {
             {/* Mobile cards */}
             <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
               {filtered.map((r:any)=>(
-                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:8, padding:"1rem" }}>
+                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.5rem" }}>
                     <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{r.prenom} {r.nom}</span>
                     {r.telephone && <a href={`tel:${r.telephone}`} style={{ color:GREEN, fontSize:"1.1rem", textDecoration:"none" }}>📞</a>}
@@ -1261,7 +1264,7 @@ function Tickets() {
           <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
             {filtered.map((t:any)=>(
               <div key={t.id} onClick={()=>setSelected(t)}
-                style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:8, padding:"1rem", cursor:"pointer" }}>
+                style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem", cursor:"pointer" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.3rem" }}>
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",color:GREEN,fontWeight:700,fontSize:"0.85rem"}}>{t.numero}</span>
                   <Badge statut={t.statut}/>
@@ -2408,7 +2411,7 @@ function Decharges() {
         {/* Mobile cards */}
         <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
           {decharges.map((d:any)=>(
-            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:8, padding:"1rem" }}>
+            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.4rem" }}>
                 <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{d.nom}</span>
                 <Badge statut={d.statut}/>
