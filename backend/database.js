@@ -233,9 +233,8 @@ function initAdmin() {
 }
 
 function genererNumeroTicket() {
-  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const rand    = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
-  return `RCO-${dateStr}-${rand}`;
+  const rand = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  return `RCO-${rand}`;
 }
 
 module.exports = { db, initAdmin, genererNumeroTicket };
