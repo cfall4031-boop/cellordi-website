@@ -1458,22 +1458,25 @@ function Calculateur() {
     { id:"appareils" as const, icon:"📱", label:"Valeur appareils" },
   ];
   return (
-    <div>
-      <div style={{display:"flex",gap:"0.5rem",marginBottom:"2rem",flexWrap:"wrap"}}>
-        {tabs.map(t=>(
-          <button key={t.id} onClick={()=>setSubTab(t.id)}
-            style={{background:subTab===t.id?GREEN:"rgba(255,255,255,0.04)",color:subTab===t.id?NAVY:GRAY,
-              border:`1px solid ${subTab===t.id?GREEN:"rgba(109,212,0,0.2)"}`,padding:"0.5rem 1.1rem",
-              cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:subTab===t.id?700:400,
-              fontSize:"0.9rem",letterSpacing:"0.05em"}}>
-            {t.icon} {t.label}
-          </button>
-        ))}
+    <div className="admin-fade">
+      <Topbar title="Calculateur de prix" subtitle={tabs.find(t=>t.id===subTab)?.label}/>
+      <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
+        <div style={{display:"flex",gap:"0.5rem",marginBottom:"1.5rem",flexWrap:"wrap"}}>
+          {tabs.map(t=>(
+            <button key={t.id} onClick={()=>setSubTab(t.id)}
+              style={{background:subTab===t.id?GREEN:"rgba(255,255,255,0.04)",color:subTab===t.id?NAVY:GRAY,
+                border:`1px solid ${subTab===t.id?GREEN:"rgba(109,212,0,0.2)"}`,padding:"0.5rem 1.1rem",
+                cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:subTab===t.id?700:400,
+                fontSize:"0.9rem",letterSpacing:"0.05em",borderRadius:4}}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+        {subTab==="calculer" && <CalculerPrix/>}
+        {subTab==="catalogue" && <CataloguePieces/>}
+        {subTab==="concurrents" && <PrixConcurrents/>}
+        {subTab==="appareils" && <ValeurAppareils/>}
       </div>
-      {subTab==="calculer" && <CalculerPrix/>}
-      {subTab==="catalogue" && <CataloguePieces/>}
-      {subTab==="concurrents" && <PrixConcurrents/>}
-      {subTab==="appareils" && <ValeurAppareils/>}
     </div>
   );
 }
@@ -1655,7 +1658,7 @@ function CataloguePieces() {
 
       {showAdd && (
         <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
             <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
             <div><label style={labelSt}>Type de pièce *</label><input value={form.type_piece} onChange={e=>setForm(p=>({...p,type_piece:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
@@ -1670,9 +1673,10 @@ function CataloguePieces() {
       )}
 
       {loading?<div style={{color:GRAY}}>Chargement...</div>:(
+        <div className="admin-table-scroll" style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse"}}>
           <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
-            {["Appareil","Modèle","Pièce","Coût ($)","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>{h}</th>)}
+            {["Appareil","Modèle","Pièce","Coût ($)","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
           </tr></thead>
           <tbody>
             {filtered.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
@@ -1689,6 +1693,7 @@ function CataloguePieces() {
             );})}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -1731,12 +1736,12 @@ function PrixConcurrents() {
 
       {showAdd && (
         <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
             <div><label style={labelSt}>Réparation *</label><input value={form.type_reparation} onChange={e=>setForm(p=>({...p,type_reparation:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
             <div><label style={labelSt}>Source</label><input value={form.source} onChange={e=>setForm(p=>({...p,source:e.target.value}))} placeholder="site web, appel..." style={inputSt}/></div>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>CD Solution ($)</label><input type="number" value={form.prix_cd_solution} onChange={e=>setForm(p=>({...p,prix_cd_solution:e.target.value}))} style={inputSt}/></div>
             <div><label style={labelSt}>Fix Moi ($)</label><input type="number" value={form.prix_fix_moi} onChange={e=>setForm(p=>({...p,prix_fix_moi:e.target.value}))} style={inputSt}/></div>
             <div><label style={labelSt}>Mobile Klinik ($)</label><input type="number" value={form.prix_mobile_klinik} onChange={e=>setForm(p=>({...p,prix_mobile_klinik:e.target.value}))} style={inputSt}/></div>
@@ -1746,9 +1751,10 @@ function PrixConcurrents() {
       )}
 
       {loading?<div style={{color:GRAY}}>Chargement...</div>:(
+        <div className="admin-table-scroll" style={{overflowX:"auto"}}>
         <table style={{width:"100%",borderCollapse:"collapse"}}>
           <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
-            {["Appareil","Réparation","CD Solution","Fix Moi","Mobile Klinik","Source",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>{h}</th>)}
+            {["Appareil","Réparation","CD Solution","Fix Moi","Mobile Klinik","Source",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
           </tr></thead>
           <tbody>
             {items.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune donnée</td></tr>}
@@ -1765,6 +1771,7 @@ function PrixConcurrents() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );
@@ -1802,7 +1809,7 @@ function ValeurAppareils() {
 
       {showAdd && (
         <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro Max" style={inputSt}/></div>
             <div><label style={labelSt}>Valeur ($) *</label><input type="number" value={form.valeur_marche} onChange={e=>setForm(p=>({...p,valeur_marche:e.target.value}))} placeholder="650" style={inputSt}/></div>
             <div><label style={labelSt}>Année</label><input type="number" value={form.annee} onChange={e=>setForm(p=>({...p,annee:e.target.value}))} placeholder="2023" style={inputSt}/></div>
@@ -1813,7 +1820,8 @@ function ValeurAppareils() {
       )}
 
       {loading?<div style={{color:GRAY}}>Chargement...</div>:(
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
+        <div className="admin-table-scroll" style={{overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",minWidth:"500px"}}>
           <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
             {["Appareil","Valeur marché ($)","Année","Notes",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>{h}</th>)}
           </tr></thead>
@@ -1830,6 +1838,7 @@ function ValeurAppareils() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

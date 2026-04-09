@@ -13,6 +13,11 @@ self.addEventListener('push', function(event) {
       badge: '/favicon-48x48.png',
       tag: data.tag || 'general',
       data: { url: data.url || '/admin' }
+    }).then(function() {
+      // Badge +1 sur l'icône de l'app
+      if (self.navigator && self.navigator.setAppBadge) {
+        self.navigator.setAppBadge(1);
+      }
     })
   );
 });
@@ -20,6 +25,11 @@ self.addEventListener('push', function(event) {
 // Clic sur la notification → ouvrir le panel admin
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
+
+  // Effacer le badge quand on clique sur la notification
+  if (self.navigator && self.navigator.clearAppBadge) {
+    self.navigator.clearAppBadge();
+  }
 
   var url = (event.notification.data && event.notification.data.url) || '/admin';
 

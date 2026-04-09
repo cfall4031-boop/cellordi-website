@@ -1,17 +1,1 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    {
-      "name": "Frontend CeLL&Ordi",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 5173
-    },
-    {
-      "name": "Backend CeLL&Ordi",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3001
-    }
-  ]
-}
+{"version":"0.0.1","configurations":[{"name":"frontend","runtimeExecutable":"npm","runtimeArgs":["run","dev"],"port":5173,"cwd":"C:/Users/cfall/Desktop/cellordi-website/frontend"},{"name":"backend","runtimeExecutable":"node","runtimeArgs":["server.js"],"port":3001,"cwd":"C:/Users/cfall/Desktop/cellordi-website/backend"}]}
