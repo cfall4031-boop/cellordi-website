@@ -1159,6 +1159,14 @@ function Tickets() {
     } catch (err) { console.error(err); }
   };
 
+  const saveNote = async (id: number, notes_internes: string) => {
+    try {
+      await ticketsApi.update(id, { notes_internes });
+      setTickets(prev => prev.map((x:any) => x.id === id ? {...x, notes_internes} : x));
+      if (selected?.id === id) setSelected((s:any) => ({...s, notes_internes}));
+    } catch (err) { console.error(err); }
+  };
+
   const deleteTicket = async (id: number) => {
     if (!window.confirm("Supprimer définitivement ce ticket ?")) return;
     try {
@@ -1207,7 +1215,7 @@ function Tickets() {
             <table>
               <thead>
                 <tr style={{ background:"rgba(109,212,0,0.04)" }}>
-                  {["Numéro","Client","Appareil","Problème","Statut","Coût","Action"].map(h=>(
+                  {["Numéro","Client","Appareil","Problème","Statut","Coût","Action","Note"].map(h=>(
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -1254,6 +1262,18 @@ function Tickets() {
                         )}
                       </div>
                     </td>
+                    <td style={tdStyle} onClick={e=>e.stopPropagation()}>
+                      <input
+                        type="text"
+                        defaultValue={t.notes_internes || ""}
+                        onBlur={e => saveNote(t.id, e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        placeholder="Note…"
+                        style={{ width: 180, background:"rgba(255,255,255,0.05)",
+                          border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
+                          fontSize:"0.78rem", padding:"0.35rem 0.5rem", outline:"none", borderRadius:6 }}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1284,6 +1304,16 @@ function Tickets() {
                     {t.cout_estime>0?`${t.cout_estime} $`:"—"}
                   </span>
                 </div>
+                <input
+                  type="text"
+                  defaultValue={t.notes_internes || ""}
+                  onBlur={e => saveNote(t.id, e.target.value)}
+                  onClick={e => e.stopPropagation()}
+                  placeholder="📝 Ajouter une note…"
+                  style={{ marginTop:"0.6rem", width:"100%", background:"rgba(255,255,255,0.05)",
+                    border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
+                    fontSize:"16px", padding:"0.55rem 0.7rem", outline:"none", borderRadius:10 }}
+                />
               </div>
             ))}
             {filtered.length === 0 && <div style={{textAlign:"center",padding:"2rem",color:GRAY}}>Aucun ticket trouvé.</div>}
