@@ -1102,6 +1102,7 @@ function Tickets() {
   const [showArchived, setShowArchived] = useState(false);
   const [updates, setUpdates] = useState<any[]>([]);
   const [newUpdate, setNewUpdate] = useState("");
+  const [statutErr, setStatutErr] = useState<string | null>(null);
 
   // Load updates when a ticket is selected
   const selectedId = selected?.id ?? null;
@@ -1157,7 +1158,13 @@ function Tickets() {
       const extra = statut === "livre" ? { date_livraison: now } : {};
       setTickets(prev => prev.map((x:any) => x.id === id ? {...x, statut, ...extra} : x));
       if (selected?.id === id) setSelected((s:any) => ({...s, statut, ...extra}));
-    } catch (err) { console.error(err); }
+      setStatutErr(null);
+    } catch (err: any) {
+      console.error(err);
+      const msg = err?.message || "Erreur lors du changement de statut";
+      setStatutErr(msg);
+      setTimeout(() => setStatutErr(null), 5000);
+    }
   };
 
   const saveNote = async (id: number, notes_internes: string) => {
@@ -1209,6 +1216,15 @@ function Tickets() {
               border:"1px solid rgba(255,255,255,0.1)", padding:"0.8rem", cursor:"pointer" }}>↻</button>
           </div>
 
+          {statutErr && (
+            <div style={{
+              marginBottom:"1rem", padding:"0.75rem 1rem",
+              background:"rgba(255,77,77,0.1)", border:`1px solid ${RED}`,
+              color:RED, fontSize:"0.85rem", borderRadius:10
+            }}>
+              ⚠ {statutErr}
+            </div>
+          )}
           {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
           <>
           {/* Desktop table */}
