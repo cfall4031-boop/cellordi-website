@@ -30,6 +30,7 @@ const statutColors: Record<string, { bg: string; color: string; label: string }>
   termine:    { bg:"rgba(109,212,0,0.15)",  color:GREEN,  label:"Terminé"    },
   pret:       { bg:"rgba(109,212,0,0.25)",  color:GREEN,  label:"✓ Prêt"     },
   livre:      { bg:"rgba(56,189,248,0.1)",  color:BLUE,   label:"Livré"      },
+  en_suspend: { bg:"rgba(168,85,247,0.15)", color:"#c084fc", label:"⏸ En suspend" },
   traitee:    { bg:"rgba(109,212,0,0.15)",  color:GREEN,  label:"Traitée"    },
 };
 
@@ -1176,7 +1177,7 @@ function Tickets() {
     } catch (e: any) { console.error(e); }
   };
 
-  const statutsList = ["recu","diagnostic","en_cours","termine","pret","livre"];
+  const statutsList = ["recu","diagnostic","en_cours","en_suspend","termine","pret","livre"];
 
   return (
     <div className="admin-fade" style={{display:"flex", height:"100%"}}>
@@ -1215,7 +1216,7 @@ function Tickets() {
             <table>
               <thead>
                 <tr style={{ background:"rgba(109,212,0,0.04)" }}>
-                  {["Numéro","Client","Appareil","Problème","Statut","Coût","Action","Note"].map(h=>(
+                  {["Numéro","Client","Appareil","Problème","Statut","Coût","Action"].map(h=>(
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -1245,34 +1246,37 @@ function Tickets() {
                     <td style={{...tdStyle,color:t.cout_estime>0?GREEN:GRAY_DIM,fontWeight:t.cout_estime>0?600:400}}>
                       {t.cout_estime>0?`${t.cout_estime} $`:"—"}
                     </td>
-                    <td style={tdStyle}>
-                      <div style={{display:"flex", gap:"0.4rem", alignItems:"center"}}>
-                        <select value={t.statut} onChange={e=>{e.stopPropagation();changeStatut(t.id,e.target.value);}}
-                          onClick={e=>e.stopPropagation()}
-                          style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
-                            fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
-                          {statutsList.map(s=><option key={s} value={s}>{statutColors[s]?.label||s}</option>)}
-                        </select>
-                        {showArchived && t.statut === "livre" && (
-                          <button onClick={e=>{e.stopPropagation();deleteTicket(t.id);}} title="Supprimer définitivement"
-                            style={{ background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.25)",
-                              color:"#f87171", cursor:"pointer", fontSize:"0.85rem", padding:"0.25rem 0.5rem", lineHeight:1 }}>
-                            🗑
-                          </button>
+                    <td style={tdStyle} onClick={e=>e.stopPropagation()}>
+                      <div style={{display:"flex", flexDirection:"column", gap:"0.4rem"}}>
+                        <div style={{display:"flex", gap:"0.4rem", alignItems:"center"}}>
+                          <select value={t.statut} onChange={e=>{e.stopPropagation();changeStatut(t.id,e.target.value);}}
+                            onClick={e=>e.stopPropagation()}
+                            style={{ background:NAVY, border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
+                              fontSize:"0.78rem", padding:"0.3rem 0.5rem", cursor:"pointer", outline:"none" }}>
+                            {statutsList.map(s=><option key={s} value={s}>{statutColors[s]?.label||s}</option>)}
+                          </select>
+                          {showArchived && t.statut === "livre" && (
+                            <button onClick={e=>{e.stopPropagation();deleteTicket(t.id);}} title="Supprimer définitivement"
+                              style={{ background:"rgba(248,113,113,0.1)", border:"1px solid rgba(248,113,113,0.25)",
+                                color:"#f87171", cursor:"pointer", fontSize:"0.85rem", padding:"0.25rem 0.5rem", lineHeight:1 }}>
+                              🗑
+                            </button>
+                          )}
+                        </div>
+                        {t.statut === "en_suspend" && (
+                          <input
+                            key={`note-${t.id}`}
+                            type="text"
+                            defaultValue={t.notes_internes || ""}
+                            onBlur={e => saveNote(t.id, e.target.value)}
+                            onClick={e => e.stopPropagation()}
+                            placeholder="Raison du suspend…"
+                            style={{ width:"100%", background:"rgba(168,85,247,0.08)",
+                              border:"1px solid rgba(168,85,247,0.3)", color:"#fff",
+                              fontSize:"0.78rem", padding:"0.35rem 0.5rem", outline:"none", borderRadius:6 }}
+                          />
                         )}
                       </div>
-                    </td>
-                    <td style={tdStyle} onClick={e=>e.stopPropagation()}>
-                      <input
-                        type="text"
-                        defaultValue={t.notes_internes || ""}
-                        onBlur={e => saveNote(t.id, e.target.value)}
-                        onClick={e => e.stopPropagation()}
-                        placeholder="Note…"
-                        style={{ width: 180, background:"rgba(255,255,255,0.05)",
-                          border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
-                          fontSize:"0.78rem", padding:"0.35rem 0.5rem", outline:"none", borderRadius:6 }}
-                      />
                     </td>
                   </tr>
                 ))}
@@ -1304,16 +1308,19 @@ function Tickets() {
                     {t.cout_estime>0?`${t.cout_estime} $`:"—"}
                   </span>
                 </div>
-                <input
-                  type="text"
-                  defaultValue={t.notes_internes || ""}
-                  onBlur={e => saveNote(t.id, e.target.value)}
-                  onClick={e => e.stopPropagation()}
-                  placeholder="📝 Ajouter une note…"
-                  style={{ marginTop:"0.6rem", width:"100%", background:"rgba(255,255,255,0.05)",
-                    border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
-                    fontSize:"16px", padding:"0.55rem 0.7rem", outline:"none", borderRadius:10 }}
-                />
+                {t.statut === "en_suspend" && (
+                  <input
+                    key={`note-m-${t.id}`}
+                    type="text"
+                    defaultValue={t.notes_internes || ""}
+                    onBlur={e => saveNote(t.id, e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    placeholder="⏸ Raison du suspend…"
+                    style={{ marginTop:"0.6rem", width:"100%", background:"rgba(168,85,247,0.08)",
+                      border:"1px solid rgba(168,85,247,0.3)", color:"#fff",
+                      fontSize:"16px", padding:"0.55rem 0.7rem", outline:"none", borderRadius:10 }}
+                  />
+                )}
               </div>
             ))}
             {filtered.length === 0 && <div style={{textAlign:"center",padding:"2rem",color:GRAY}}>Aucun ticket trouvé.</div>}

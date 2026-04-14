@@ -15,12 +15,13 @@ router.get("/suivi/:numero", (req, res) => {
   if (!ticket) return res.status(404).json({ erreur: "Ticket introuvable. Vérifiez votre numéro." });
 
   const etapes = {
-    recu:        { label: "Reçu",      index: 0 },
-    diagnostic:  { label: "Diagnostic",index: 1 },
-    en_cours:    { label: "En cours",  index: 2 },
-    termine:     { label: "Terminé",   index: 3 },
-    pret:        { label: "Prêt",      index: 4 },
-    livre:       { label: "Livré",     index: 5 },
+    recu:        { label: "Reçu",       index: 0 },
+    diagnostic:  { label: "Diagnostic", index: 1 },
+    en_cours:    { label: "En cours",   index: 2 },
+    en_suspend:  { label: "En suspend", index: 2 },
+    termine:     { label: "Terminé",    index: 3 },
+    pret:        { label: "Prêt",       index: 4 },
+    livre:       { label: "Livré",      index: 5 },
   };
 
   // Fetch tracking updates for this ticket
@@ -157,7 +158,7 @@ router.patch("/:id", auth, (req, res) => {
     date_estimee, notes_internes
   } = req.body;
 
-  const statutsValides = ["recu","diagnostic","en_cours","termine","pret","livre"];
+  const statutsValides = ["recu","diagnostic","en_cours","en_suspend","termine","pret","livre"];
   if (statut && !statutsValides.includes(statut)) {
     return res.status(400).json({ erreur: `Statut invalide. Valeurs: ${statutsValides.join(", ")}` });
   }
