@@ -74,7 +74,7 @@ db.exec(`
     cout_estime     REAL DEFAULT 0,
     cout_final      REAL DEFAULT 0,
     statut          TEXT DEFAULT 'recu'
-                    CHECK(statut IN ('recu','diagnostic','en_cours','termine','pret','livre')),
+                    CHECK(statut IN ('recu','diagnostic','en_cours','en_suspend','termine','pret','livre')),
     date_reception  DATETIME DEFAULT CURRENT_TIMESTAMP,
     date_estimee    TEXT,
     date_completion DATETIME,
@@ -122,6 +122,52 @@ try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 
 
 // Migration: add telephone field to messages_contact
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN telephone TEXT"); } catch (_) {}
+
+// Migration: allow 'en_suspend' in tickets.statut CHECK constraint (SQLite requires table rebuild)
+try {
+  const row = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='tickets'").get();
+  if (row && row.sql && !row.sql.includes("'en_suspend'")) {
+    db.pragma("foreign_keys = OFF");
+    db.exec(`
+      BEGIN TRANSACTION;
+      CREATE TABLE tickets_new (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        numero          TEXT UNIQUE NOT NULL,
+        client_id       INTEGER REFERENCES clients(id) ON DELETE SET NULL,
+        rendezvous_id   INTEGER REFERENCES rendezvous(id) ON DELETE SET NULL,
+        prenom          TEXT NOT NULL,
+        nom             TEXT NOT NULL,
+        email           TEXT NOT NULL,
+        telephone       TEXT,
+        type_appareil   TEXT NOT NULL,
+        marque          TEXT,
+        modele          TEXT,
+        probleme        TEXT NOT NULL,
+        diagnostic      TEXT,
+        pieces          TEXT,
+        cout_estime     REAL DEFAULT 0,
+        cout_final      REAL DEFAULT 0,
+        statut          TEXT DEFAULT 'recu'
+                        CHECK(statut IN ('recu','diagnostic','en_cours','en_suspend','termine','pret','livre')),
+        date_reception  DATETIME DEFAULT CURRENT_TIMESTAMP,
+        date_estimee    TEXT,
+        date_completion DATETIME,
+        notes_internes  TEXT,
+        date_livraison  TEXT,
+        updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO tickets_new (id, numero, client_id, rendezvous_id, prenom, nom, email, telephone, type_appareil, marque, modele, probleme, diagnostic, pieces, cout_estime, cout_final, statut, date_reception, date_estimee, date_completion, notes_internes, date_livraison, updated_at)
+        SELECT id, numero, client_id, rendezvous_id, prenom, nom, email, telephone, type_appareil, marque, modele, probleme, diagnostic, pieces, cout_estime, cout_final, statut, date_reception, date_estimee, date_completion, notes_internes, date_livraison, updated_at FROM tickets;
+      DROP TABLE tickets;
+      ALTER TABLE tickets_new RENAME TO tickets;
+      COMMIT;
+    `);
+    db.pragma("foreign_keys = ON");
+    console.log("✓ Migration: contrainte CHECK tickets.statut mise à jour (en_suspend ajouté)");
+  }
+} catch (err) {
+  console.error("Migration CHECK tickets.statut échouée :", err?.message || err);
+}
 
 // ── MISES À JOUR TICKET (tracking updates) ────────────────────────
 db.exec(`
