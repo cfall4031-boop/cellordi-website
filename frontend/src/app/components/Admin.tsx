@@ -1280,16 +1280,17 @@ function Tickets() {
                           )}
                         </div>
                         {t.statut === "en_suspend" && (
-                          <input
+                          <textarea
                             key={`note-${t.id}`}
-                            type="text"
                             defaultValue={t.notes_internes || ""}
                             onBlur={e => saveNote(t.id, e.target.value)}
                             onClick={e => e.stopPropagation()}
                             placeholder="Raison du suspend…"
-                            style={{ width:"100%", background:"rgba(168,85,247,0.08)",
+                            rows={3}
+                            style={{ width:"100%", minWidth:220, background:"rgba(168,85,247,0.08)",
                               border:"1px solid rgba(168,85,247,0.3)", color:"#fff",
-                              fontSize:"0.78rem", padding:"0.35rem 0.5rem", outline:"none", borderRadius:6 }}
+                              fontSize:"0.78rem", padding:"0.45rem 0.6rem", outline:"none", borderRadius:6,
+                              resize:"vertical", fontFamily:"'DM Sans',sans-serif", lineHeight:1.4 }}
                           />
                         )}
                       </div>
@@ -1325,16 +1326,17 @@ function Tickets() {
                   </span>
                 </div>
                 {t.statut === "en_suspend" && (
-                  <input
+                  <textarea
                     key={`note-m-${t.id}`}
-                    type="text"
                     defaultValue={t.notes_internes || ""}
                     onBlur={e => saveNote(t.id, e.target.value)}
                     onClick={e => e.stopPropagation()}
                     placeholder="⏸ Raison du suspend…"
+                    rows={3}
                     style={{ marginTop:"0.6rem", width:"100%", background:"rgba(168,85,247,0.08)",
                       border:"1px solid rgba(168,85,247,0.3)", color:"#fff",
-                      fontSize:"16px", padding:"0.55rem 0.7rem", outline:"none", borderRadius:10 }}
+                      fontSize:"16px", padding:"0.6rem 0.75rem", outline:"none", borderRadius:10,
+                      resize:"vertical", fontFamily:"'DM Sans',sans-serif", lineHeight:1.4 }}
                   />
                 )}
               </div>
