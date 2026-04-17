@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
 // Ton image personnalisée — téléphone cassé fond blanc (mis dans /public/)
-const PHONE_IMG = "/phone-cracked.png";
+const PHONE_IMG = "/phone-cracked.jpg";
 
 export function Hero() {
   const { t } = useTranslation();
