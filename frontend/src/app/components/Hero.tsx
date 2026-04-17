@@ -181,12 +181,12 @@ export function Hero() {
         <div style={{
           position: "absolute",
           width: "500px", height: "500px",
-          background: "radial-gradient(ellipse, rgba(109,212,0,0.12) 0%, transparent 70%)",
-          filter: "blur(40px)",
+          background: "radial-gradient(ellipse, rgba(109,212,0,0.07) 0%, transparent 65%)",
+          filter: "blur(60px)",
           pointerEvents: "none", zIndex: 5,
         }} />
 
-        {/* Téléphone cassé — fond noir, bords fondus via mask CSS */}
+        {/* Téléphone cassé — fond noir fondu via mix-blend-mode */}
         <img
           src={PHONE_IMG}
           alt="Téléphone écran cassé"
@@ -195,10 +195,7 @@ export function Hero() {
             width: "85%",
             maxWidth: "480px",
             transform: "rotate(-5deg) translateY(-20px)",
-            borderRadius: "12px",
-            WebkitMaskImage: "radial-gradient(ellipse 82% 88% at 50% 50%, black 55%, transparent 100%)",
-            maskImage: "radial-gradient(ellipse 82% 88% at 50% 50%, black 55%, transparent 100%)",
-            filter: "drop-shadow(0 0 40px rgba(109,212,0,0.18))",
+            mixBlendMode: "lighten",
             zIndex: 6,
           }}
         />
