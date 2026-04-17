@@ -24,7 +24,7 @@ export function Process() {
       }} className="process-strip">
         {steps.map((step, i) => (
           <React.Fragment key={step.num}>
-            <div style={{
+            <div className="process-pill" style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "0.55rem",
@@ -33,7 +33,7 @@ export function Process() {
               borderRadius: "50px",
               padding: "0.45rem 1rem 0.45rem 0.45rem",
             }}>
-              <span style={{
+              <span className="process-num" style={{
                 width: "24px",
                 height: "24px",
                 background: GREEN,
@@ -49,7 +49,7 @@ export function Process() {
               }}>
                 {i + 1}
               </span>
-              <span style={{
+              <span className="process-label" style={{
                 fontFamily: FONT_DISPLAY,
                 fontWeight: 700,
                 fontSize: "0.8rem",
@@ -75,8 +75,25 @@ export function Process() {
 
       <style>{`
         @media (max-width: 640px) {
-          .process-strip { gap: 0.5rem 0.4rem !important; }
+          #process { padding: 0.9rem 0.75rem !important; }
+          .process-strip { gap: 0.35rem !important; }
           .process-arrow { display: none !important; }
+          .process-pill {
+            flex: 0 0 calc(50% - 0.2rem) !important;
+            padding: 0.3rem 0.55rem 0.3rem 0.3rem !important;
+            gap: 0.35rem !important;
+          }
+          .process-num {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 0.6rem !important;
+          }
+          .process-label {
+            font-size: 0.6rem !important;
+            letter-spacing: 0.03em !important;
+            white-space: normal !important;
+            line-height: 1.2 !important;
+          }
         }
       `}</style>
     </section>
