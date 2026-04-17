@@ -161,11 +161,11 @@ export function Hero() {
           background: `linear-gradient(to bottom, ${NAVY} 0%, transparent 100%)`,
           pointerEvents: "none", zIndex: 7,
         }} />
-        {/* Fondu bas */}
+        {/* Fondu bas — vers couleur de la section suivante */}
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
-          height: "20%",
-          background: `linear-gradient(to top, ${NAVY} 0%, transparent 100%)`,
+          height: "30%",
+          background: `linear-gradient(to top, #101016 0%, transparent 100%)`,
           pointerEvents: "none", zIndex: 7,
         }} />
         {/* Fondu gauche */}
@@ -198,7 +198,11 @@ export function Hero() {
           50%       { opacity: 0.5; transform: scale(1.6); }
         }
         @media (max-width: 900px) {
-          #hero { flex-direction: column !important; align-items: stretch !important; }
+          #hero {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            min-height: unset !important;
+          }
           #hero-left {
             flex: none !important;
             padding: 1.8rem !important;
@@ -207,8 +211,7 @@ export function Hero() {
           }
           #hero-right {
             flex: none !important;
-            height: 380px !important;
-            min-height: 320px;
+            height: 420px !important;
             overflow: hidden !important;
           }
           #hero-phone {
@@ -216,6 +219,7 @@ export function Hero() {
             max-width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
+            object-position: center top !important;
             transform: none !important;
             position: absolute !important;
             top: 0; left: 0;
