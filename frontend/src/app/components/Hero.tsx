@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
-// Cracked screen of a smartphone (Pexels #11921157)
-const PHONE_IMG = "https://images.pexels.com/photos/11921157/pexels-photo-11921157.jpeg?auto=compress&cs=tinysrgb&w=700&h=900&fit=crop";
-// Laptop with a broken screen (Pexels #28379995)
-const LAPTOP_IMG = "https://images.pexels.com/photos/28379995/pexels-photo-28379995.jpeg?auto=compress&cs=tinysrgb&w=900&h=600&fit=crop";
+// Ton image personnalisée — téléphone cassé fond blanc (mis dans /public/)
+const PHONE_IMG = "/phone-cracked.png";
 
 export function Hero() {
   const { t } = useTranslation();
@@ -191,39 +189,20 @@ export function Hero() {
           zIndex: 10, pointerEvents: "none",
         }} />
 
-        {/* Téléphone cassé — haut droite, légèrement tilté */}
+        {/* Téléphone cassé — centré, mix-blend-mode pour fondre le fond blanc */}
         <img
           src={PHONE_IMG}
           alt="Téléphone écran cassé"
           style={{
             position: "absolute",
-            top: "5%",
-            right: "-3%",
-            width: "52%",
-            borderRadius: "20px",
-            transform: "rotate(-7deg)",
-            boxShadow: "0 50px 90px rgba(0,0,0,0.7), 0 0 0 1px rgba(109,212,0,0.1)",
-            objectFit: "cover",
-            objectPosition: "center",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%) rotate(-6deg)",
+            width: "75%",
+            maxWidth: "420px",
+            mixBlendMode: "multiply",
             zIndex: 6,
-          }}
-        />
-
-        {/* Laptop cassé — centre-bas, tilté autre sens */}
-        <img
-          src={LAPTOP_IMG}
-          alt="Ordinateur écran cassé"
-          style={{
-            position: "absolute",
-            bottom: "8%",
-            left: "0%",
-            width: "72%",
-            borderRadius: "14px",
-            transform: "rotate(4deg)",
-            boxShadow: "0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(109,212,0,0.08)",
-            objectFit: "cover",
-            objectPosition: "center",
-            zIndex: 5,
+            filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.8))",
           }}
         />
 
