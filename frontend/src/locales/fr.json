@@ -7,7 +7,9 @@
     "blog": "Blog",
     "contact": "Contact",
     "cta": "Prendre RDV",
-    "repair": "Réparation"
+    "repair": "Réparation",
+    "decharge": "Décharge",
+    "search_placeholder": "Rechercher un service, article…"
   },
   "hero": {
     "tag": "Diagnostic gratuit",

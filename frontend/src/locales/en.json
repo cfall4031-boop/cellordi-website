@@ -7,7 +7,9 @@
     "blog": "Blog",
     "contact": "Contact",
     "cta": "Book Now",
-    "repair": "Repair"
+    "repair": "Repair",
+    "decharge": "Drop-off",
+    "search_placeholder": "Search a service, article…"
   },
   "hero": {
     "tag": "Free Diagnostic",
