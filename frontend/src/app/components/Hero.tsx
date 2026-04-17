@@ -200,45 +200,6 @@ export function Hero() {
           }}
         />
 
-        {/* Badge flottant — "✓ Réparé en 1h" */}
-        <div style={{
-          position: "absolute",
-          bottom: "22%",
-          right: "4%",
-          background: GREEN,
-          color: "#0c0c12",
-          padding: "0.6rem 1.2rem",
-          borderRadius: "100px",
-          fontFamily: FONT_DISPLAY,
-          fontWeight: 800,
-          fontSize: "0.85rem",
-          letterSpacing: "0.06em",
-          zIndex: 12,
-          boxShadow: "0 8px 32px rgba(109,212,0,0.5)",
-          whiteSpace: "nowrap" as const,
-        }}>
-          ✓ Réparé en 1h
-        </div>
-
-        {/* Badge flottant — "Pièces certifiées" */}
-        <div style={{
-          position: "absolute",
-          top: "20%",
-          left: "5%",
-          background: "rgba(12,12,18,0.88)",
-          color: WHITE,
-          border: "1px solid rgba(109,212,0,0.3)",
-          padding: "0.5rem 1rem",
-          borderRadius: "100px",
-          fontFamily: FONT_BODY,
-          fontSize: "0.78rem",
-          fontWeight: 500,
-          zIndex: 12,
-          backdropFilter: "blur(10px)",
-          whiteSpace: "nowrap" as const,
-        }}>
-          🔩 Pièces certifiées
-        </div>
       </div>
 
       <style>{`
