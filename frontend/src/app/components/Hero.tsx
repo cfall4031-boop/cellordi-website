@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
-// Ton image personnalisée — téléphone cassé fond blanc (mis dans /public/)
-const PHONE_IMG = "/phone-cracked.jpg";
+// Téléphone cassé — fond transparent (généré par script)
+const PHONE_IMG = "/phone-cracked.png";
 
 export function Hero() {
   const { t } = useTranslation();
@@ -163,84 +163,78 @@ export function Hero() {
       </div>
 
       {/* ══════════════════════════════════════════════════
-          COLONNE DROITE — Devices cassés immersifs
+          COLONNE DROITE — Téléphone cassé (principal)
       ══════════════════════════════════════════════════ */}
       <div
         id="hero-right"
         style={{
           flex: "0 0 50%",
           position: "relative",
-          overflow: "hidden",
+          overflow: "visible",
           zIndex: 4,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {/* Gradient fondu vers la gauche pour raccorder avec le texte */}
+        {/* Halo vert derrière le téléphone */}
         <div style={{
-          position: "absolute", top: 0, left: 0,
-          width: "180px", height: "100%",
-          background: `linear-gradient(to right, ${NAVY}, transparent)`,
-          zIndex: 10, pointerEvents: "none",
-        }} />
-        {/* Gradient fondu vers le bas */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          height: "160px",
-          background: `linear-gradient(to top, ${NAVY}, transparent)`,
-          zIndex: 10, pointerEvents: "none",
+          position: "absolute",
+          width: "500px", height: "500px",
+          background: "radial-gradient(ellipse, rgba(109,212,0,0.12) 0%, transparent 70%)",
+          filter: "blur(40px)",
+          pointerEvents: "none", zIndex: 5,
         }} />
 
-        {/* Téléphone cassé — centré, mix-blend-mode pour fondre le fond blanc */}
+        {/* Téléphone cassé — PNG transparent, grand format, légèrement incliné */}
         <img
           src={PHONE_IMG}
           alt="Téléphone écran cassé"
           style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%) rotate(-6deg)",
-            width: "75%",
-            maxWidth: "420px",
-            mixBlendMode: "multiply",
+            position: "relative",
+            width: "85%",
+            maxWidth: "480px",
+            transform: "rotate(-5deg) translateY(-20px)",
+            filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.9)) drop-shadow(0 0 40px rgba(109,212,0,0.15))",
             zIndex: 6,
-            filter: "drop-shadow(0 30px 60px rgba(0,0,0,0.8))",
           }}
         />
 
-        {/* Badge flottant — "Réparé en 1h" */}
+        {/* Badge flottant — "✓ Réparé en 1h" */}
         <div style={{
           position: "absolute",
-          top: "42%",
-          right: "6%",
+          bottom: "22%",
+          right: "4%",
           background: GREEN,
           color: "#0c0c12",
-          padding: "0.55rem 1.1rem",
+          padding: "0.6rem 1.2rem",
           borderRadius: "100px",
           fontFamily: FONT_DISPLAY,
           fontWeight: 800,
-          fontSize: "0.82rem",
+          fontSize: "0.85rem",
           letterSpacing: "0.06em",
           zIndex: 12,
-          boxShadow: "0 8px 32px rgba(109,212,0,0.45)",
+          boxShadow: "0 8px 32px rgba(109,212,0,0.5)",
           whiteSpace: "nowrap" as const,
         }}>
           ✓ Réparé en 1h
         </div>
 
-        {/* Badge flottant secondaire — "Pièces certifiées" */}
+        {/* Badge flottant — "Pièces certifiées" */}
         <div style={{
           position: "absolute",
-          top: "18%",
-          left: "12%",
-          background: "rgba(12,12,18,0.85)",
+          top: "20%",
+          left: "5%",
+          background: "rgba(12,12,18,0.88)",
           color: WHITE,
-          border: "1px solid rgba(109,212,0,0.25)",
-          padding: "0.45rem 0.9rem",
+          border: "1px solid rgba(109,212,0,0.3)",
+          padding: "0.5rem 1rem",
           borderRadius: "100px",
           fontFamily: FONT_BODY,
-          fontSize: "0.75rem",
+          fontSize: "0.78rem",
           fontWeight: 500,
           zIndex: 12,
-          backdropFilter: "blur(8px)",
+          backdropFilter: "blur(10px)",
           whiteSpace: "nowrap" as const,
         }}>
           🔩 Pièces certifiées
