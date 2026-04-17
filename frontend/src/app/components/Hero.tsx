@@ -171,6 +171,7 @@ export function Hero() {
 
         {/* Téléphone cassé — fond noir, affiché directement */}
         <img
+          id="hero-phone"
           src={PHONE_IMG}
           alt="Téléphone écran cassé"
           style={{
@@ -199,8 +200,18 @@ export function Hero() {
           }
           #hero-right {
             flex: none !important;
-            height: 320px !important;
-            min-height: 280px;
+            height: 380px !important;
+            min-height: 320px;
+            overflow: hidden !important;
+          }
+          #hero-phone {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            transform: none !important;
+            position: absolute !important;
+            top: 0; left: 0;
           }
         }
       `}</style>
