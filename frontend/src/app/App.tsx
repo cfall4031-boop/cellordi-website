@@ -3,7 +3,6 @@ import { motion } from "motion/react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { Services } from "./components/Services";
-import { Process } from "./components/Process";
 import { Rendezvous } from "./components/Rendezvous";
 import { Suivi } from "./components/Suivi";
 import { Decharge } from "./components/Decharge";
@@ -24,7 +23,6 @@ export default function App() {
     >
       <Navbar />
       <Hero />
-      <Process />
       <Services />
       <Rendezvous />
       <Suivi />
