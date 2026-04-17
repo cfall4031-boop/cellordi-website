@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
-// Téléphone cassé — fond transparent (généré par script)
-const PHONE_IMG = "/phone-cracked.png";
+// Téléphone cassé — fond noir naturel
+const PHONE_IMG = "/phone-cracked.jpg";
 
 export function Hero() {
   const { t } = useTranslation();
@@ -186,7 +186,7 @@ export function Hero() {
           pointerEvents: "none", zIndex: 5,
         }} />
 
-        {/* Téléphone cassé — PNG transparent, grand format, légèrement incliné */}
+        {/* Téléphone cassé — fond noir, bords fondus via mask CSS */}
         <img
           src={PHONE_IMG}
           alt="Téléphone écran cassé"
@@ -195,7 +195,10 @@ export function Hero() {
             width: "85%",
             maxWidth: "480px",
             transform: "rotate(-5deg) translateY(-20px)",
-            filter: "drop-shadow(0 40px 80px rgba(0,0,0,0.9)) drop-shadow(0 0 40px rgba(109,212,0,0.15))",
+            borderRadius: "12px",
+            WebkitMaskImage: "radial-gradient(ellipse 82% 88% at 50% 50%, black 55%, transparent 100%)",
+            maskImage: "radial-gradient(ellipse 82% 88% at 50% 50%, black 55%, transparent 100%)",
+            filter: "drop-shadow(0 0 40px rgba(109,212,0,0.18))",
             zIndex: 6,
           }}
         />
