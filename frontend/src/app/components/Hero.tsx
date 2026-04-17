@@ -178,7 +178,6 @@ export function Hero() {
             width: "85%",
             maxWidth: "480px",
             transform: "rotate(-5deg) translateY(-20px)",
-            filter: "brightness(1.15) contrast(1.05)",
             zIndex: 6,
           }}
         />
