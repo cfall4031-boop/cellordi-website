@@ -22,23 +22,6 @@ export function Hero() {
         overflow: "hidden",
       }}
     >
-      {/* ── Gradient ambiance verte ── */}
-      <div style={{
-        position: "absolute",
-        top: "-15%", left: "30%",
-        width: "800px", height: "700px",
-        background: "radial-gradient(ellipse at 40% 40%, rgba(109,212,0,0.11) 0%, rgba(40,100,0,0.05) 45%, transparent 70%)",
-        filter: "blur(50px)",
-        pointerEvents: "none", zIndex: 0,
-      }} />
-      <div style={{
-        position: "absolute",
-        bottom: "-10%", left: "-5%",
-        width: "450px", height: "450px",
-        background: "radial-gradient(ellipse, rgba(109,212,0,0.05) 0%, transparent 65%)",
-        filter: "blur(60px)",
-        pointerEvents: "none", zIndex: 0,
-      }} />
 
       {/* ── Texture grille diagonale ── */}
       <div style={{
