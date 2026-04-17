@@ -169,7 +169,7 @@ export function Hero() {
           pointerEvents: "none", zIndex: 5,
         }} />
 
-        {/* Téléphone cassé — fond noir fondu via mix-blend-mode */}
+        {/* Téléphone cassé — fond noir, affiché directement */}
         <img
           src={PHONE_IMG}
           alt="Téléphone écran cassé"
@@ -178,7 +178,7 @@ export function Hero() {
             width: "85%",
             maxWidth: "480px",
             transform: "rotate(-5deg) translateY(-20px)",
-            mixBlendMode: "lighten",
+            filter: "brightness(1.15) contrast(1.05)",
             zIndex: 6,
           }}
         />
