@@ -258,7 +258,7 @@
     "subtitle": "Official device deposit and repair consent form.",
     "refused_title": "You have declined data processing.",
     "refused_text": "To drop off your device, contact us directly:",
-    "steps": ["Client information", "Device description", "Terms & Signature"],
+    "steps": ["Device description", "Client information", "Terms & Signature"],
     "step1": {
       "title": "Client Information",
       "prenom": "First name *",

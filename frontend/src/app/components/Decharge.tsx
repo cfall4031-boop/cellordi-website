@@ -218,44 +218,8 @@ export function Decharge() {
 
             <FadeUp delay={0.1}>
               <div style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.12)", padding: "2.5rem" }}>
-                {/* Step 1 */}
+                {/* Step 1 — Description de l'appareil */}
                 {step === 1 && (
-                  <div>
-                    <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, textTransform: "uppercase", marginBottom: "1.5rem" }}>
-                      {t("decharge.step1.title")}
-                    </h3>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.prenom")}</label>
-                        <input name="prenom" value={form.prenom} onChange={handleChange} required style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.nom")}</label>
-                        <input name="nom" value={form.nom} onChange={handleChange} required style={inputStyle} />
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.email")}</label>
-                        <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.telephone")}</label>
-                        <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} required style={inputStyle} />
-                      </div>
-                    </div>
-                    <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-                      <button onClick={() => { if (form.prenom && form.nom && form.telephone) setStep(2); }} style={{ ...btn(GREEN, NAVY) }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
-                        {t("decharge.step1.next")}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2 */}
-                {step === 2 && (
                   <div>
                     <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, textTransform: "uppercase", marginBottom: "1.5rem" }}>
                       {t("decharge.step2.title")}
@@ -297,14 +261,50 @@ export function Decharge() {
                       <label style={labelStyle}>{t("decharge.step2.accessoires")}</label>
                       <input name="accessoires" value={form.accessoires} onChange={handleChange} placeholder={t("decharge.step2.accessoires_ph")} style={inputStyle} />
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <button onClick={() => setStep(1)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
-                        {t("decharge.step2.prev")}
-                      </button>
-                      <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) setStep(3); }} style={{ ...btn(GREEN, NAVY) }}
+                    <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
+                      <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) setStep(2); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
                         onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
                         {t("decharge.step2.next")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2 — Informations client */}
+                {step === 2 && (
+                  <div>
+                    <h3 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1.2rem", color: WHITE, textTransform: "uppercase", marginBottom: "1.5rem" }}>
+                      {t("decharge.step1.title")}
+                    </h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
+                      <div>
+                        <label style={labelStyle}>{t("decharge.step1.prenom")}</label>
+                        <input name="prenom" value={form.prenom} onChange={handleChange} required style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>{t("decharge.step1.nom")}</label>
+                        <input name="nom" value={form.nom} onChange={handleChange} required style={inputStyle} />
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
+                      <div>
+                        <label style={labelStyle}>{t("decharge.step1.email")}</label>
+                        <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>{t("decharge.step1.telephone")}</label>
+                        <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} required style={inputStyle} />
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem" }}>
+                      <button onClick={() => setStep(1)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
+                        {t("decharge.step2.prev")}
+                      </button>
+                      <button onClick={() => { if (form.prenom && form.nom && form.telephone) setStep(3); }} style={{ ...btn(GREEN, NAVY) }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
+                        {t("decharge.step1.next")}
                       </button>
                     </div>
                   </div>

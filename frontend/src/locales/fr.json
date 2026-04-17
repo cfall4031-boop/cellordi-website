@@ -258,7 +258,7 @@
     "subtitle": "Formulaire officiel de dépôt et de consentement pour la réparation.",
     "refused_title": "Vous avez refusé le traitement de vos données.",
     "refused_text": "Pour déposer votre appareil, contactez-nous directement :",
-    "steps": ["Informations client", "Description de l'appareil", "Conditions & Signature"],
+    "steps": ["Description de l'appareil", "Informations client", "Conditions & Signature"],
     "step1": {
       "title": "Informations Client",
       "prenom": "Prénom *",
