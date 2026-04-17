@@ -23,12 +23,6 @@ export function Hero() {
       }}
     >
 
-      {/* ── Texture grille diagonale ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: `repeating-linear-gradient(-52deg, rgba(109,212,0,0.018) 0px, rgba(109,212,0,0.018) 1px, transparent 1px, transparent 64px)`,
-        pointerEvents: "none", zIndex: 1,
-      }} />
 
       {/* ── Ligne verte top gauche ── */}
       <div style={{
@@ -160,13 +154,26 @@ export function Hero() {
           justifyContent: "center",
         }}
       >
-        {/* Halo vert derrière le téléphone */}
+        {/* Fondu haut — image vers fond hero */}
         <div style={{
-          position: "absolute",
-          width: "500px", height: "500px",
-          background: "radial-gradient(ellipse, rgba(109,212,0,0.07) 0%, transparent 65%)",
-          filter: "blur(60px)",
-          pointerEvents: "none", zIndex: 5,
+          position: "absolute", top: 0, left: 0, right: 0,
+          height: "35%",
+          background: `linear-gradient(to bottom, ${NAVY} 0%, transparent 100%)`,
+          pointerEvents: "none", zIndex: 7,
+        }} />
+        {/* Fondu bas */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          height: "20%",
+          background: `linear-gradient(to top, ${NAVY} 0%, transparent 100%)`,
+          pointerEvents: "none", zIndex: 7,
+        }} />
+        {/* Fondu gauche */}
+        <div style={{
+          position: "absolute", top: 0, bottom: 0, left: 0,
+          width: "12%",
+          background: `linear-gradient(to right, ${NAVY} 0%, transparent 100%)`,
+          pointerEvents: "none", zIndex: 7,
         }} />
 
         {/* Téléphone cassé — fond noir, affiché directement */}
