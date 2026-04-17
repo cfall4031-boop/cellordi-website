@@ -10,13 +10,12 @@
     "repair": "Repair"
   },
   "hero": {
-    "tag": "Repair · Optimize · Evolve",
-    "main_title": "Phone & Computer Repair — Experts at Your Service",
-    "subtitle": "Hardware & software solutions — experts in phone & computer repair, IT support and web development. Certified parts, precise diagnostics and tailored solutions for individuals and businesses.",
-    "cta_rdv": "Book an Appointment",
+    "tag": "Free Diagnostic",
+    "main_title": "We fix your device.",
+    "headline2": "Phones & Computers",
     "cta_call": "Call Now",
     "cta_suivi": "Track my repair",
-    "img_alt": "Phone repair technician"
+    "img_alt": "Broken phone and computer repair"
   },
   "services": {
     "tag": "What we do",
