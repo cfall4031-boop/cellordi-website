@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { TypewriterTitle } from "./TypewriterTitle";
@@ -84,6 +85,13 @@ export function Decharge() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
+
+  // Direction: 1 = forward, -1 = back (controls slide direction)
+  const dirRef = useRef<1 | -1>(1);
+  const goTo = (s: number) => {
+    dirRef.current = s > step ? 1 : -1;
+    setStep(s);
+  };
 
   const stepTitles = t("decharge.steps", { returnObjects: true }) as string[];
   const deviceTypes = t("decharge.step2.types", { returnObjects: true }) as string[];
@@ -189,36 +197,93 @@ export function Decharge() {
           </FadeUp>
         ) : (
           <>
-            {/* Step indicator */}
+            {/* ── Stepper animé ── */}
             <FadeUp>
-              <div style={{ display: "flex", gap: "0", marginBottom: "2.5rem" }}>
+              <div style={{ position: "relative", display: "flex", marginBottom: "3rem" }}>
+                {/* Track gris */}
+                <div style={{
+                  position: "absolute", top: "20px",
+                  left: "calc(100% / 6)", right: "calc(100% / 6)",
+                  height: "2px", background: "rgba(255,255,255,0.08)",
+                }} />
+                {/* Fill vert animé */}
+                <motion.div
+                  style={{
+                    position: "absolute", top: "20px",
+                    left: "calc(100% / 6)",
+                    height: "2px", background: GREEN,
+                    originX: 0,
+                  }}
+                  animate={{ width: `${((step - 1) / 2) * 66.67}%` }}
+                  transition={{ duration: 0.45, ease: "easeInOut" }}
+                />
+
                 {[1, 2, 3].map((s) => (
-                  <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
-                      {s > 1 && <div style={{ flex: 1, height: "2px", background: step >= s ? GREEN : "rgba(255,255,255,0.1)" }} />}
-                      <div style={{
-                        width: "36px", height: "36px", borderRadius: "50%",
-                        background: step > s ? GREEN : step === s ? `rgba(109,212,0,0.15)` : "transparent",
-                        border: `2px solid ${step >= s ? GREEN : "rgba(255,255,255,0.1)"}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.9rem",
-                        color: step > s ? NAVY : step === s ? GREEN : GRAY_DIM,
-                        flexShrink: 0,
-                      }}>
-                        {step > s ? "✓" : s}
-                      </div>
-                      {s < 3 && <div style={{ flex: 1, height: "2px", background: step > s ? GREEN : "rgba(255,255,255,0.1)" }} />}
-                    </div>
-                    <span style={{ fontFamily: FONT_BODY, fontSize: "0.72rem", color: step >= s ? GRAY : GRAY_DIM, textAlign: "center", maxWidth: "80px" }}>
+                  <div key={s} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.65rem" }}>
+                    {/* Cercle animé */}
+                    <motion.div
+                      animate={{
+                        backgroundColor: step > s ? GREEN : step === s ? "rgba(109,212,0,0.12)" : "rgba(255,255,255,0.03)",
+                        borderColor: step >= s ? GREEN : "rgba(255,255,255,0.15)",
+                        scale: step === s ? 1.12 : 1,
+                        boxShadow: step === s ? `0 0 0 4px rgba(109,212,0,0.15)` : "0 0 0 0px transparent",
+                      }}
+                      transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                      style={{
+                        width: "40px", height: "40px", borderRadius: "50%",
+                        border: "2px solid", display: "flex", alignItems: "center",
+                        justifyContent: "center", zIndex: 2, position: "relative",
+                      }}
+                    >
+                      <AnimatePresence mode="wait">
+                        {step > s ? (
+                          <motion.span key="check"
+                            initial={{ scale: 0, rotate: -120 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0, rotate: 120 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 22 }}
+                            style={{ color: NAVY, fontWeight: 900, fontSize: "1rem", lineHeight: 1 }}
+                          >✓</motion.span>
+                        ) : (
+                          <motion.span key={`num-${s}`}
+                            initial={{ scale: 0.6, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.6, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                            style={{
+                              fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.9rem",
+                              color: step === s ? GREEN : "rgba(255,255,255,0.2)",
+                              lineHeight: 1,
+                            }}
+                          >{s}</motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+
+                    {/* Label */}
+                    <motion.span
+                      animate={{ color: step >= s ? "#9090a8" : "#3a3a52" }}
+                      transition={{ duration: 0.3 }}
+                      style={{ fontFamily: FONT_BODY, fontSize: "0.72rem", textAlign: "center", maxWidth: "90px", lineHeight: 1.35 }}
+                    >
                       {stepTitles[s - 1]}
-                    </span>
+                    </motion.span>
                   </div>
                 ))}
               </div>
             </FadeUp>
 
             <FadeUp delay={0.1}>
-              <div style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.12)", padding: "2.5rem" }}>
+              <div style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.12)", padding: "2.5rem", overflow: "hidden" }}>
+                <AnimatePresence mode="wait" custom={dirRef.current}>
+                  <motion.div
+                    key={step}
+                    custom={dirRef.current}
+                    initial={(dir) => ({ opacity: 0, x: (dir as number) * 48 })}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={(dir) => ({ opacity: 0, x: (dir as number) * -48 })}
+                    transition={{ duration: 0.22, ease: "easeInOut" }}
+                  >
                 {/* Step 1 — Description de l'appareil */}
                 {step === 1 && (
                   <div>
@@ -263,7 +328,7 @@ export function Decharge() {
                       <input name="accessoires" value={form.accessoires} onChange={handleChange} placeholder={t("decharge.step2.accessoires_ph")} style={inputStyle} />
                     </div>
                     <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-                      <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) setStep(2); }} style={{ ...btn(GREEN, NAVY) }}
+                      <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) goTo(2); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
                         onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
                         {t("decharge.step2.next")}
@@ -299,10 +364,10 @@ export function Decharge() {
                       </div>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem" }}>
-                      <button onClick={() => setStep(1)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <button onClick={() => goTo(1)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
                         {t("decharge.step2.prev")}
                       </button>
-                      <button onClick={() => { if (form.prenom && form.nom && form.telephone) setStep(3); }} style={{ ...btn(GREEN, NAVY) }}
+                      <button onClick={() => { if (form.prenom && form.nom && form.telephone) goTo(3); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
                         onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
                         {t("decharge.step1.next")}
@@ -454,7 +519,7 @@ export function Decharge() {
                     )}
 
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem" }}>
-                      <button onClick={() => setStep(2)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <button onClick={() => goTo(2)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
                         {t("decharge.step3.prev")}
                       </button>
                       <button
@@ -492,6 +557,8 @@ export function Decharge() {
                     </div>
                   </div>
                 )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </FadeUp>
           </>
