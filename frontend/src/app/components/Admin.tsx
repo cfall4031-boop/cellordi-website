@@ -172,7 +172,7 @@ function Login({ onLogin }: { onLogin: (token: string, nom: string) => void }) {
 
 // ── SIDEBAR ───────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { id:"overview",  icon:"📊", label:"Vue d'ensemble" },
+  { id:"overview",  icon:"📆", label:"Calendrier"     },
   { id:"rdvs",      icon:"📅", label:"Rendez-vous"    },
   { id:"tickets",   icon:"🎫", label:"Tickets"         },
   { id:"clients",   icon:"👥", label:"Clients"         },
@@ -540,10 +540,422 @@ function Overview() {
   );
 }
 
-// ── RENDEZ-VOUS ───────────────────────────────────────────────
-// ── Helpers calendrier ──────────────────────────────────────────────────────
+// ── ADMIN CALENDAR (Vue d'ensemble) ──────────────────────────
+
 const JOURS_LABEL = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
 const MOIS_LABEL  = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+type CalEvent = {
+  id: number;
+  type: "rdv" | "ticket" | "message";
+  date: string;
+  heure?: string;
+  title: string;
+  subtitle: string;
+  statut: string;
+  raw: any;
+};
+
+const CAL_TYPE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  rdv:     { bg: "rgba(56,189,248,0.18)",  border: "#38bdf8", text: "#7dd3fc" },
+  ticket:  { bg: "rgba(245,158,11,0.18)",  border: "#f59e0b", text: "#fcd34d" },
+  message: { bg: "rgba(167,139,250,0.18)", border: "#a78bfa", text: "#c4b5fd" },
+};
+
+const CAL_SLOT_H  = 48;
+const CAL_START_H = 9;
+const CAL_END_H   = 20;
+const CAL_TOTAL_SLOTS = (CAL_END_H - CAL_START_H) * 2;
+
+function calPad(n: number) { return String(n).padStart(2, "0"); }
+function toDS(d: Date) { return `${d.getFullYear()}-${calPad(d.getMonth()+1)}-${calPad(d.getDate())}`; }
+function todayDS() { return toDS(new Date()); }
+
+function getWeekDays(ref: Date): Date[] {
+  const d = new Date(ref);
+  const dow = d.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return Array.from({ length: 7 }, (_, i) => { const dd = new Date(d); dd.setDate(d.getDate()+i); return dd; });
+}
+
+function slotTopPx(heure: string): number {
+  const [h, m] = heure.split(":").map(Number);
+  return ((h - CAL_START_H) * 2 + m / 30) * CAL_SLOT_H;
+}
+
+function CalDetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
+  if (value === null || value === undefined || value === "") return null;
+  return (
+    <div style={{ marginBottom: "0.85rem" }}>
+      <div style={{ fontSize: "0.67rem", color: GRAY_DIM, textTransform: "uppercase" as const, letterSpacing: "0.07em", marginBottom: "0.2rem" }}>{label}</div>
+      <div style={{ fontSize: "0.9rem", color: "#ddeeff", lineHeight: 1.5 }}>{value}</div>
+    </div>
+  );
+}
+
+function CalEventBtn({ e, compact, onClick }: { e: CalEvent; compact?: boolean; onClick: () => void }) {
+  const c = CAL_TYPE_COLORS[e.type];
+  return (
+    <button onClick={onClick} title={`${e.title} — ${e.subtitle}`} style={{
+      display: "block", width: "100%", textAlign: "left" as const, border: "none",
+      background: c.bg, borderLeft: `3px solid ${c.border}`,
+      color: c.text, fontSize: compact ? "0.65rem" : "0.7rem", fontWeight: 600,
+      padding: compact ? "2px 4px" : "3px 6px", cursor: "pointer",
+      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
+      marginBottom: "2px", borderRadius: "0 2px 2px 0",
+    }}>
+      {e.heure ? `${e.heure} · ` : ""}{e.title}
+    </button>
+  );
+}
+
+function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () => void }) {
+  const c = CAL_TYPE_COLORS[event.type];
+  const r = event.raw;
+  const typeLabel = event.type === "rdv" ? "Rendez-vous" : event.type === "ticket" ? "Ticket" : "Message";
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 298, background: "rgba(0,0,0,0.45)" }} />
+      <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, width: 390,
+        background: "#0d1e38", borderLeft: `2px solid ${c.border}55`,
+        zIndex: 299, overflowY: "auto" as const, display: "flex", flexDirection: "column" as const,
+        fontFamily: "'DM Sans',sans-serif" }}>
+        {/* Header */}
+        <div style={{ padding: "1.2rem 1.4rem", borderBottom: "1px solid rgba(255,255,255,0.07)",
+          display: "flex", alignItems: "flex-start", gap: "0.8rem", flexShrink: 0 }}>
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: c.border, marginTop: 5, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "0.68rem", color: c.text, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>{typeLabel}</div>
+            <div style={{ fontSize: "1.05rem", fontWeight: 600, color: "#fff", marginTop: "0.2rem" }}>{event.title}</div>
+            <div style={{ fontSize: "0.8rem", color: GRAY, marginTop: "0.1rem" }}>{event.subtitle}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)",
+            color: GRAY, fontSize: "0.95rem", cursor: "pointer", padding: "0.2rem 0.55rem", borderRadius: 2 }}>✕</button>
+        </div>
+        {/* Statut */}
+        <div style={{ padding: "0.7rem 1.4rem", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <Badge statut={event.statut} />
+        </div>
+        {/* Fields */}
+        <div style={{ flex: 1, padding: "1.2rem 1.4rem" }}>
+          {event.type === "rdv" && <>
+            <CalDetailRow label="Date" value={r.date_rdv} />
+            <CalDetailRow label="Heure" value={r.heure || "—"} />
+            <CalDetailRow label="Client" value={`${r.prenom} ${r.nom}`} />
+            <CalDetailRow label="Téléphone" value={r.telephone} />
+            <CalDetailRow label="Courriel" value={r.email} />
+            <CalDetailRow label="Appareil" value={r.type_appareil} />
+            <CalDetailRow label="Description" value={r.description} />
+            <CalDetailRow label="N° ticket" value={r.numero_ticket} />
+            <CalDetailRow label="Créé le" value={r.created_at ? new Date(r.created_at).toLocaleString("fr-CA") : undefined} />
+          </>}
+          {event.type === "ticket" && <>
+            <CalDetailRow label="N° ticket" value={r.numero} />
+            <CalDetailRow label="Client" value={`${r.prenom} ${r.nom}`} />
+            <CalDetailRow label="Téléphone" value={r.telephone} />
+            <CalDetailRow label="Courriel" value={r.email} />
+            <CalDetailRow label="Appareil" value={r.type_appareil} />
+            {(r.marque || r.modele) && <CalDetailRow label="Marque / Modèle" value={[r.marque, r.modele].filter(Boolean).join(" ")} />}
+            <CalDetailRow label="Problème" value={r.probleme} />
+            <CalDetailRow label="Diagnostic" value={r.diagnostic} />
+            <CalDetailRow label="Pièces" value={r.pieces} />
+            {r.cout_estime > 0 && <CalDetailRow label="Coût estimé" value={`${r.cout_estime} $`} />}
+            {r.cout_final && <CalDetailRow label="Coût final" value={`${r.cout_final} $`} />}
+            <CalDetailRow label="Reçu le" value={r.date_reception ? new Date(r.date_reception).toLocaleDateString("fr-CA") : undefined} />
+            <CalDetailRow label="Date estimée" value={r.date_estimee ? new Date(r.date_estimee).toLocaleDateString("fr-CA") : undefined} />
+            <CalDetailRow label="Notes internes" value={r.notes_internes} />
+          </>}
+          {event.type === "message" && <>
+            <CalDetailRow label="De" value={r.nom} />
+            <CalDetailRow label="Courriel" value={r.email} />
+            <CalDetailRow label="Téléphone" value={r.telephone} />
+            <CalDetailRow label="Sujet" value={r.sujet} />
+            <CalDetailRow label="Message" value={<span style={{ whiteSpace: "pre-wrap" as const, fontSize: "0.88rem", color: GRAY, lineHeight: 1.6 }}>{r.message}</span>} />
+            {r.reply_text && <CalDetailRow label="Réponse" value={<span style={{ whiteSpace: "pre-wrap" as const, color: GREEN }}>{r.reply_text}</span>} />}
+            <CalDetailRow label="Reçu le" value={r.created_at ? new Date(r.created_at).toLocaleString("fr-CA") : undefined} />
+          </>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function CalWeekView({ events, refDate, onSelect }: { events: CalEvent[]; refDate: Date; onSelect: (e: CalEvent) => void }) {
+  const days = getWeekDays(refDate);
+  const td = todayDS();
+  const totalH = CAL_TOTAL_SLOTS * CAL_SLOT_H;
+  const timedRdvs = events.filter(e => e.type === "rdv" && e.heure);
+  const allDay    = events.filter(e => e.type !== "rdv" || !e.heure);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
+      {/* Column headers */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, background: NAVY_MID }}>
+        <div style={{ width: 58, flexShrink: 0 }} />
+        {days.map((d, i) => {
+          const isToday = toDS(d) === td;
+          return (
+            <div key={i} style={{ flex: 1, textAlign: "center" as const, padding: "0.55rem 0.2rem", borderLeft: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ fontSize: "0.64rem", color: GRAY_DIM, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{JOURS_LABEL[i]}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 30, height: 30, borderRadius: "50%", marginTop: "0.15rem",
+                background: isToday ? GREEN : "transparent",
+                color: isToday ? NAVY : i === 6 ? GRAY_DIM : GRAY,
+                fontWeight: isToday ? 700 : 500, fontSize: "0.88rem" }}>
+                {d.getDate()}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* All-day strip (tickets + messages + RDVs without time) */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, minHeight: 28 }}>
+        <div style={{ width: 58, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "0.5rem" }}>
+          <span style={{ fontSize: "0.58rem", color: GRAY_DIM, textTransform: "uppercase" as const }}>Jour</span>
+        </div>
+        {days.map((d, i) => {
+          const dayAllDay = allDay.filter(e => e.date === toDS(d));
+          return (
+            <div key={i} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.04)", padding: "3px 2px" }}>
+              {dayAllDay.map(e => <CalEventBtn key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />)}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Scrollable time grid */}
+      <div style={{ flex: 1, overflowY: "auto" as const }}>
+        <div style={{ display: "flex", position: "relative" as const }}>
+          {/* Time axis */}
+          <div style={{ width: 58, flexShrink: 0, height: totalH, position: "relative" as const }}>
+            {Array.from({ length: CAL_END_H - CAL_START_H }, (_, i) => (
+              <div key={i} style={{ position: "absolute" as const, top: i * CAL_SLOT_H * 2 - 8, right: 8,
+                fontSize: "0.62rem", color: GRAY_DIM, userSelect: "none" as const }}>
+                {calPad(CAL_START_H + i)}:00
+              </div>
+            ))}
+          </div>
+          {/* Day columns */}
+          {days.map((d, di) => {
+            const ds = toDS(d);
+            const isToday = ds === td;
+            const dayTimed = timedRdvs.filter(e => e.date === ds);
+            return (
+              <div key={di} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.06)",
+                position: "relative" as const, height: totalH,
+                background: isToday ? "rgba(109,212,0,0.025)" : "transparent" }}>
+                {/* Grid lines */}
+                {Array.from({ length: CAL_TOTAL_SLOTS }, (_, i) => (
+                  <div key={i} style={{ position: "absolute" as const, top: i * CAL_SLOT_H, left: 0, right: 0, height: 1,
+                    background: `rgba(255,255,255,${i % 2 === 0 ? "0.06" : "0.02"})` }} />
+                ))}
+                {/* Current time line */}
+                {isToday && (() => {
+                  const now = new Date();
+                  const mins = (now.getHours() - CAL_START_H) * 60 + now.getMinutes();
+                  if (mins < 0 || mins > (CAL_END_H - CAL_START_H) * 60) return null;
+                  const top = (mins / 30) * CAL_SLOT_H;
+                  return (
+                    <div style={{ position: "absolute" as const, top, left: 0, right: 0, height: 2, background: RED, zIndex: 10, pointerEvents: "none" as const }}>
+                      <div style={{ position: "absolute" as const, left: -5, top: -5, width: 12, height: 12, borderRadius: "50%", background: RED }} />
+                    </div>
+                  );
+                })()}
+                {/* Timed RDV events */}
+                {dayTimed.map(e => {
+                  const top = slotTopPx(e.heure!);
+                  const c = CAL_TYPE_COLORS[e.type];
+                  return (
+                    <button key={`${e.type}-${e.id}`} onClick={() => onSelect(e)} style={{
+                      position: "absolute" as const, top, left: 3, right: 3, height: CAL_SLOT_H * 2,
+                      background: c.bg, border: `1px solid ${c.border}55`,
+                      borderLeft: `3px solid ${c.border}`, color: c.text,
+                      padding: "4px 7px", textAlign: "left" as const, cursor: "pointer",
+                      overflow: "hidden", borderRadius: 2, zIndex: 5 }}>
+                      <div style={{ fontSize: "0.72rem", fontWeight: 700, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                        {e.heure} · {e.title}
+                      </div>
+                      <div style={{ fontSize: "0.65rem", opacity: 0.75, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{e.subtitle}</div>
+                      <div style={{ marginTop: 2 }}><Badge statut={e.statut} /></div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDate: Date; onSelect: (e: CalEvent) => void }) {
+  const year = refDate.getFullYear();
+  const month = refDate.getMonth();
+  const td = todayDS();
+  const firstDay = new Date(year, month, 1);
+  const startDow = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (Date | null)[] = Array.from({ length: 42 }, (_, i) => {
+    const dayNum = i - startDow + 1;
+    if (dayNum < 1 || dayNum > daysInMonth) return null;
+    return new Date(year, month, dayNum);
+  });
+  return (
+    <div style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, background: NAVY_MID }}>
+        {JOURS_LABEL.map(d => (
+          <div key={d} style={{ textAlign: "center" as const, padding: "0.5rem", fontSize: "0.67rem", color: GRAY_DIM, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{d}</div>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gridTemplateRows: "repeat(6,1fr)", flex: 1 }}>
+        {cells.map((day, i) => {
+          if (!day) return <div key={i} style={{ background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.04)" }} />;
+          const ds = toDS(day);
+          const isToday = ds === td;
+          const dayEvs = events.filter(e => e.date === ds);
+          const visible = dayEvs.slice(0, 3);
+          const more = dayEvs.length - 3;
+          return (
+            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.05)", padding: "4px 5px", overflow: "hidden", display: "flex", flexDirection: "column" as const }}>
+              <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 24, height: 24, borderRadius: "50%", marginBottom: 3, flexShrink: 0,
+                background: isToday ? GREEN : "transparent",
+                color: isToday ? NAVY : GRAY,
+                fontWeight: isToday ? 700 : 400, fontSize: "0.78rem" }}>
+                {day.getDate()}
+              </div>
+              {visible.map(e => <CalEventBtn key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />)}
+              {more > 0 && <div style={{ fontSize: "0.62rem", color: GRAY_DIM, paddingLeft: 4 }}>+{more} autre{more > 1 ? "s" : ""}</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AdminCalendar() {
+  const [view, setView]       = useState<"week"|"month">("week");
+  const [refDate, setRefDate] = useState(new Date());
+  const [events, setEvents]   = useState<CalEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<CalEvent | null>(null);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [rData, tData, mData] = await Promise.all([
+        rdvApi.getAll({}),
+        ticketsApi.getAll({}),
+        messagesApi.getAll({}),
+      ]);
+      const rdvs: CalEvent[] = ((rData as any).rendezvous || []).map((x: any) => ({
+        id: x.id, type: "rdv" as const,
+        date: x.date_rdv || "",
+        heure: x.heure || undefined,
+        title: `${x.prenom} ${x.nom}`,
+        subtitle: x.type_appareil || "",
+        statut: x.statut, raw: x,
+      }));
+      const tickets: CalEvent[] = ((tData as any).tickets || []).map((x: any) => ({
+        id: x.id, type: "ticket" as const,
+        date: (x.date_reception || x.created_at || "").slice(0, 10),
+        title: `${x.prenom} ${x.nom}`,
+        subtitle: x.type_appareil || "",
+        statut: x.statut, raw: x,
+      }));
+      const msgs: CalEvent[] = ((mData as any).messages || []).map((x: any) => ({
+        id: x.id, type: "message" as const,
+        date: (x.created_at || "").slice(0, 10),
+        title: x.nom || "",
+        subtitle: x.sujet || "",
+        statut: x.repondu ? "repondu" : x.lu ? "lu" : "non_lu",
+        raw: x,
+      }));
+      setEvents([...rdvs, ...tickets, ...msgs]);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const navigate = (dir: -1 | 1) => {
+    setRefDate(prev => {
+      const d = new Date(prev);
+      if (view === "week") d.setDate(d.getDate() + dir * 7);
+      else d.setMonth(d.getMonth() + dir);
+      return d;
+    });
+  };
+
+  const headerLabel = (() => {
+    if (view === "week") {
+      const days = getWeekDays(refDate);
+      const s = days[0]; const e = days[6];
+      if (s.getMonth() === e.getMonth()) return `${MOIS_LABEL[s.getMonth()]} ${s.getFullYear()}`;
+      return `${MOIS_LABEL[s.getMonth()]} – ${MOIS_LABEL[e.getMonth()]} ${e.getFullYear()}`;
+    }
+    return `${MOIS_LABEL[refDate.getMonth()]} ${refDate.getFullYear()}`;
+  })();
+
+  const navBtn: React.CSSProperties = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: GRAY, fontSize: "1.1rem", cursor: "pointer", padding: "0.25rem 0.7rem", borderRadius: 3 };
+
+  return (
+    <div className="admin-fade" style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
+      {/* Top bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.8rem 1.4rem",
+        background: NAVY_MID, borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, flexWrap: "wrap" as const }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: "1.3rem", color: "#fff" }}>
+          {headerLabel}
+        </div>
+        <div style={{ flex: 1 }} />
+        {/* Legend */}
+        <div style={{ display: "flex", gap: "0.9rem", alignItems: "center" }}>
+          {(["rdv","ticket","message"] as const).map(tp => (
+            <div key={tp} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+              <div style={{ width: 9, height: 9, borderRadius: "50%", background: CAL_TYPE_COLORS[tp].border }} />
+              <span style={{ fontSize: "0.7rem", color: GRAY }}>{tp === "rdv" ? "RDV" : tp === "ticket" ? "Ticket" : "Message"}</span>
+            </div>
+          ))}
+        </div>
+        {/* Navigation */}
+        <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+          <button onClick={() => navigate(-1)} style={navBtn}>‹</button>
+          <button onClick={() => setRefDate(new Date())} style={{ ...navBtn, background: "rgba(109,212,0,0.1)", border: "1px solid rgba(109,212,0,0.3)", color: GREEN, fontSize: "0.78rem", fontWeight: 700 }}>Aujourd'hui</button>
+          <button onClick={() => navigate(1)} style={navBtn}>›</button>
+        </div>
+        {/* View toggle */}
+        <div style={{ display: "flex", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 3, overflow: "hidden" }}>
+          {(["week","month"] as const).map(v => (
+            <button key={v} onClick={() => setView(v)} style={{ padding: "0.28rem 0.85rem", border: "none", cursor: "pointer",
+              background: view === v ? "rgba(109,212,0,0.15)" : "transparent",
+              color: view === v ? GREEN : GRAY, fontSize: "0.78rem", fontWeight: 700 }}>
+              {v === "week" ? "Semaine" : "Mois"}
+            </button>
+          ))}
+        </div>
+        <button onClick={loadAll} title="Rafraîchir" style={{ ...navBtn, fontSize: "1rem" }}>↺</button>
+      </div>
+      {/* Body */}
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        {loading
+          ? <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: GRAY }}>Chargement du calendrier…</div>
+          : view === "week"
+            ? <CalWeekView events={events} refDate={refDate} onSelect={setSelected} />
+            : <CalMonthView events={events} refDate={refDate} onSelect={setSelected} />
+        }
+      </div>
+      {selected && <CalEventDetailPanel event={selected} onClose={() => setSelected(null)} />}
+    </div>
+  );
+}
+
+// ── RENDEZ-VOUS ───────────────────────────────────────────────
+// ── Helpers calendrier ──────────────────────────────────────────────────────
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -2559,7 +2971,7 @@ export default function Admin() {
   };
 
   const sections: Record<string, React.ReactNode> = {
-    overview:  <Overview/>,
+    overview:  <AdminCalendar/>,
     rdvs:      <Rendez_vous/>,
     tickets:   <Tickets/>,
     clients:   <Clients/>,
