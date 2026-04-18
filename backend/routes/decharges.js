@@ -52,9 +52,10 @@ router.post("/", (req, res) => {
   const rep_val      = auth_rep  || auth_reparation  || "OUI";
   const appareil_final = type_appareil + (marque_modele ? ` — ${marque_modele}` : "");
 
-  if (!nom_final || !type_appareil || !probleme) {
-    return res.status(400).json({ erreur: "Champs obligatoires manquants (nom, type_appareil, probleme)." });
+  if (!nom_final || !type_appareil) {
+    return res.status(400).json({ erreur: "Champs obligatoires manquants (nom, type_appareil)." });
   }
+  const probleme_final = probleme || "Non précisé";
 
   const result = db.prepare(`
     INSERT INTO decharges (ticket_id, nom, prenom, telephone, type_appareil, probleme, auth_diag, auth_rep, signature)
@@ -65,7 +66,7 @@ router.post("/", (req, res) => {
     prenom_final,
     telephone || null,
     appareil_final,
-    probleme,
+    probleme_final,
     diag_val,
     rep_val,
     signature || null
@@ -80,7 +81,7 @@ router.post("/", (req, res) => {
         prenom: prenom_final,
         nom: nom_final,
         type_appareil: appareil_final,
-        probleme,
+        probleme: probleme_final,
       }),
     }).catch(console.error);
   }

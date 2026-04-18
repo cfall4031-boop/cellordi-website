@@ -77,7 +77,7 @@ export function Decharge() {
     nom: _saved.nom || "", prenom: _saved.prenom || "",
     email: _saved.email || "", telephone: _saved.telephone || "",
     appareil: _saved.appareil || "", marque: "", modele: "", serie: "",
-    probleme: "", etatAppareil: "", accessoires: "",
+    etatAppareil: "", accessoires: "",
     acceptConditions: false,
     acceptDiagnostic: false,
     acceptFacturation: false,
@@ -190,7 +190,7 @@ export function Decharge() {
               <button
                 onClick={() => {
                   setStep(1); setSigned(false); setDone(false); setErreur(null);
-                  setForm({ nom: "", prenom: "", email: "", telephone: "", appareil: "", marque: "", modele: "", serie: "", probleme: "", etatAppareil: "", accessoires: "", acceptConditions: false, acceptDiagnostic: false, acceptFacturation: false });
+                  setForm({ nom: "", prenom: "", email: "", telephone: "", appareil: "", marque: "", modele: "", serie: "", etatAppareil: "", accessoires: "", acceptConditions: false, acceptDiagnostic: false, acceptFacturation: false });
                   const canvas = canvasRef.current;
                   if (canvas) { const ctx = canvas.getContext("2d"); if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
                 }}
@@ -308,11 +308,10 @@ export function Decharge() {
                       <FloatingInput label={t("decharge.step2.modele")} name="modele" value={form.modele} onChange={handleChange} required />
                       <FloatingInput label={t("decharge.step2.serie")} name="serie" value={form.serie} onChange={handleChange} />
                     </div>
-                    <FloatingTextarea label={t("decharge.step2.probleme")} name="probleme" value={form.probleme} onChange={handleChange} required rows={3} containerStyle={{ marginBottom: "1.2rem" }} />
                     <FloatingInput label={t("decharge.step2.etat")} name="etatAppareil" value={form.etatAppareil} onChange={handleChange} containerStyle={{ marginBottom: "1.2rem" }} />
                     <FloatingInput label={t("decharge.step2.accessoires")} name="accessoires" value={form.accessoires} onChange={handleChange} containerStyle={{ marginBottom: "1.5rem" }} />
                     <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
-                      <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) goTo(2); }} style={{ ...btn(GREEN, NAVY) }}
+                      <button onClick={() => { if (form.appareil && form.marque && form.modele) goTo(2); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
                         onMouseLeave={(e) => (e.currentTarget.style.background = GREEN)}>
                         {t("decharge.step2.next")}
@@ -507,7 +506,7 @@ export function Decharge() {
                               email: form.email || undefined, telephone: form.telephone,
                               type_appareil: form.appareil,
                               marque_modele: `${form.marque} ${form.modele}`.trim(),
-                              imei: form.serie, probleme: form.probleme,
+                              imei: form.serie, probleme: "",
                               etat_physique: form.etatAppareil, accessoires: form.accessoires,
                               auth_diagnostic: "OUI",
                               auth_reparation: form.acceptFacturation ? "OUI" : "NON",
