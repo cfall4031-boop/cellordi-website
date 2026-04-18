@@ -6,6 +6,7 @@ import { TypewriterTitle } from "./TypewriterTitle";
 import { FloatingInput, FloatingTextarea, FloatingSelect } from "./FloatingInput";
 import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, labelStyle } from "../tokens";
 import { dechargesApi } from "../../api";
+import { loadClient, saveClient } from "../utils/clientStorage";
 
 
 // ── Helpers pour la politique de service ────────────────────────────────────
@@ -71,8 +72,10 @@ export function Decharge() {
   const isEN = i18n.language === 'en';
   const policy = isEN ? POLICY_DATA.en : POLICY_DATA.fr;
   const [step, setStep] = useState(1);
+  const _saved = loadClient();
   const [form, setForm] = useState({
-    nom: "", prenom: "", email: "", telephone: "",
+    nom: _saved.nom || "", prenom: _saved.prenom || "",
+    email: _saved.email || "", telephone: _saved.telephone || "",
     appareil: "", marque: "", modele: "", serie: "",
     probleme: "", etatAppareil: "", accessoires: "",
     acceptConditions: false,
@@ -97,12 +100,13 @@ export function Decharge() {
   const stepTitles = t("decharge.steps", { returnObjects: true }) as string[];
   const deviceTypes = t("decharge.step2.types", { returnObjects: true }) as string[];
 
+  const CLIENT_FIELDS = ["prenom", "nom", "email", "telephone"] as const;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
+    const newVal = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setForm((prev) => ({ ...prev, [name]: newVal }));
+    if ((CLIENT_FIELDS as readonly string[]).includes(name))
+      saveClient({ [name]: value } as any);
   };
 
   const getPos = (canvas: HTMLCanvasElement, e: React.MouseEvent | React.TouchEvent) => {

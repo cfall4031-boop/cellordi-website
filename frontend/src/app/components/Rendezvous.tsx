@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { TypewriterTitle } from "./TypewriterTitle";
+import { FloatingInput, FloatingTextarea, FloatingSelect } from "./FloatingInput";
 import {
   NAVY, NAVY_MID, GREEN, GREEN_GLOW,
   WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY,
   btn, inputStyle, labelStyle,
 } from "../tokens";
 import { rdvApi, messagesApi } from "../../api";
+import { loadClient, saveClient } from "../utils/clientStorage";
 
 // ── Heures d'ouverture (fuseau Montréal) ─────────────────────────────────────
 const isBusinessOpen = (): boolean => {
@@ -76,8 +78,10 @@ export function Rendezvous() {
       .finally(() => setSlotsLoading(false));
   }, [selDate]);
 
+  const _saved = loadClient();
   const [form, setForm] = useState({
-    prenom: "", nom: "", email: "", telephone: "",
+    prenom: _saved.prenom || "", nom: _saved.nom || "",
+    email: _saved.email || "", telephone: _saved.telephone || "",
     service: "", probleme: "", urgence: false,
   });
   const [sent, setSent] = useState(false);
@@ -88,14 +92,15 @@ export function Rendezvous() {
 
   const SERVICES = t("rdv.services", { returnObjects: true }) as string[];
 
+  const CLIENT_FIELDS = ["prenom", "nom", "email", "telephone"] as const;
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
-    setForm(p => ({
-      ...p,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
+    const newVal = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setForm(p => ({ ...p, [name]: newVal }));
+    if ((CLIENT_FIELDS as readonly string[]).includes(name))
+      saveClient({ [name]: value } as any);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -516,62 +521,45 @@ export function Rendezvous() {
                 {/* ─ Formulaire ─ */}
                 <form onSubmit={handleSubmit}>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.9rem", marginBottom: "0.9rem" }} className="rdv-grid">
-                    <div>
-                      <label style={labelStyle}>{t("rdv.fields.prenom")}</label>
-                      <input
-                        name="prenom" value={form.prenom} onChange={handleChange}
-                        placeholder={t("rdv.placeholders.prenom")} required style={inputStyle}
-                      />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>{t("rdv.fields.nom")}</label>
-                      <input
-                        name="nom" value={form.nom} onChange={handleChange}
-                        placeholder={t("rdv.placeholders.nom")} required style={inputStyle}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: "0.9rem" }}>
-                    <label style={labelStyle}>{t("rdv.fields.telephone")}</label>
-                    <input
-                      name="telephone" type="tel" value={form.telephone} onChange={handleChange}
-                      placeholder={t("rdv.placeholders.telephone")} required style={inputStyle}
+                    <FloatingInput
+                      label={t("rdv.fields.prenom")}
+                      name="prenom" value={form.prenom} onChange={handleChange} required
+                    />
+                    <FloatingInput
+                      label={t("rdv.fields.nom")}
+                      name="nom" value={form.nom} onChange={handleChange} required
                     />
                   </div>
 
-                  <div style={{ marginBottom: "0.9rem" }}>
-                    <label style={labelStyle}>{t("rdv.fields.email_label")}</label>
-                    <input
-                      name="email" type="email" value={form.email} onChange={handleChange}
-                      placeholder={t("rdv.placeholders.email")} style={inputStyle}
-                    />
-                    <span style={{ fontSize: "0.72rem", color: GRAY_DIM, marginTop: "0.3rem", display: "block", lineHeight: 1.4 }}>
-                      {t("rdv.fields.email_hint")}
-                    </span>
-                  </div>
+                  <FloatingInput
+                    label={t("rdv.fields.telephone")}
+                    name="telephone" type="tel" value={form.telephone} onChange={handleChange} required
+                    containerStyle={{ marginBottom: "0.9rem" }}
+                  />
 
-                  <div style={{ marginBottom: "0.9rem" }}>
-                    <label style={labelStyle}>{t("rdv.fields.service")}</label>
-                    <select
-                      name="service" value={form.service} onChange={handleChange}
-                      required style={{ ...inputStyle, cursor: "pointer" }}
-                    >
-                      <option value="">{t("rdv.fields.select")}</option>
-                      {SERVICES.map(s => (
-                        <option key={s} value={s} style={{ background: NAVY }}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <FloatingInput
+                    label={t("rdv.fields.email_label")}
+                    name="email" type="email" value={form.email} onChange={handleChange}
+                    hint={t("rdv.fields.email_hint")}
+                    containerStyle={{ marginBottom: "0.9rem" }}
+                  />
 
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label style={labelStyle}>{t("rdv.fields.probleme")}</label>
-                    <textarea
-                      name="probleme" value={form.probleme} onChange={handleChange}
-                      placeholder={t("rdv.placeholders.probleme")} required rows={3}
-                      style={{ ...inputStyle, resize: "vertical", fontFamily: FONT_BODY }}
-                    />
-                  </div>
+                  <FloatingSelect
+                    label={t("rdv.fields.service")}
+                    name="service" value={form.service} onChange={handleChange} required
+                    containerStyle={{ marginBottom: "0.9rem" }}
+                  >
+                    <option value=""></option>
+                    {SERVICES.map(s => (
+                      <option key={s} value={s} style={{ background: NAVY }}>{s}</option>
+                    ))}
+                  </FloatingSelect>
+
+                  <FloatingTextarea
+                    label={t("rdv.fields.probleme")}
+                    name="probleme" value={form.probleme} onChange={handleChange} required rows={3}
+                    containerStyle={{ marginBottom: "1rem" }}
+                  />
 
                   <label style={{
                     display: "flex", alignItems: "center", gap: "0.65rem",
