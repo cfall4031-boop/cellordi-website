@@ -595,18 +595,69 @@ function CalDetailRow({ label, value }: { label: string; value?: React.ReactNode
   );
 }
 
-function CalEventBtn({ e, compact, onClick }: { e: CalEvent; compact?: boolean; onClick: () => void }) {
+// ── AM/PM formatter ───────────────────────────────────────────
+function fmtAmPm(heure: string): string {
+  const [h, m] = heure.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+// Day abbreviations (Sun first, matching getDay())
+const DAY_ABBR_CAL = ["DIM","LUN","MAR","MER","JEU","VEN","SAM"];
+
+// ── Event card — Datewise-inspired ────────────────────────────
+function CalEventCard({ e, compact, onClick }: { e: CalEvent; compact?: boolean; onClick: () => void }) {
   const c = CAL_TYPE_COLORS[e.type];
+  const typeIcon = e.type === "rdv" ? "📅" : e.type === "ticket" ? "🔧" : "💬";
+
+  if (compact) {
+    return (
+      <button onClick={onClick} title={`${e.title} — ${e.subtitle}`} style={{
+        display: "flex", alignItems: "center", gap: 5, width: "100%", border: "none",
+        background: c.bg, borderLeft: `3px solid ${c.border}`, color: c.text,
+        fontSize: "0.68rem", fontWeight: 600, padding: "3px 7px", cursor: "pointer",
+        marginBottom: 2, borderRadius: "0 6px 6px 0", textAlign: "left" as const,
+        overflow: "hidden", whiteSpace: "nowrap" as const, textOverflow: "ellipsis",
+      }}>
+        <span style={{ fontSize: "0.62rem", flexShrink: 0 }}>{typeIcon}</span>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+          {e.heure ? `${e.heure} · ` : ""}{e.title}
+        </span>
+      </button>
+    );
+  }
+
+  // Full card for time grid
   return (
-    <button onClick={onClick} title={`${e.title} — ${e.subtitle}`} style={{
-      display: "block", width: "100%", textAlign: "left" as const, border: "none",
+    <button onClick={onClick} style={{
+      display: "flex", flexDirection: "column" as const, justifyContent: "space-between",
+      width: "100%", height: "100%", border: "none",
       background: c.bg, borderLeft: `3px solid ${c.border}`,
-      color: c.text, fontSize: compact ? "0.65rem" : "0.7rem", fontWeight: 600,
-      padding: compact ? "2px 4px" : "3px 6px", cursor: "pointer",
-      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
-      marginBottom: "2px", borderRadius: "0 2px 2px 0",
+      color: c.text, padding: "5px 8px", cursor: "pointer",
+      borderRadius: "0 8px 8px 0", textAlign: "left" as const, overflow: "hidden",
     }}>
-      {e.heure ? `${e.heure} · ` : ""}{e.title}
+      <div>
+        <div style={{ fontSize: "0.72rem", fontWeight: 700, lineHeight: 1.25,
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+          {e.title}
+        </div>
+        {e.heure && (
+          <div style={{ fontSize: "0.63rem", opacity: 0.8, marginTop: 1 }}>{fmtAmPm(e.heure)}</div>
+        )}
+        <div style={{ fontSize: "0.62rem", opacity: 0.6, overflow: "hidden", textOverflow: "ellipsis",
+          whiteSpace: "nowrap" as const, marginTop: 1 }}>
+          {e.subtitle}
+        </div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 3 }}>
+        <div style={{ width: 17, height: 17, borderRadius: "50%", background: c.border,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "0.5rem", fontWeight: 800, color: "#000", flexShrink: 0 }}>
+          {e.title.charAt(0).toUpperCase()}
+        </div>
+        <span style={{ fontSize: "0.7rem", opacity: 0.4, letterSpacing: 1 }}>···</span>
+      </div>
     </button>
   );
 }
@@ -632,7 +683,7 @@ function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () 
             <div style={{ fontSize: "0.8rem", color: GRAY, marginTop: "0.1rem" }}>{event.subtitle}</div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)",
-            color: GRAY, fontSize: "0.95rem", cursor: "pointer", padding: "0.2rem 0.55rem", borderRadius: 2 }}>✕</button>
+            color: GRAY, fontSize: "0.95rem", cursor: "pointer", padding: "0.2rem 0.55rem", borderRadius: 8 }}>✕</button>
         </div>
         {/* Statut */}
         <div style={{ padding: "0.7rem 1.4rem", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
@@ -688,22 +739,41 @@ function CalWeekView({ events, refDate, onSelect }: { events: CalEvent[]; refDat
   const totalH = CAL_TOTAL_SLOTS * CAL_SLOT_H;
   const timedRdvs = events.filter(e => e.type === "rdv" && e.heure);
   const allDay    = events.filter(e => e.type !== "rdv" || !e.heure);
+  const timeColW  = 72;
+
+  const now = new Date();
+  const nowMins = (now.getHours() - CAL_START_H) * 60 + now.getMinutes();
+  const nowTop  = (nowMins / 30) * CAL_SLOT_H;
+  const nowLabel = now.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const showNow  = nowMins >= 0 && nowMins <= (CAL_END_H - CAL_START_H) * 60;
+  const todayInView = days.some(d => toDS(d) === td);
 
   return (
     <div style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
-      {/* Column headers */}
-      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, background: NAVY_MID }}>
-        <div style={{ width: 58, flexShrink: 0 }} />
+
+      {/* ── Day column headers ── */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+        <div style={{ width: timeColW, flexShrink: 0, display: "flex", alignItems: "flex-end",
+          justifyContent: "flex-end", padding: "0 0.5rem 0.45rem" }}>
+          <span style={{ fontSize: "0.58rem", color: GRAY_DIM, letterSpacing: "0.04em" }}>EST</span>
+        </div>
         {days.map((d, i) => {
           const isToday = toDS(d) === td;
           return (
-            <div key={i} style={{ flex: 1, textAlign: "center" as const, padding: "0.55rem 0.2rem", borderLeft: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ fontSize: "0.64rem", color: GRAY_DIM, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{JOURS_LABEL[i]}</div>
+            <div key={i} style={{ flex: 1, textAlign: "center" as const,
+              padding: "0.55rem 0.25rem 0.5rem",
+              borderLeft: "1px solid rgba(255,255,255,0.06)",
+              background: isToday ? "rgba(109,212,0,0.04)" : "transparent" }}>
+              <div style={{ fontSize: "0.63rem", fontWeight: 700, letterSpacing: "0.08em",
+                textTransform: "uppercase" as const, marginBottom: "0.3rem",
+                color: isToday ? GREEN : GRAY_DIM }}>
+                {DAY_ABBR_CAL[d.getDay()]}
+              </div>
               <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 30, height: 30, borderRadius: "50%", marginTop: "0.15rem",
+                width: 33, height: 33, borderRadius: "50%",
                 background: isToday ? GREEN : "transparent",
-                color: isToday ? NAVY : i === 6 ? GRAY_DIM : GRAY,
-                fontWeight: isToday ? 700 : 500, fontSize: "0.88rem" }}>
+                color: isToday ? NAVY : GRAY,
+                fontWeight: isToday ? 800 : 400, fontSize: "1rem" }}>
                 {d.getDate()}
               </div>
             </div>
@@ -711,33 +781,57 @@ function CalWeekView({ events, refDate, onSelect }: { events: CalEvent[]; refDat
         })}
       </div>
 
-      {/* All-day strip (tickets + messages + RDVs without time) */}
-      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, minHeight: 28 }}>
-        <div style={{ width: 58, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "0.5rem" }}>
-          <span style={{ fontSize: "0.58rem", color: GRAY_DIM, textTransform: "uppercase" as const }}>Jour</span>
+      {/* ── All-day strip (tickets, messages, RDVs without time) ── */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0, minHeight: 36 }}>
+        <div style={{ width: timeColW, flexShrink: 0, display: "flex", alignItems: "center",
+          justifyContent: "flex-end", paddingRight: "0.55rem" }}>
+          <span style={{ fontSize: "0.58rem", color: GRAY_DIM, textAlign: "right" as const,
+            textTransform: "uppercase" as const, lineHeight: 1.3 }}>Tout<br/>le jour</span>
         </div>
         {days.map((d, i) => {
-          const dayAllDay = allDay.filter(e => e.date === toDS(d));
+          const ds = toDS(d);
+          const isToday = ds === td;
+          const dayEvs = allDay.filter(e => e.date === ds);
           return (
-            <div key={i} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.04)", padding: "3px 2px" }}>
-              {dayAllDay.map(e => <CalEventBtn key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />)}
+            <div key={i} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.05)",
+              padding: "4px 4px", background: isToday ? "rgba(109,212,0,0.03)" : "transparent" }}>
+              {dayEvs.map(e => (
+                <CalEventCard key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />
+              ))}
             </div>
           );
         })}
       </div>
 
-      {/* Scrollable time grid */}
+      {/* ── Scrollable time grid ── */}
       <div style={{ flex: 1, overflowY: "auto" as const }}>
         <div style={{ display: "flex", position: "relative" as const }}>
+
           {/* Time axis */}
-          <div style={{ width: 58, flexShrink: 0, height: totalH, position: "relative" as const }}>
-            {Array.from({ length: CAL_END_H - CAL_START_H }, (_, i) => (
-              <div key={i} style={{ position: "absolute" as const, top: i * CAL_SLOT_H * 2 - 8, right: 8,
-                fontSize: "0.62rem", color: GRAY_DIM, userSelect: "none" as const }}>
-                {calPad(CAL_START_H + i)}:00
+          <div style={{ width: timeColW, flexShrink: 0, height: totalH,
+            position: "relative" as const, userSelect: "none" as const }}>
+            {Array.from({ length: CAL_END_H - CAL_START_H }, (_, i) => {
+              const hour = CAL_START_H + i;
+              const label = hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`;
+              return (
+                <div key={i} style={{ position: "absolute" as const,
+                  top: i * CAL_SLOT_H * 2 - 9, right: 10,
+                  fontSize: "0.6rem", color: GRAY_DIM, whiteSpace: "nowrap" as const }}>
+                  {label}
+                </div>
+              );
+            })}
+            {/* Current time label on axis */}
+            {showNow && todayInView && (
+              <div style={{ position: "absolute" as const, top: nowTop - 9, right: 4,
+                fontSize: "0.58rem", color: GREEN, fontWeight: 700,
+                whiteSpace: "nowrap" as const, zIndex: 12 }}>
+                {nowLabel}
               </div>
-            ))}
+            )}
           </div>
+
           {/* Day columns */}
           {days.map((d, di) => {
             const ds = toDS(d);
@@ -747,40 +841,41 @@ function CalWeekView({ events, refDate, onSelect }: { events: CalEvent[]; refDat
               <div key={di} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.06)",
                 position: "relative" as const, height: totalH,
                 background: isToday ? "rgba(109,212,0,0.025)" : "transparent" }}>
-                {/* Grid lines */}
-                {Array.from({ length: CAL_TOTAL_SLOTS }, (_, i) => (
-                  <div key={i} style={{ position: "absolute" as const, top: i * CAL_SLOT_H, left: 0, right: 0, height: 1,
-                    background: `rgba(255,255,255,${i % 2 === 0 ? "0.06" : "0.02"})` }} />
+
+                {/* Hourly lines */}
+                {Array.from({ length: CAL_END_H - CAL_START_H + 1 }, (_, i) => (
+                  <div key={i} style={{ position: "absolute" as const,
+                    top: i * CAL_SLOT_H * 2, left: 0, right: 0, height: 1,
+                    background: "rgba(255,255,255,0.07)" }} />
                 ))}
+                {/* Half-hour lines */}
+                {Array.from({ length: CAL_TOTAL_SLOTS }, (_, i) => i % 2 === 1 && (
+                  <div key={`h${i}`} style={{ position: "absolute" as const,
+                    top: i * CAL_SLOT_H, left: 0, right: 0, height: 1,
+                    background: "rgba(255,255,255,0.025)" }} />
+                ))}
+
                 {/* Current time line */}
-                {isToday && (() => {
-                  const now = new Date();
-                  const mins = (now.getHours() - CAL_START_H) * 60 + now.getMinutes();
-                  if (mins < 0 || mins > (CAL_END_H - CAL_START_H) * 60) return null;
-                  const top = (mins / 30) * CAL_SLOT_H;
-                  return (
-                    <div style={{ position: "absolute" as const, top, left: 0, right: 0, height: 2, background: RED, zIndex: 10, pointerEvents: "none" as const }}>
-                      <div style={{ position: "absolute" as const, left: -5, top: -5, width: 12, height: 12, borderRadius: "50%", background: RED }} />
-                    </div>
-                  );
-                })()}
+                {isToday && showNow && (
+                  <div style={{ position: "absolute" as const, top: nowTop, left: 0, right: 0,
+                    height: 2, background: GREEN, zIndex: 10, pointerEvents: "none" as const }}>
+                    <div style={{ position: "absolute" as const, left: -5, top: -4,
+                      width: 10, height: 10, borderRadius: "50%", background: GREEN }} />
+                  </div>
+                )}
+
                 {/* Timed RDV events */}
                 {dayTimed.map(e => {
                   const top = slotTopPx(e.heure!);
-                  const c = CAL_TYPE_COLORS[e.type];
                   return (
-                    <button key={`${e.type}-${e.id}`} onClick={() => onSelect(e)} style={{
-                      position: "absolute" as const, top, left: 3, right: 3, height: CAL_SLOT_H * 2,
-                      background: c.bg, border: `1px solid ${c.border}55`,
-                      borderLeft: `3px solid ${c.border}`, color: c.text,
-                      padding: "4px 7px", textAlign: "left" as const, cursor: "pointer",
-                      overflow: "hidden", borderRadius: 2, zIndex: 5 }}>
-                      <div style={{ fontSize: "0.72rem", fontWeight: 700, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
-                        {e.heure} · {e.title}
-                      </div>
-                      <div style={{ fontSize: "0.65rem", opacity: 0.75, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{e.subtitle}</div>
-                      <div style={{ marginTop: 2 }}><Badge statut={e.statut} /></div>
-                    </button>
+                    <div key={`${e.type}-${e.id}`} style={{
+                      position: "absolute" as const, top: top + 1, left: 4, right: 4,
+                      height: CAL_SLOT_H - 2, zIndex: 5,
+                      borderRadius: "0 8px 8px 0",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+                    }}>
+                      <CalEventCard e={e} onClick={() => onSelect(e)} />
+                    </div>
                   );
                 })}
               </div>
@@ -804,32 +899,51 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
     if (dayNum < 1 || dayNum > daysInMonth) return null;
     return new Date(year, month, dayNum);
   });
+
   return (
     <div style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, background: NAVY_MID }}>
+      {/* Day headers */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
         {JOURS_LABEL.map(d => (
-          <div key={d} style={{ textAlign: "center" as const, padding: "0.5rem", fontSize: "0.67rem", color: GRAY_DIM, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>{d}</div>
+          <div key={d} style={{ textAlign: "center" as const, padding: "0.6rem 0.4rem",
+            fontSize: "0.65rem", color: GRAY_DIM, fontWeight: 700,
+            textTransform: "uppercase" as const, letterSpacing: "0.08em" }}>{d}</div>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gridTemplateRows: "repeat(6,1fr)", flex: 1 }}>
+      {/* Day grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)",
+        gridTemplateRows: "repeat(6,1fr)", flex: 1 }}>
         {cells.map((day, i) => {
-          if (!day) return <div key={i} style={{ background: "rgba(0,0,0,0.18)", border: "1px solid rgba(255,255,255,0.04)" }} />;
+          if (!day) return (
+            <div key={i} style={{ background: "rgba(0,0,0,0.15)",
+              borderRight: "1px solid rgba(255,255,255,0.04)",
+              borderBottom: "1px solid rgba(255,255,255,0.04)" }} />
+          );
           const ds = toDS(day);
           const isToday = ds === td;
           const dayEvs = events.filter(e => e.date === ds);
           const visible = dayEvs.slice(0, 3);
           const more = dayEvs.length - 3;
           return (
-            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.05)", padding: "4px 5px", overflow: "hidden", display: "flex", flexDirection: "column" as const }}>
+            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.05)", padding: "6px 5px",
+              overflow: "hidden", display: "flex", flexDirection: "column" as const,
+              background: isToday ? "rgba(109,212,0,0.04)" : "transparent" }}>
               <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 24, height: 24, borderRadius: "50%", marginBottom: 3, flexShrink: 0,
+                width: 26, height: 26, borderRadius: "50%", marginBottom: 4, flexShrink: 0,
                 background: isToday ? GREEN : "transparent",
                 color: isToday ? NAVY : GRAY,
-                fontWeight: isToday ? 700 : 400, fontSize: "0.78rem" }}>
+                fontWeight: isToday ? 800 : 400, fontSize: "0.82rem" }}>
                 {day.getDate()}
               </div>
-              {visible.map(e => <CalEventBtn key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />)}
-              {more > 0 && <div style={{ fontSize: "0.62rem", color: GRAY_DIM, paddingLeft: 4 }}>+{more} autre{more > 1 ? "s" : ""}</div>}
+              {visible.map(e => (
+                <CalEventCard key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />
+              ))}
+              {more > 0 && (
+                <div style={{ fontSize: "0.62rem", color: GRAY_DIM, paddingLeft: 4, marginTop: 2 }}>
+                  +{more} autre{more > 1 ? "s" : ""}
+                </div>
+              )}
             </div>
           );
         })}
@@ -839,10 +953,10 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
 }
 
 function AdminCalendar() {
-  const [view, setView]       = useState<"week"|"month">("week");
-  const [refDate, setRefDate] = useState(new Date());
-  const [events, setEvents]   = useState<CalEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [view, setView]         = useState<"week"|"month">("week");
+  const [refDate, setRefDate]   = useState(new Date());
+  const [events, setEvents]     = useState<CalEvent[]>([]);
+  const [loading, setLoading]   = useState(true);
   const [selected, setSelected] = useState<CalEvent | null>(null);
 
   const loadAll = useCallback(async () => {
@@ -896,59 +1010,95 @@ function AdminCalendar() {
     if (view === "week") {
       const days = getWeekDays(refDate);
       const s = days[0]; const e = days[6];
-      if (s.getMonth() === e.getMonth()) return `${MOIS_LABEL[s.getMonth()]} ${s.getFullYear()}`;
-      return `${MOIS_LABEL[s.getMonth()]} – ${MOIS_LABEL[e.getMonth()]} ${e.getFullYear()}`;
+      if (s.getMonth() === e.getMonth()) return `${MOIS_LABEL[s.getMonth()]}, ${s.getFullYear()}`;
+      return `${MOIS_LABEL[s.getMonth()]} – ${MOIS_LABEL[e.getMonth()]}, ${e.getFullYear()}`;
     }
-    return `${MOIS_LABEL[refDate.getMonth()]} ${refDate.getFullYear()}`;
+    return `${MOIS_LABEL[refDate.getMonth()]}, ${refDate.getFullYear()}`;
   })();
 
-  const navBtn: React.CSSProperties = { background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: GRAY, fontSize: "1.1rem", cursor: "pointer", padding: "0.25rem 0.7rem", borderRadius: 3 };
+  const navBtn: React.CSSProperties = {
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    color: GRAY, fontSize: "1.1rem", cursor: "pointer", padding: "0.28rem 0.75rem",
+    borderRadius: 8, lineHeight: 1, transition: "background 0.15s",
+  };
 
   return (
     <div className="admin-fade" style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
-      {/* Top bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.8rem 1.4rem",
-        background: NAVY_MID, borderBottom: "1px solid rgba(255,255,255,0.07)", flexShrink: 0, flexWrap: "wrap" as const }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: "1.3rem", color: "#fff" }}>
+
+      {/* ── Datewise-style top bar ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "0.6rem",
+        padding: "0.7rem 1.1rem", background: NAVY_MID,
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        flexShrink: 0, flexWrap: "wrap" as const,
+      }}>
+
+        {/* Nav arrows */}
+        <button onClick={() => navigate(-1)} style={navBtn}>‹</button>
+        <button onClick={() => navigate(1)}  style={navBtn}>›</button>
+
+        {/* Month, Year label */}
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700,
+          fontSize: "1.12rem", color: "#fff", letterSpacing: "0.01em", minWidth: 190 }}>
           {headerLabel}
         </div>
+
         <div style={{ flex: 1 }} />
-        {/* Legend */}
-        <div style={{ display: "flex", gap: "0.9rem", alignItems: "center" }}>
-          {(["rdv","ticket","message"] as const).map(tp => (
-            <div key={tp} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-              <div style={{ width: 9, height: 9, borderRadius: "50%", background: CAL_TYPE_COLORS[tp].border }} />
-              <span style={{ fontSize: "0.7rem", color: GRAY }}>{tp === "rdv" ? "RDV" : tp === "ticket" ? "Ticket" : "Message"}</span>
-            </div>
-          ))}
+
+        {/* Legend dots */}
+        <div style={{ display: "flex", gap: "0.85rem", alignItems: "center" }}>
+          {(["rdv","ticket","message"] as const).map(tp => {
+            const c = CAL_TYPE_COLORS[tp];
+            const label = tp === "rdv" ? "Rendez-vous" : tp === "ticket" ? "Ticket" : "Message";
+            return (
+              <div key={tp} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.border }} />
+                <span style={{ fontSize: "0.7rem", color: GRAY }}>{label}</span>
+              </div>
+            );
+          })}
         </div>
-        {/* Navigation */}
-        <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
-          <button onClick={() => navigate(-1)} style={navBtn}>‹</button>
-          <button onClick={() => setRefDate(new Date())} style={{ ...navBtn, background: "rgba(109,212,0,0.1)", border: "1px solid rgba(109,212,0,0.3)", color: GREEN, fontSize: "0.78rem", fontWeight: 700 }}>Aujourd'hui</button>
-          <button onClick={() => navigate(1)} style={navBtn}>›</button>
-        </div>
-        {/* View toggle */}
-        <div style={{ display: "flex", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 3, overflow: "hidden" }}>
+
+        {/* Today */}
+        <button onClick={() => setRefDate(new Date())} style={{
+          ...navBtn, background: "rgba(109,212,0,0.1)", border: "1px solid rgba(109,212,0,0.3)",
+          color: GREEN, fontSize: "0.78rem", fontWeight: 700, padding: "0.3rem 0.9rem",
+        }}>Aujourd'hui</button>
+
+        {/* Week / Month toggle */}
+        <div style={{ display: "flex", background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
           {(["week","month"] as const).map(v => (
-            <button key={v} onClick={() => setView(v)} style={{ padding: "0.28rem 0.85rem", border: "none", cursor: "pointer",
-              background: view === v ? "rgba(109,212,0,0.15)" : "transparent",
-              color: view === v ? GREEN : GRAY, fontSize: "0.78rem", fontWeight: 700 }}>
+            <button key={v} onClick={() => setView(v)} style={{
+              padding: "0.3rem 0.85rem", border: "none", cursor: "pointer",
+              background: view === v ? "rgba(109,212,0,0.18)" : "transparent",
+              color: view === v ? GREEN : GRAY, fontSize: "0.78rem", fontWeight: 700,
+            }}>
               {v === "week" ? "Semaine" : "Mois"}
             </button>
           ))}
         </div>
-        <button onClick={loadAll} title="Rafraîchir" style={{ ...navBtn, fontSize: "1rem" }}>↺</button>
+
+        {/* Refresh */}
+        <button onClick={loadAll} title="Rafraîchir" style={{ ...navBtn, fontSize: "1rem", padding: "0.28rem 0.6rem" }}>↺</button>
       </div>
-      {/* Body */}
+
+      {/* ── Body ── */}
       <div style={{ flex: 1, overflow: "hidden" }}>
         {loading
-          ? <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: GRAY }}>Chargement du calendrier…</div>
+          ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center",
+              height: "100%", color: GRAY, fontSize: "0.9rem", gap: "0.5rem" }}>
+              <span style={{ display: "inline-block", animation: "adminFadeIn 0.6s ease infinite alternate" }}>⟳</span>
+              Chargement du calendrier…
+            </div>
+          )
           : view === "week"
             ? <CalWeekView events={events} refDate={refDate} onSelect={setSelected} />
             : <CalMonthView events={events} refDate={refDate} onSelect={setSelected} />
         }
       </div>
+
       {selected && <CalEventDetailPanel event={selected} onClose={() => setSelected(null)} />}
     </div>
   );
