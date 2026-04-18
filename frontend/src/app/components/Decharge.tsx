@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { TypewriterTitle } from "./TypewriterTitle";
-import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
+import { FloatingInput, FloatingTextarea, FloatingSelect } from "./FloatingInput";
+import { NAVY, NAVY_MID, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, labelStyle } from "../tokens";
 import { dechargesApi } from "../../api";
 
 
@@ -291,42 +292,21 @@ export function Decharge() {
                       {t("decharge.step2.title")}
                     </h3>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step2.type")}</label>
-                        <select name="appareil" value={form.appareil} onChange={handleChange} required style={{ ...inputStyle, cursor: "pointer" }}>
-                          <option value="">{t("decharge.step2.select")}</option>
-                          {deviceTypes.map((a) => (
-                            <option key={a} value={a} style={{ background: NAVY }}>{a}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step2.marque")}</label>
-                        <input name="marque" value={form.marque} onChange={handleChange} required placeholder={t("decharge.step2.marque_ph")} style={inputStyle} />
-                      </div>
+                      <FloatingSelect label={t("decharge.step2.type")} name="appareil" value={form.appareil} onChange={handleChange} required>
+                        <option value=""></option>
+                        {deviceTypes.map((a) => (
+                          <option key={a} value={a} style={{ background: NAVY }}>{a}</option>
+                        ))}
+                      </FloatingSelect>
+                      <FloatingInput label={t("decharge.step2.marque")} name="marque" value={form.marque} onChange={handleChange} required />
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step2.modele")}</label>
-                        <input name="modele" value={form.modele} onChange={handleChange} required placeholder={t("decharge.step2.modele_ph")} style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step2.serie")}</label>
-                        <input name="serie" value={form.serie} onChange={handleChange} placeholder={t("decharge.step2.serie_ph")} style={inputStyle} />
-                      </div>
+                      <FloatingInput label={t("decharge.step2.modele")} name="modele" value={form.modele} onChange={handleChange} required />
+                      <FloatingInput label={t("decharge.step2.serie")} name="serie" value={form.serie} onChange={handleChange} />
                     </div>
-                    <div style={{ marginBottom: "1.2rem" }}>
-                      <label style={labelStyle}>{t("decharge.step2.probleme")}</label>
-                      <textarea name="probleme" value={form.probleme} onChange={handleChange} required rows={3} placeholder={t("decharge.step2.probleme_ph")} style={{ ...inputStyle, resize: "vertical" }} />
-                    </div>
-                    <div style={{ marginBottom: "1.2rem" }}>
-                      <label style={labelStyle}>{t("decharge.step2.etat")}</label>
-                      <input name="etatAppareil" value={form.etatAppareil} onChange={handleChange} placeholder={t("decharge.step2.etat_ph")} style={inputStyle} />
-                    </div>
-                    <div style={{ marginBottom: "1.5rem" }}>
-                      <label style={labelStyle}>{t("decharge.step2.accessoires")}</label>
-                      <input name="accessoires" value={form.accessoires} onChange={handleChange} placeholder={t("decharge.step2.accessoires_ph")} style={inputStyle} />
-                    </div>
+                    <FloatingTextarea label={t("decharge.step2.probleme")} name="probleme" value={form.probleme} onChange={handleChange} required rows={3} containerStyle={{ marginBottom: "1.2rem" }} />
+                    <FloatingInput label={t("decharge.step2.etat")} name="etatAppareil" value={form.etatAppareil} onChange={handleChange} containerStyle={{ marginBottom: "1.2rem" }} />
+                    <FloatingInput label={t("decharge.step2.accessoires")} name="accessoires" value={form.accessoires} onChange={handleChange} containerStyle={{ marginBottom: "1.5rem" }} />
                     <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
                       <button onClick={() => { if (form.appareil && form.marque && form.modele && form.probleme) goTo(2); }} style={{ ...btn(GREEN, NAVY) }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = GREEN_GLOW)}
@@ -344,24 +324,12 @@ export function Decharge() {
                       {t("decharge.step1.title")}
                     </h3>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.prenom")}</label>
-                        <input name="prenom" value={form.prenom} onChange={handleChange} required style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.nom")}</label>
-                        <input name="nom" value={form.nom} onChange={handleChange} required style={inputStyle} />
-                      </div>
+                      <FloatingInput label={t("decharge.step1.prenom")} name="prenom" value={form.prenom} onChange={handleChange} required />
+                      <FloatingInput label={t("decharge.step1.nom")} name="nom" value={form.nom} onChange={handleChange} required />
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.2rem", marginBottom: "1.2rem" }} className="rdv-grid">
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.email")}</label>
-                        <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
-                      </div>
-                      <div>
-                        <label style={labelStyle}>{t("decharge.step1.telephone")}</label>
-                        <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} required style={inputStyle} />
-                      </div>
+                      <FloatingInput label={t("decharge.step1.email")} name="email" type="email" value={form.email} onChange={handleChange} />
+                      <FloatingInput label={t("decharge.step1.telephone")} name="telephone" type="tel" value={form.telephone} onChange={handleChange} required />
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem" }}>
                       <button onClick={() => goTo(1)} style={{ ...btn("transparent", GRAY), border: "1px solid rgba(255,255,255,0.1)" }}>
