@@ -82,7 +82,7 @@ export function Rendezvous() {
   const [form, setForm] = useState({
     prenom: _saved.prenom || "", nom: _saved.nom || "",
     email: _saved.email || "", telephone: _saved.telephone || "",
-    service: "", probleme: "", urgence: false,
+    service: "", probleme: _saved.probleme || "", urgence: false,
   });
   const [sent, setSent] = useState(false);
   const [ticket, setTicket] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export function Rendezvous() {
 
   const SERVICES = t("rdv.services", { returnObjects: true }) as string[];
 
-  const CLIENT_FIELDS = ["prenom", "nom", "email", "telephone"] as const;
+  const CLIENT_FIELDS = ["prenom", "nom", "email", "telephone", "probleme"] as const;
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {

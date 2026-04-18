@@ -76,8 +76,8 @@ export function Decharge() {
   const [form, setForm] = useState({
     nom: _saved.nom || "", prenom: _saved.prenom || "",
     email: _saved.email || "", telephone: _saved.telephone || "",
-    appareil: "", marque: "", modele: "", serie: "",
-    probleme: "", etatAppareil: "", accessoires: "",
+    appareil: _saved.appareil || "", marque: "", modele: "", serie: "",
+    probleme: _saved.probleme || "", etatAppareil: "", accessoires: "",
     acceptConditions: false,
     acceptDiagnostic: false,
     acceptFacturation: false,
@@ -100,7 +100,7 @@ export function Decharge() {
   const stepTitles = t("decharge.steps", { returnObjects: true }) as string[];
   const deviceTypes = t("decharge.step2.types", { returnObjects: true }) as string[];
 
-  const CLIENT_FIELDS = ["prenom", "nom", "email", "telephone"] as const;
+  const CLIENT_FIELDS = ["prenom", "nom", "email", "telephone", "appareil", "probleme"] as const;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const newVal = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;

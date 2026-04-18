@@ -11,6 +11,8 @@ export type StoredClient = {
   nom?: string;
   email?: string;
   telephone?: string;
+  appareil?: string;   // type d'appareil (partagé entre Rendezvous service et Decharge appareil)
+  probleme?: string;   // description du problème
 };
 
 export function loadClient(): StoredClient {
