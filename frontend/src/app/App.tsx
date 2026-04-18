@@ -40,6 +40,10 @@ export default function App() {
         html { scroll-behavior: smooth; }
         body { margin: 0; padding: 0; background: #0c0c12; }
 
+        @keyframes blink-cursor {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
+        }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(28px); }
           to   { opacity: 1; transform: translateY(0); }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { TypewriterTitle } from "./TypewriterTitle";
 import {
   NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM,
   FONT_DISPLAY, FONT_BODY,
@@ -66,7 +67,7 @@ export function FAQ() {
                 textTransform: "uppercase", letterSpacing: "0.02em",
                 margin: "0.6rem 0 1rem", lineHeight: 1.1,
               }}>
-                {t("faq.title")}
+                <TypewriterTitle text={t("faq.title")} />
               </h2>
               <p style={{
                 fontFamily: FONT_BODY, fontSize: "0.95rem", color: GRAY,

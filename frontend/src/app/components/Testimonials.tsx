@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { TypewriterTitle } from "./TypewriterTitle";
 import {
   NAVY, NAVY_LIGHT, GREEN, WHITE, GRAY, GRAY_DIM,
   FONT_DISPLAY, FONT_BODY,
@@ -191,7 +192,7 @@ export function Testimonials() {
               textTransform: "uppercase", letterSpacing: "0.02em",
               margin: "0.6rem 0 1rem",
             }}>
-              {t("testimonials.title")}
+              <TypewriterTitle text={t("testimonials.title")} />
             </h2>
             <a
               href={GOOGLE_URL}

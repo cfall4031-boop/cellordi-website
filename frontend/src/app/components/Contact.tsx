@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { TypewriterTitle } from "./TypewriterTitle";
 import { NAVY, NAVY_MID, GREEN, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY } from "../tokens";
 
 
@@ -69,7 +70,7 @@ export function Contact() {
               {t("contact.tag")}
             </span>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
-              {t("contact.title")}
+              <TypewriterTitle text={t("contact.title")} />
             </h2>
           </div>
         </FadeUp>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { TypewriterTitle } from "./TypewriterTitle";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { ticketsApi } from "../../api";
 
@@ -58,7 +59,7 @@ export function Suivi() {
               {t("suivi.tag")}
             </span>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
-              {t("suivi.title")}
+              <TypewriterTitle text={t("suivi.title")} />
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem" }}>
               {t("suivi.subtitle")}

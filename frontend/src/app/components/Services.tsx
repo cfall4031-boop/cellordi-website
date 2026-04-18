@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { GlowCard } from "./GlowCard";
+import { TypewriterTitle } from "./TypewriterTitle";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLAY, FONT_BODY } from "../tokens";
 
 // ─── Icônes SVG ──────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ export function Services() {
               {t("services.tag")}
             </span>
             <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
-              {t("services.title")}
+              <TypewriterTitle text={t("services.title")} />
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", maxWidth: "520px", margin: "0 auto" }}>
               {t("services.subtitle")}

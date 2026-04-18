@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
+import { TypewriterTitle } from "./TypewriterTitle";
 import {
   NAVY, NAVY_MID, GREEN, GREEN_GLOW,
   WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY,
@@ -182,7 +183,7 @@ export function Rendezvous() {
               fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: WHITE,
               textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.5rem 0 0.6rem",
             }}>
-              {t("rdv.title")}
+              <TypewriterTitle text={t("rdv.title")} />
             </h2>
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "0.95rem" }}>
               {t("rdv.subtitle")}
