@@ -236,24 +236,28 @@ db.exec(`
   );
 `);
 
-// Horaires officiels : Lun–Ven 10h–19h, Sam 11h–18h, Dim fermé
+// Horaires officiels : Lun–Ven 10:30–19h, Sam 11:30–18h, Dim fermé
 function seedHoraires() {
   const count = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo").get();
   if (count.c > 0) return;
-  const heuresLV  = ["10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
-  const heuresSam = ["11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
+  const heuresLV  = ["10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00"];
+  const heuresSam = ["11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
   const insert = db.prepare("INSERT OR IGNORE INTO horaires_dispo (jour, heure, actif) VALUES (?, ?, ?)");
   const insertMany = db.transaction(() => {
-    for (let jour = 1; jour <= 5; jour++) {   // Lun–Ven actifs 10h–19h
+    for (let jour = 1; jour <= 5; jour++) {   // Lun–Ven actifs 10:30–19h
       for (const h of heuresLV) insert.run(jour, h, 1);
     }
-    for (const h of heuresSam) {              // Sam actifs 11h–18h
+    for (const h of heuresSam) {              // Sam actifs 11:30–18h
       insert.run(6, h, 1);
     }
   });
   insertMany();
-  console.log("✅ Horaires initialisés : Lun–Ven 10h–19h, Sam 11h–18h, Dim fermé.");
+  console.log("✅ Horaires initialisés : Lun–Ven 10:30–19h, Sam 11:30–18h, Dim fermé.");
 }
+
+// Migration : supprimer les créneaux hors-horaires (10:00 LV, 11:00 Sam)
+db.prepare("DELETE FROM horaires_dispo WHERE jour BETWEEN 1 AND 5 AND heure = '10:00'").run();
+db.prepare("DELETE FROM horaires_dispo WHERE jour = 6 AND heure = '11:00'").run();
 
 // Migration : si l'ancien schedule (sans :30) est détecté, effacer et re-seeder
 const hasOldSchedule = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '09:00' AND actif = 1").get();
