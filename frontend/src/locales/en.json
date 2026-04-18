@@ -14,13 +14,14 @@
   "hero": {
     "tag": "Free Diagnostic",
     "main_title": "We fix your device.",
+    "prefix": "We fix",
     "phrases": [
-      "We fix your device.",
-      "We optimize your device.",
-      "We clean your device.",
-      "We recover your data.",
-      "We protect your device.",
-      "We make your device like new."
+      "your phone.",
+      "your computer.",
+      "your broken screen.",
+      "your data.",
+      "your Mac.",
+      "your Samsung."
     ],
     "headline2": "Phones & Computers",
     "cta_call": "Call Now",

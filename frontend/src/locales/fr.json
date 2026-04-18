@@ -14,13 +14,14 @@
   "hero": {
     "tag": "Diagnostic gratuit",
     "main_title": "On répare votre appareil.",
+    "prefix": "On répare",
     "phrases": [
-      "On répare votre appareil.",
-      "On optimise votre appareil.",
-      "On nettoie votre appareil.",
-      "On récupère vos données.",
-      "On protège votre appareil.",
-      "On remet votre appareil à neuf."
+      "votre téléphone.",
+      "votre ordinateur.",
+      "votre écran brisé.",
+      "vos données.",
+      "votre Mac.",
+      "votre Samsung."
     ],
     "headline2": "Cellulaires & Ordinateurs",
     "cta_call": "Appeler maintenant",
