@@ -14,6 +14,14 @@
   "hero": {
     "tag": "Diagnostic gratuit",
     "main_title": "On répare votre appareil.",
+    "phrases": [
+      "On répare votre appareil.",
+      "On optimise votre appareil.",
+      "On nettoie votre appareil.",
+      "On récupère vos données.",
+      "On protège votre appareil.",
+      "On remet votre appareil à neuf."
+    ],
     "headline2": "Cellulaires & Ordinateurs",
     "cta_call": "Appeler maintenant",
     "cta_suivi": "Suivre ma réparation",

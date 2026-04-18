@@ -1,14 +1,99 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { NAVY, GREEN, GREEN_GLOW, WHITE, FONT_DISPLAY, FONT_BODY, btn } from "../tokens";
 
-// Téléphone cassé — fond noir naturel
 const PHONE_IMG = "/phone-cracked.jpg";
+
+// ─── Scramble chars — uppercase + tech symbols for terminal feel ───
+const SCRAMBLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#!$%&?";
+
+/**
+ * Cycles through `phrases` with a scramble-reveal / dissolve-out animation.
+ *   scramble-in  → hold → dissolve → next phrase
+ */
+function useScrambleCycle(phrases: string[], speed = 26, holdMs = 2600) {
+  const [display, setDisplay] = useState(phrases[0] ?? "");
+  const timerRef   = useRef<ReturnType<typeof setInterval>  | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>   | null>(null);
+
+  useEffect(() => {
+    if (!phrases.length) return;
+    let alive = true;
+
+    const rand = () => SCRAMBLE[Math.floor(Math.random() * SCRAMBLE.length)];
+
+    /** Reveal phrase left-to-right, scrambling unrevealed chars */
+    function scrambleIn(phrase: string): Promise<void> {
+      return new Promise((resolve) => {
+        let iter = 0;
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          if (!alive) return;
+          setDisplay(
+            phrase.split("").map((ch, i) => {
+              if (ch === " ") return " ";
+              return i < iter ? ch : rand();
+            }).join("")
+          );
+          if (iter >= phrase.length) {
+            clearInterval(timerRef.current!);
+            setDisplay(phrase);
+            resolve();
+          }
+          iter += 0.45;
+        }, speed);
+      });
+    }
+
+    /** All chars dissolve into random noise */
+    function dissolve(phrase: string): Promise<void> {
+      return new Promise((resolve) => {
+        let ticks = 0;
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          if (!alive) return;
+          setDisplay(phrase.split("").map(ch => ch === " " ? " " : rand()).join(""));
+          if (++ticks >= 8) { clearInterval(timerRef.current!); resolve(); }
+        }, 36);
+      });
+    }
+
+    const wait = (ms: number) =>
+      new Promise<void>((res) => { timeoutRef.current = setTimeout(res, ms); });
+
+    async function loop() {
+      let i = 0;
+      while (alive) {
+        await scrambleIn(phrases[i]);
+        await wait(holdMs);
+        await dissolve(phrases[i]);
+        await wait(120);
+        i = (i + 1) % phrases.length;
+      }
+    }
+
+    loop();
+
+    return () => {
+      alive = false;
+      if (timerRef.current)   clearInterval(timerRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return display;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function Hero() {
   const { t } = useTranslation();
   const [hovCta, setHovCta] = useState(false);
   const [hovSec, setHovSec] = useState(false);
+
+  const phrases  = t("hero.phrases", { returnObjects: true }) as string[];
+  const scrambled = useScrambleCycle(phrases);
 
   return (
     <section
@@ -22,8 +107,6 @@ export function Hero() {
         overflow: "hidden",
       }}
     >
-
-
       {/* ── Ligne verte top gauche ── */}
       <div style={{
         position: "absolute", top: 0, left: 0,
@@ -61,7 +144,11 @@ export function Hero() {
           marginBottom: "2rem",
           width: "fit-content",
         }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: GREEN, display: "inline-block", animation: "pulse-dot 1.5s ease-in-out infinite" }} />
+          <span style={{
+            width: 7, height: 7, borderRadius: "50%",
+            background: GREEN, display: "inline-block",
+            animation: "pulse-dot 1.5s ease-in-out infinite",
+          }} />
           <span style={{
             fontFamily: FONT_DISPLAY,
             fontSize: "0.75rem",
@@ -74,7 +161,7 @@ export function Hero() {
           </span>
         </div>
 
-        {/* H1 — punch court */}
+        {/* H1 — scramble cycle */}
         <h1 style={{
           fontFamily: FONT_DISPLAY,
           fontWeight: 900,
@@ -84,8 +171,26 @@ export function Hero() {
           letterSpacing: "-0.02em",
           textTransform: "uppercase" as const,
           margin: "0 0 0.6rem",
+          minHeight: "3em",          /* prevent layout shift */
+          display: "flex",
+          alignItems: "flex-start",
+          flexDirection: "column",
+          justifyContent: "flex-start",
         }}>
-          {t("hero.main_title")}
+          <span style={{ display: "block" }}>
+            {scrambled}
+            {/* blinking cursor */}
+            <span style={{
+              display: "inline-block",
+              width: "3px",
+              height: "0.8em",
+              background: GREEN,
+              marginLeft: "6px",
+              verticalAlign: "middle",
+              borderRadius: "1px",
+              animation: "blink-cursor 1s step-end infinite",
+            }} />
+          </span>
         </h1>
 
         {/* Sous-titre service — vert */}
@@ -154,14 +259,14 @@ export function Hero() {
           justifyContent: "center",
         }}
       >
-        {/* Fondu haut — image vers fond hero */}
+        {/* Fondu haut */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0,
           height: "35%",
           background: `linear-gradient(to bottom, ${NAVY} 0%, transparent 100%)`,
           pointerEvents: "none", zIndex: 7,
         }} />
-        {/* Fondu bas — vers couleur de la section suivante */}
+        {/* Fondu bas */}
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
           height: "30%",
@@ -176,7 +281,6 @@ export function Hero() {
           pointerEvents: "none", zIndex: 7,
         }} />
 
-        {/* Téléphone cassé — fond noir, affiché directement */}
         <img
           id="hero-phone"
           src={PHONE_IMG}
@@ -189,13 +293,16 @@ export function Hero() {
             zIndex: 6,
           }}
         />
-
       </div>
 
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%       { opacity: 0.5; transform: scale(1.6); }
+        }
+        @keyframes blink-cursor {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
         }
         @media (max-width: 900px) {
           #hero {
