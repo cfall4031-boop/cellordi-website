@@ -158,8 +158,20 @@ router.get("/slots", (req, res) => {
   ).all(date);
   const bookedSet = new Set(booked.map(s => s.heure));
 
-  // Retourner uniquement les créneaux libres
-  const available = activeSlots.filter(s => !bookedSet.has(s.heure));
+  // Si la date demandée est aujourd'hui, exclure les créneaux déjà passés
+  const todayStr = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Toronto" }); // "YYYY-MM-DD"
+  let minHeure = null;
+  if (date === todayStr) {
+    const now = new Date();
+    const hh = now.toLocaleTimeString("fr-CA", { timeZone: "America/Toronto", hour: "2-digit", minute: "2-digit", hour12: false });
+    minHeure = hh; // ex: "14:32"
+  }
+
+  // Retourner uniquement les créneaux libres (et futurs si aujourd'hui)
+  const available = activeSlots.filter(s =>
+    !bookedSet.has(s.heure) &&
+    (minHeure === null || s.heure > minHeure)
+  );
   res.json({ slots: available.map(s => s.heure) });
 });
 
