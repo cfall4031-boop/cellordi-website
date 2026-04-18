@@ -83,6 +83,43 @@
       }
     ]
   },
+  "faq": {
+    "tag": "On répond à vos questions",
+    "title": "Questions fréquentes",
+    "subtitle": "Pas de jargon, des réponses claires sur nos services. Une question qui ne figure pas ici ? Contactez-nous directement.",
+    "contact_btn": "Nous contacter",
+    "footer_note": "Vous avez une question spécifique à votre appareil ? Écrivez-nous — diagnostic gratuit, réponse rapide.",
+    "items": [
+      {
+        "q": "Combien coûte une réparation d'écran iPhone ?",
+        "a": "Le prix varie selon le modèle. Comptez généralement entre 79 $ et 199 $ pour un écran iPhone (11 à 15 Pro Max). Le diagnostic est toujours gratuit et un devis vous est remis avant toute intervention."
+      },
+      {
+        "q": "Combien de temps prend une réparation ?",
+        "a": "La plupart des réparations courantes (écran, batterie, connecteur) sont effectuées en moins de 2 heures. Pour les cas plus complexes comme la récupération de données ou les réparations de carte mère, comptez 24 à 48 heures."
+      },
+      {
+        "q": "Est-ce que vous offrez une garantie sur les réparations ?",
+        "a": "Oui — toutes nos réparations sont couvertes par une garantie de 90 jours sur les pièces et la main-d'œuvre. Si un problème directement lié à notre intervention survient, on le règle sans frais supplémentaires."
+      },
+      {
+        "q": "Réparez-vous tous les modèles de téléphones ?",
+        "a": "On répare iPhone (tous modèles depuis iPhone 6), Samsung Galaxy, Google Pixel, Huawei et la plupart des appareils Android populaires. En cas de doute, apportez votre appareil pour un diagnostic gratuit."
+      },
+      {
+        "q": "Que se passe-t-il si mon appareil ne peut pas être réparé ?",
+        "a": "Le diagnostic reste gratuit, même si la réparation s'avère impossible. On vous explique honnêtement la situation et vous conseille sur les meilleures options : récupération de données, remplacement ou autres solutions."
+      },
+      {
+        "q": "Puis-je récupérer mes photos et données avant la réparation ?",
+        "a": "Oui, la récupération de données est un service que nous offrons. Même sur un appareil dont l'écran est complètement brisé ou qui ne démarre plus, nous pouvons extraire vos photos, contacts et fichiers importants."
+      },
+      {
+        "q": "Offrez-vous des services informatiques pour les entreprises ?",
+        "a": "Absolument. Nous proposons des contrats d'entretien informatique mensuels, du support prioritaire en moins de 4h, des audits de sécurité et la gestion de parc informatique pour les PME de la région de Montréal."
+      }
+    ]
+  },
   "testimonials": {
     "tag": "Ils nous font confiance",
     "title": "Ce que disent nos clients",

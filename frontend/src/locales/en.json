@@ -83,6 +83,43 @@
       }
     ]
   },
+  "faq": {
+    "tag": "We answer your questions",
+    "title": "Frequently asked questions",
+    "subtitle": "No jargon — just clear answers about our services. Don't see your question? Reach out directly.",
+    "contact_btn": "Contact us",
+    "footer_note": "Have a question specific to your device? Write to us — free diagnostic, fast response.",
+    "items": [
+      {
+        "q": "How much does an iPhone screen repair cost?",
+        "a": "Pricing varies by model. Expect between $79 and $199 for an iPhone screen (11 to 15 Pro Max). Diagnostics are always free, and we provide a full quote before any work begins."
+      },
+      {
+        "q": "How long does a repair take?",
+        "a": "Most common repairs (screen, battery, charging port) are completed in under 2 hours. For more complex cases like data recovery or motherboard repairs, allow 24 to 48 hours."
+      },
+      {
+        "q": "Do you offer a warranty on repairs?",
+        "a": "Yes — all repairs come with a 90-day warranty on both parts and labour. If an issue directly related to our work arises, we fix it at no extra charge."
+      },
+      {
+        "q": "Do you repair all phone models?",
+        "a": "We repair iPhone (all models from iPhone 6 onward), Samsung Galaxy, Google Pixel, Huawei, and most popular Android devices. Not sure? Bring it in for a free diagnostic."
+      },
+      {
+        "q": "What happens if my device can't be repaired?",
+        "a": "The diagnostic remains free even if the repair isn't possible. We'll explain the situation honestly and advise you on the best alternatives: data recovery, replacement options, or other solutions."
+      },
+      {
+        "q": "Can I recover my photos and data before the repair?",
+        "a": "Yes, data recovery is a service we offer. Even on a device with a completely broken screen or one that won't turn on, we can often extract your photos, contacts, and important files."
+      },
+      {
+        "q": "Do you offer IT services for businesses?",
+        "a": "Absolutely. We offer monthly IT maintenance contracts, priority support under 4 hours, security audits, and full IT fleet management for SMBs in the Montreal area."
+      }
+    ]
+  },
   "testimonials": {
     "tag": "They trust us",
     "title": "What our clients say",
