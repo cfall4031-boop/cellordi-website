@@ -580,6 +580,15 @@ function getWeekDays(ref: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => { const dd = new Date(d); dd.setDate(d.getDate()+i); return dd; });
 }
 
+function getThreeDays(ref: Date): Date[] {
+  return [-1, 0, 1].map(offset => {
+    const d = new Date(ref);
+    d.setDate(ref.getDate() + offset);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+}
+
 function slotTopPx(heure: string): number {
   const [h, m] = heure.split(":").map(Number);
   return ((h - CAL_START_H) * 2 + m / 30) * CAL_SLOT_H;
@@ -733,13 +742,15 @@ function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () 
   );
 }
 
-function CalWeekView({ events, refDate, onSelect }: { events: CalEvent[]; refDate: Date; onSelect: (e: CalEvent) => void }) {
-  const days = getWeekDays(refDate);
+function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
+  events: CalEvent[]; refDate: Date; onSelect: (e: CalEvent) => void; isMobile?: boolean;
+}) {
+  const days = isMobile ? getThreeDays(refDate) : getWeekDays(refDate);
   const td = todayDS();
   const totalH = CAL_TOTAL_SLOTS * CAL_SLOT_H;
   const timedRdvs = events.filter(e => e.type === "rdv" && e.heure);
   const allDay    = events.filter(e => e.type !== "rdv" || !e.heure);
-  const timeColW  = 72;
+  const timeColW  = isMobile ? 50 : 72;
 
   const now = new Date();
   const nowMins = (now.getHours() - CAL_START_H) * 60 + now.getMinutes();
@@ -754,26 +765,27 @@ function CalWeekView({ events, refDate, onSelect }: { events: CalEvent[]; refDat
       {/* ── Day column headers ── */}
       <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
         <div style={{ width: timeColW, flexShrink: 0, display: "flex", alignItems: "flex-end",
-          justifyContent: "flex-end", padding: "0 0.5rem 0.45rem" }}>
-          <span style={{ fontSize: "0.58rem", color: GRAY_DIM, letterSpacing: "0.04em" }}>EST</span>
+          justifyContent: "flex-end", padding: "0 0.4rem 0.45rem" }}>
+          {!isMobile && <span style={{ fontSize: "0.55rem", color: GRAY_DIM, letterSpacing: "0.04em" }}>EST</span>}
         </div>
         {days.map((d, i) => {
           const isToday = toDS(d) === td;
+          const circleSize = isMobile ? 30 : 33;
           return (
             <div key={i} style={{ flex: 1, textAlign: "center" as const,
-              padding: "0.55rem 0.25rem 0.5rem",
+              padding: isMobile ? "0.45rem 0.1rem 0.4rem" : "0.55rem 0.25rem 0.5rem",
               borderLeft: "1px solid rgba(255,255,255,0.06)",
               background: isToday ? "rgba(109,212,0,0.04)" : "transparent" }}>
-              <div style={{ fontSize: "0.63rem", fontWeight: 700, letterSpacing: "0.08em",
-                textTransform: "uppercase" as const, marginBottom: "0.3rem",
+              <div style={{ fontSize: isMobile ? "0.55rem" : "0.63rem", fontWeight: 700, letterSpacing: "0.06em",
+                textTransform: "uppercase" as const, marginBottom: "0.25rem",
                 color: isToday ? GREEN : GRAY_DIM }}>
                 {DAY_ABBR_CAL[d.getDay()]}
               </div>
               <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 33, height: 33, borderRadius: "50%",
+                width: circleSize, height: circleSize, borderRadius: "50%",
                 background: isToday ? GREEN : "transparent",
                 color: isToday ? NAVY : GRAY,
-                fontWeight: isToday ? 800 : 400, fontSize: "1rem" }}>
+                fontWeight: isToday ? 800 : 400, fontSize: isMobile ? "0.88rem" : "1rem" }}>
                 {d.getDate()}
               </div>
             </div>
@@ -952,6 +964,46 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
   );
 }
 
+// ── MOBILE BOTTOM NAV ─────────────────────────────────────────
+const BOTTOM_NAV_ITEMS = [
+  { id: "overview",  icon: "📆", label: "Calendrier" },
+  { id: "rdv",       icon: "📅", label: "RDV"        },
+  { id: "tickets",   icon: "🎫", label: "Tickets"    },
+  { id: "messages",  icon: "✉️",  label: "Messages"  },
+  { id: "decharges", icon: "📋", label: "Décharges"  },
+];
+
+function MobileBottomNav({ active, setActive }: { active: string; setActive: (s: string) => void }) {
+  return (
+    <nav style={{
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
+      background: NAVY_MID, borderTop: "1px solid rgba(255,255,255,0.12)",
+      display: "flex", height: 58,
+    }}>
+      {BOTTOM_NAV_ITEMS.map(item => {
+        const isActive = active === item.id;
+        return (
+          <button key={item.id} onClick={() => setActive(item.id)} style={{
+            flex: 1, display: "flex", flexDirection: "column" as const,
+            alignItems: "center", justifyContent: "center", gap: 2,
+            border: "none", background: "transparent", cursor: "pointer",
+            color: isActive ? GREEN : GRAY_DIM, padding: "4px 0",
+            borderTop: isActive ? `2px solid ${GREEN}` : "2px solid transparent",
+            transition: "color 0.15s, border-color 0.15s",
+          }}>
+            <span style={{ fontSize: "1.15rem", lineHeight: 1 }}>{item.icon}</span>
+            <span style={{ fontSize: "0.52rem", fontWeight: isActive ? 700 : 400,
+              letterSpacing: "0.03em", marginTop: 1 }}>
+              {item.label}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ── ADMIN CALENDAR ────────────────────────────────────────────
 function AdminCalendar() {
   const [view, setView]         = useState<"week"|"month">("week");
   const [refDate, setRefDate]   = useState(new Date());
@@ -997,10 +1049,12 @@ function AdminCalendar() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
+  const { isMobile, openSidebar } = React.useContext(MobileCtx);
+
   const navigate = (dir: -1 | 1) => {
     setRefDate(prev => {
       const d = new Date(prev);
-      if (view === "week") d.setDate(d.getDate() + dir * 7);
+      if (view === "week") d.setDate(d.getDate() + dir * (isMobile ? 3 : 7));
       else d.setMonth(d.getMonth() + dir);
       return d;
     });
@@ -1008,7 +1062,7 @@ function AdminCalendar() {
 
   const headerLabel = (() => {
     if (view === "week") {
-      const days = getWeekDays(refDate);
+      const days = isMobile ? getThreeDays(refDate) : getWeekDays(refDate);
       const s = days[0]; const e = days[6];
       if (s.getMonth() === e.getMonth()) return `${MOIS_LABEL[s.getMonth()]}, ${s.getFullYear()}`;
       return `${MOIS_LABEL[s.getMonth()]} – ${MOIS_LABEL[e.getMonth()]}, ${e.getFullYear()}`;
@@ -1033,6 +1087,13 @@ function AdminCalendar() {
         flexShrink: 0, flexWrap: "wrap" as const,
       }}>
 
+        {/* Hamburger — mobile only */}
+        {isMobile && (
+          <button onClick={openSidebar} style={{ background:"none", border:"none",
+            color:"#fff", fontSize:"1.4rem", cursor:"pointer", padding:"0.2rem 0.4rem",
+            lineHeight: 1, flexShrink: 0 }}>☰</button>
+        )}
+
         {/* Nav arrows */}
         <button onClick={() => navigate(-1)} style={navBtn}>‹</button>
         <button onClick={() => navigate(1)}  style={navBtn}>›</button>
@@ -1045,8 +1106,8 @@ function AdminCalendar() {
 
         <div style={{ flex: 1 }} />
 
-        {/* Legend dots */}
-        <div style={{ display: "flex", gap: "0.85rem", alignItems: "center" }}>
+        {/* Legend dots — desktop only */}
+        <div style={{ display: isMobile ? "none" : "flex", gap: "0.85rem", alignItems: "center" }}>
           {(["rdv","ticket","message"] as const).map(tp => {
             const c = CAL_TYPE_COLORS[tp];
             const label = tp === "rdv" ? "Rendez-vous" : tp === "ticket" ? "Ticket" : "Message";
@@ -1094,7 +1155,7 @@ function AdminCalendar() {
             </div>
           )
           : view === "week"
-            ? <CalWeekView events={events} refDate={refDate} onSelect={setSelected} />
+            ? <CalWeekView events={events} refDate={refDate} onSelect={setSelected} isMobile={isMobile} />
             : <CalMonthView events={events} refDate={refDate} onSelect={setSelected} />
         }
       </div>
@@ -3150,10 +3211,12 @@ export default function Admin() {
         <style>{globalStyles}</style>
         <Sidebar active={active} setActive={setActive} adminNom={adminNom} onLogout={handleLogout}
           isMobile={isMobile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}/>
-        <main style={{ flex:1, marginLeft: isMobile ? 0 : 240, display:"flex", flexDirection:"column", overflow:"auto", background:NAVY }}>
+        <main style={{ flex:1, marginLeft: isMobile ? 0 : 240, display:"flex", flexDirection:"column",
+          overflow:"auto", background:NAVY, paddingBottom: isMobile ? 58 : 0 }}>
           {sections[active]}
         </main>
       </div>
+      {isMobile && <MobileBottomNav active={active} setActive={setActive} />}
     </MobileCtx.Provider>
   );
 }
