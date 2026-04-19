@@ -967,7 +967,7 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
 // ── MOBILE BOTTOM NAV ─────────────────────────────────────────
 const BOTTOM_NAV_ITEMS = [
   { id: "overview",  icon: "📆", label: "Calendrier" },
-  { id: "rdv",       icon: "📅", label: "RDV"        },
+  { id: "rdvs",      icon: "📅", label: "RDV"        },
   { id: "tickets",   icon: "🎫", label: "Tickets"    },
   { id: "messages",  icon: "✉️",  label: "Messages"  },
   { id: "decharges", icon: "📋", label: "Décharges"  },
@@ -1063,7 +1063,7 @@ function AdminCalendar() {
   const headerLabel = (() => {
     if (view === "week") {
       const days = isMobile ? getThreeDays(refDate) : getWeekDays(refDate);
-      const s = days[0]; const e = days[6];
+      const s = days[0]; const e = days[days.length - 1];
       if (s.getMonth() === e.getMonth()) return `${MOIS_LABEL[s.getMonth()]}, ${s.getFullYear()}`;
       return `${MOIS_LABEL[s.getMonth()]} – ${MOIS_LABEL[e.getMonth()]}, ${e.getFullYear()}`;
     }
