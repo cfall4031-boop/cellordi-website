@@ -31,25 +31,35 @@ const IconShield = () => (
   </svg>
 );
 
-const IconGlobe = () => (
+// Signal bars — Forfaits Cellulaires
+const IconSignal = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/>
-    <line x1="2" y1="12" x2="22" y2="12" strokeOpacity="0.5"/>
-    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    <rect x="2" y="16" width="3" height="5" rx="0.5"/>
+    <rect x="7.5" y="11" width="3" height="10" rx="0.5"/>
+    <rect x="13" y="6" width="3" height="15" rx="0.5"/>
+    <rect x="18.5" y="1" width="3" height="20" rx="0.5"/>
   </svg>
 );
 
-const IconCloud = () => (
+// Wifi + maison — Internet Résidentiel
+const IconWifiHome = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
-    <polyline points="16 16 12 12 8 16" strokeOpacity="0.7"/>
-    <line x1="12" y1="12" x2="12" y2="21" strokeOpacity="0.7"/>
+    <path d="M1.5 8.5C5 5 9.3 3 12 3s7 2 10.5 5.5" strokeOpacity="0.45"/>
+    <path d="M4.5 11.5C7 9 9.7 8 12 8s5 1 7.5 3.5" strokeOpacity="0.7"/>
+    <path d="M7.5 14.5C9 13 10.5 12.5 12 12.5s3 .5 4.5 2"/>
+    <circle cx="12" cy="18" r="1.2" fill={GREEN} stroke="none"/>
+    <path d="M10 21h4" strokeOpacity="0.5"/>
   </svg>
 );
 
-const IconWrench = () => (
+// Casque + étoile — Conseiller Télécom
+const IconHeadsetStar = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    <path d="M3 11a9 9 0 0 1 18 0"/>
+    <rect x="2" y="11" width="3" height="5" rx="1.5"/>
+    <rect x="19" y="11" width="3" height="5" rx="1.5"/>
+    <path d="M21 16v1a4 4 0 0 1-4 4h-2" strokeOpacity="0.6"/>
+    <polygon points="12,13 12.9,15.5 15.5,15.5 13.4,17 14.1,19.5 12,18 9.9,19.5 10.6,17 8.5,15.5 11.1,15.5" fill={GREEN} fillOpacity="0.25" stroke={GREEN} strokeWidth="1"/>
   </svg>
 );
 
@@ -64,9 +74,9 @@ const SERVICE_SLUGS = [
   { slug: "cellulaires", Icon: IconPhone },
   { slug: "ordinateurs", Icon: IconLaptop },
   { slug: "informatique", Icon: IconShield },
-  { slug: "web", Icon: IconGlobe },
-  { slug: "cloud", Icon: IconCloud },
-  { slug: "entretien", Icon: IconWrench },
+  { slug: "forfait",     Icon: IconSignal },
+  { slug: "internet",   Icon: IconWifiHome },
+  { slug: "telecom",    Icon: IconHeadsetStar },
 ];
 
 export function Services() {

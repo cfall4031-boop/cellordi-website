@@ -49,20 +49,20 @@
         "desc": "Installation OS, configuration réseau, antivirus, sauvegarde automatique.",
         "items": ["Install. Windows / macOS", "Réseau & WiFi sécurisé", "Antivirus entreprise", "Sauvegarde cloud"]
       },
-      "web": {
-        "title": "Développement Web",
-        "desc": "Sites vitrine, e-commerce et applications web sur mesure pour votre entreprise.",
-        "items": ["Site vitrine & SEO", "E-commerce Stripe", "Application web React", "Maintenance mensuelle"]
+      "forfait": {
+        "title": "Forfaits Cellulaires",
+        "desc": "Trouvez le meilleur forfait cellulaire au Québec. On compare les offres et on active sur place.",
+        "items": ["Forfaits 5G compétitifs", "Activation sur place ou en ligne", "Transfert de numéro inclus", "Appareils disponibles"]
       },
-      "cloud": {
-        "title": "Solutions Cloud",
-        "desc": "Migration cloud, stockage sécurisé, synchronisation multi-appareils.",
-        "items": ["Migration Google / M365", "Google Workspace", "NAS & stockage local", "Sauvegarde automatisée"]
+      "internet": {
+        "title": "Internet Résidentiel",
+        "desc": "Obtenez le meilleur service internet à la maison. On compare les fournisseurs et on vous guide.",
+        "items": ["Comparaison des fournisseurs", "Installation rapide", "Sans engagement disponible", "Service francophone"]
       },
-      "entretien": {
-        "title": "Contrats d'Entretien",
-        "desc": "Maintenance préventive pour entreprises. Support prioritaire et suivi personnalisé.",
-        "items": ["Maintenance mensuelle", "Support prioritaire < 4h", "Audit sécurité", "Rapport IT mensuel"]
+      "telecom": {
+        "title": "Conseiller Télécom",
+        "desc": "Un expert télécom à votre service. Analysez votre facture et économisez dès aujourd'hui.",
+        "items": ["Analyse de votre forfait actuel", "Économies garanties", "Consultation gratuite", "Plusieurs grands fournisseurs disponibles"]
       }
     }
   },
@@ -198,9 +198,9 @@
       "Réparation tablette",
       "Réparation ordinateur",
       "Service informatique",
-      "Développement web",
-      "Solution cloud",
-      "Contrat d'entretien",
+      "Forfait cellulaire",
+      "Internet résidentiel",
+      "Consultation télécom gratuite",
       "Autre"
     ],
     "dispos": [

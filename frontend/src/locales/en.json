@@ -49,20 +49,20 @@
         "desc": "OS installation, network setup, antivirus, automatic backup.",
         "items": ["Windows / macOS install", "Secure network & WiFi", "Enterprise antivirus", "Cloud backup"]
       },
-      "web": {
-        "title": "Web Development",
-        "desc": "Custom showcase sites, e-commerce and web applications for your business.",
-        "items": ["Showcase site & SEO", "Stripe E-commerce", "React web app", "Monthly maintenance"]
+      "forfait": {
+        "title": "Cell Phone Plans",
+        "desc": "Find the best cell phone plan in Quebec. We compare offers and activate on the spot.",
+        "items": ["Competitive 5G plans", "In-store or online activation", "Number transfer included", "Devices available"]
       },
-      "cloud": {
-        "title": "Cloud Solutions",
-        "desc": "Cloud migration, secure storage, multi-device synchronization.",
-        "items": ["Google / M365 migration", "Google Workspace", "NAS & local storage", "Automated backup"]
+      "internet": {
+        "title": "Home Internet",
+        "desc": "Get the best internet service at home. We compare providers and guide you through setup.",
+        "items": ["Provider comparison", "Fast installation", "No-contract options", "French-speaking service"]
       },
-      "entretien": {
-        "title": "Maintenance Contracts",
-        "desc": "Preventive maintenance for businesses. Priority support and personalized follow-up.",
-        "items": ["Monthly maintenance", "Priority support < 4h", "Security audit", "Monthly IT report"]
+      "telecom": {
+        "title": "Telecom Advisor",
+        "desc": "A telecom expert at your service. Analyze your bill and start saving today.",
+        "items": ["Current plan analysis", "Guaranteed savings", "Free consultation", "Multiple major providers available"]
       }
     }
   },
@@ -198,9 +198,9 @@
       "Tablet repair",
       "Computer repair",
       "IT service",
-      "Web development",
-      "Cloud solution",
-      "Maintenance contract",
+      "Cell phone plan",
+      "Home internet",
+      "Free telecom consultation",
       "Other"
     ],
     "dispos": [
