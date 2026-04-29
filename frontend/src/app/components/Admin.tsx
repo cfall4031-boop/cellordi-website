@@ -2303,21 +2303,71 @@ function CalculerPrix() {
 
 const BLANK_PIECE = {type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",cout_vente:"",fournisseur:"Tan Star Trade",notes:"",piece_detachee:false};
 
+// ── Table partagée pour les 2 sections ──────────────────────────────────────
+function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected }: {
+  pieces: any[]; isDetachee: boolean;
+  onEdit:(p:any,e:React.MouseEvent)=>void; onDelete:(id:number,e:React.MouseEvent)=>void;
+  onSelect:(p:any)=>void; selected:any|null;
+}) {
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:"#a8b8d0"};
+  const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
+  const accentColor = isDetachee ? ORANGE : GREEN;
+  const cols = isDetachee
+    ? ["Appareil","Modèle","Pièce","Achat ($)","Prix vente ($)","Fournisseur","MAJ",""]
+    : ["Appareil","Modèle","Pièce","Achat ($)","Vente service ($)","Fournisseur","MAJ",""];
+  return (
+    <div className="admin-table-scroll" style={{overflowX:"auto"}}>
+    <table style={{width:"100%",borderCollapse:"collapse"}}>
+      <thead><tr style={{borderBottom:`2px solid ${isDetachee?"rgba(245,158,11,0.25)":"rgba(109,212,0,0.2)"}`}}>
+        {cols.map(h=><th key={h} style={{...tdSt,color:"#a8b8d0",fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
+      </tr></thead>
+      <tbody>
+        {pieces.length===0 && <tr><td colSpan={8} style={{...tdSt,textAlign:"center",color:"#4a6080",padding:"2rem"}}>Aucune pièce dans cette section</td></tr>}
+        {pieces.map(p=>{const days=daysSince(p.updated_at); const isActive=selected?.id===p.id; return(
+          <tr key={p.id} onClick={()=>onSelect(p)}
+            style={{cursor:"pointer",background:isActive?`${accentColor}12`:"transparent",transition:"background 0.15s"}}>
+            <td style={{...tdSt,color:isActive?accentColor:"#fff",fontWeight:isActive?700:400}}>{p.type_appareil}</td>
+            <td style={tdSt}>{p.modele||"—"}</td>
+            <td style={tdSt}>{p.type_piece}</td>
+            <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
+            <td style={{...tdSt,color:p.cout_vente!=null?accentColor:"#4a6080",fontWeight:p.cout_vente!=null?600:400}}>{p.cout_vente!=null?`${p.cout_vente} $`:"—"}</td>
+            <td style={tdSt}>{p.fournisseur}</td>
+            <td style={{...tdSt,color:days>30?"#f59e0b":"#a8b8d0",fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
+            <td style={{...tdSt,whiteSpace:"nowrap"}}>
+              <button onClick={e=>onEdit(p,e)} title="Modifier" style={{background:"transparent",border:"none",color:"#38bdf8",cursor:"pointer",fontSize:"0.9rem",padding:"0 0.3rem"}}>✏️</button>
+              <button onClick={e=>onDelete(p.id,e)} title="Supprimer" style={{background:"transparent",border:"none",color:"#ff4d4d",cursor:"pointer",fontSize:"0.85rem",padding:"0 0.3rem"}}>🗑</button>
+            </td>
+          </tr>
+        );})}
+      </tbody>
+    </table>
+    </div>
+  );
+}
+
 function CataloguePieces() {
   const [pieces, setPieces] = useState<any[]>([]);
+  const [section, setSection] = useState<"service"|"detachee">("service");
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
   const [loading, setLoading] = useState(true);
-  // ── Edit
   const [editId, setEditId] = useState<number|null>(null);
   const [editForm, setEditForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
   const [saving, setSaving] = useState(false);
-  // ── Detail
   const [detail, setDetail] = useState<any|null>(null);
+
+  const isDetachee = section === "detachee";
+  const accentColor = isDetachee ? ORANGE : GREEN;
+  const accentBg = isDetachee ? "rgba(245,158,11,0.12)" : "rgba(109,212,0,0.12)";
 
   const load = () => { prixApi.getCatalogue().then((d:any)=>setPieces(d.pieces||[])).catch(console.error).finally(()=>setLoading(false)); };
   useEffect(load,[]);
+
+  const serviceList  = pieces.filter(p=>!p.piece_detachee);
+  const detacheeList = pieces.filter(p=> p.piece_detachee);
+  const activeList   = (isDetachee ? detacheeList : serviceList)
+    .filter(p=>`${p.type_appareil} ${p.modele||""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase()));
 
   const handleAdd = async () => {
     if(!form.type_appareil||!form.type_piece||!form.cout_fournisseur) return;
@@ -2325,24 +2375,20 @@ function CataloguePieces() {
       ...form,
       cout_fournisseur: Number(form.cout_fournisseur),
       cout_vente: form.cout_vente ? Number(form.cout_vente) : null,
-      piece_detachee: form.piece_detachee ? 1 : 0,
+      piece_detachee: isDetachee ? 1 : 0,
     });
-    setForm({...BLANK_PIECE});
-    setShowAdd(false); load();
+    setForm({...BLANK_PIECE}); setShowAdd(false); load();
   };
 
   const openEdit = (p:any, e:React.MouseEvent) => {
     e.stopPropagation();
     setEditId(p.id);
     setEditForm({
-      type_appareil: p.type_appareil,
-      modele: p.modele||"",
-      type_piece: p.type_piece,
-      cout_fournisseur: String(p.cout_fournisseur),
-      cout_vente: p.cout_vente != null ? String(p.cout_vente) : "",
-      fournisseur: p.fournisseur,
-      notes: p.notes||"",
-      piece_detachee: !!p.piece_detachee,
+      type_appareil:p.type_appareil, modele:p.modele||"", type_piece:p.type_piece,
+      cout_fournisseur:String(p.cout_fournisseur),
+      cout_vente:p.cout_vente!=null?String(p.cout_vente):"",
+      fournisseur:p.fournisseur, notes:p.notes||"",
+      piece_detachee:!!p.piece_detachee,
     });
     setDetail(null);
   };
@@ -2352,9 +2398,9 @@ function CataloguePieces() {
     setSaving(true);
     await prixApi.updatePiece(editId,{
       ...editForm,
-      cout_fournisseur: Number(editForm.cout_fournisseur),
-      cout_vente: editForm.cout_vente ? Number(editForm.cout_vente) : null,
-      piece_detachee: editForm.piece_detachee ? 1 : 0,
+      cout_fournisseur:Number(editForm.cout_fournisseur),
+      cout_vente:editForm.cout_vente?Number(editForm.cout_vente):null,
+      piece_detachee:editForm.piece_detachee?1:0,
     });
     setSaving(false); setEditId(null); load();
   };
@@ -2364,136 +2410,128 @@ function CataloguePieces() {
     if(confirm("Supprimer cette pièce?")) { await prixApi.deletePiece(id); if(detail?.id===id) setDetail(null); load(); }
   };
 
-  const filtered = pieces.filter(p=>`${p.type_appareil} ${p.modele||""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase()));
+  const handleSelect = (p:any) => { setDetail(detail?.id===p.id?null:p); };
+
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
   const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
-  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
-
-  const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
   const fmtDate = (d:string) => new Date(d).toLocaleDateString("fr-CA",{year:"numeric",month:"short",day:"numeric"});
 
   return (
     <div style={{display:"flex",gap:"1.2rem",alignItems:"flex-start"}}>
-      {/* ── Main panel ── */}
       <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." style={{...inputSt,maxWidth:300}}/>
-          <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
-            {showAdd?"✕ Fermer":"+ Ajouter une pièce"}
+
+        {/* ── Section tabs ── */}
+        <div style={{display:"flex",gap:0,marginBottom:"1.5rem",border:"1px solid rgba(255,255,255,0.08)",overflow:"hidden"}}>
+          {([
+            {id:"service"   as const, icon:"🔧", label:"Pièces de service",  count:serviceList.length,  color:GREEN,  bg:"rgba(109,212,0,0.12)"},
+            {id:"detachee"  as const, icon:"📦", label:"Pièces détachées",   count:detacheeList.length, color:ORANGE, bg:"rgba(245,158,11,0.12)"},
+          ]).map(tab=>{
+            const isOn = section===tab.id;
+            return (
+              <button key={tab.id} onClick={()=>{setSection(tab.id);setShowAdd(false);setDetail(null);setSearch("");}}
+                style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:"0.5rem",
+                  padding:"0.75rem 1rem",border:"none",cursor:"pointer",transition:"all 0.2s",
+                  background:isOn?tab.bg:"transparent",
+                  borderBottom:isOn?`2px solid ${tab.color}`:"2px solid transparent",
+                  fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem",
+                  color:isOn?tab.color:GRAY,letterSpacing:"0.04em",
+                }}>
+                <span>{tab.icon}</span>
+                <span style={{textTransform:"uppercase"}}>{tab.label}</span>
+                <span style={{background:isOn?tab.color:"rgba(255,255,255,0.08)",color:isOn?NAVY:"#fff",
+                  fontSize:"0.72rem",fontWeight:800,padding:"0.1rem 0.45rem",minWidth:20,textAlign:"center"}}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Section header ── */}
+        <div style={{marginBottom:"1rem",padding:"0.6rem 1rem",background:accentBg,borderLeft:`3px solid ${accentColor}`}}>
+          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem",color:accentColor,letterSpacing:"0.08em",textTransform:"uppercase"}}>
+            {isDetachee
+              ? "Pièces vendues au détail — ne font pas partie d'un service de réparation"
+              : "Pièces utilisées dans les services de réparation — coût inclus dans la facture du service"}
+          </span>
+        </div>
+
+        {/* ── Search + Add ── */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem",gap:"0.8rem"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." style={{...inputSt,maxWidth:280,borderColor:search?accentColor+"66":"rgba(109,212,0,0.2)"}}/>
+          <button onClick={()=>setShowAdd(!showAdd)}
+            style={{background:showAdd?"transparent":accentColor,color:showAdd?accentColor:NAVY,
+              border:`1px solid ${accentColor}`,padding:"0.5rem 1.2rem",cursor:"pointer",
+              fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem",whiteSpace:"nowrap"}}>
+            {showAdd?"✕ Fermer":`+ Ajouter ${isDetachee?"une pièce détachée":"une pièce de service"}`}
           </button>
         </div>
 
+        {/* ── Add form ── */}
         {showAdd && (
-          <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+          <div style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${accentColor}33`,padding:"1.2rem",marginBottom:"1.5rem"}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
               <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
               <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
               <div><label style={labelSt}>Type de pièce *</label><input value={form.type_piece} onChange={e=>setForm(p=>({...p,type_piece:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 2fr",gap:"0.8rem",marginBottom:"1rem"}}>
+              <div><label style={labelSt}>Coût achat ($) *</label><input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/></div>
               <div>
-                <label style={labelSt}>Coût achat ($) *</label>
-                <input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/>
-              </div>
-              <div>
-                <label style={labelSt}>
-                  {form.piece_detachee ? <span>Prix vente détail ($)</span> : <span>Coût vente service ($)</span>}
-                </label>
+                <label style={labelSt}>{isDetachee?"Prix vente détail ($)":"Coût vente service ($)"}</label>
                 <input type="number" value={form.cout_vente} onChange={e=>setForm(p=>({...p,cout_vente:e.target.value}))} placeholder="—"
-                  style={{...inputSt,borderColor:form.piece_detachee?"rgba(245,158,11,0.5)":"rgba(109,212,0,0.2)"}}/>
+                  style={{...inputSt,borderColor:`${accentColor}55`}}/>
               </div>
               <div><label style={labelSt}>Fournisseur</label><input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
               <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:"1.5rem",flexWrap:"wrap"}}>
-              <label style={{display:"flex",alignItems:"center",gap:"0.5rem",cursor:"pointer",fontSize:"0.83rem",color:GRAY}}>
-                <input type="checkbox" checked={form.piece_detachee} onChange={e=>setForm(p=>({...p,piece_detachee:e.target.checked}))} style={{accentColor:ORANGE,width:15,height:15}}/>
-                <span>Pièce détachée <span style={{color:ORANGE,fontWeight:600}}>(ne fait pas partie d'un service — vente au détail seulement)</span></span>
-              </label>
-              <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
-            </div>
+            <button onClick={handleAdd} style={{background:accentColor,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
           </div>
         )}
 
-        {loading?<div style={{color:GRAY}}>Chargement...</div>:(
-          <div className="admin-table-scroll" style={{overflowX:"auto"}}>
-          <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
-              {["Appareil","Modèle","Pièce","Achat ($)","Vente ($)","Type","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
-            </tr></thead>
-            <tbody>
-              {filtered.length===0 && <tr><td colSpan={9} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
-              {filtered.map(p=>{const days=daysSince(p.updated_at); const isActive=detail?.id===p.id; return(
-                <tr key={p.id} onClick={()=>setDetail(isActive?null:p)}
-                  style={{cursor:"pointer",background:isActive?"rgba(109,212,0,0.06)":"transparent",transition:"background 0.15s"}}>
-                  <td style={{...tdSt,color:isActive?GREEN:"#fff",fontWeight:isActive?700:400}}>{p.type_appareil}</td>
-                  <td style={tdSt}>{p.modele||"—"}</td>
-                  <td style={tdSt}>{p.type_piece}</td>
-                  <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
-                  <td style={{...tdSt,color:p.cout_vente!=null?BLUE:GRAY_DIM,fontWeight:p.cout_vente!=null?600:400}}>{p.cout_vente!=null?`${p.cout_vente} $`:"—"}</td>
-                  <td style={{...tdSt,whiteSpace:"nowrap"}}>
-                    {p.piece_detachee
-                      ? <span style={{background:"rgba(245,158,11,0.15)",color:ORANGE,fontSize:"0.68rem",fontWeight:700,padding:"0.15rem 0.5rem",letterSpacing:"0.05em"}}>DÉTACHÉE</span>
-                      : <span style={{background:"rgba(109,212,0,0.1)",color:GREEN,fontSize:"0.68rem",fontWeight:700,padding:"0.15rem 0.5rem",letterSpacing:"0.05em"}}>SERVICE</span>
-                    }
-                  </td>
-                  <td style={tdSt}>{p.fournisseur}</td>
-                  <td style={{...tdSt,color:days>30?"#f59e0b":GRAY,fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
-                  <td style={{...tdSt,whiteSpace:"nowrap"}}>
-                    <button onClick={e=>openEdit(p,e)} title="Modifier" style={{background:"transparent",border:"none",color:BLUE,cursor:"pointer",fontSize:"0.9rem",padding:"0 0.3rem"}}>✏️</button>
-                    <button onClick={e=>handleDelete(p.id,e)} title="Supprimer" style={{background:"transparent",border:"none",color:RED,cursor:"pointer",fontSize:"0.85rem",padding:"0 0.3rem"}}>🗑</button>
-                  </td>
-                </tr>
-              );})}
-            </tbody>
-          </table>
-          </div>
+        {/* ── Table ── */}
+        {loading ? <div style={{color:GRAY}}>Chargement...</div> : (
+          <PieceTable pieces={activeList} isDetachee={isDetachee}
+            onEdit={openEdit} onDelete={handleDelete}
+            onSelect={handleSelect} selected={detail}/>
         )}
       </div>
 
       {/* ── Detail drawer ── */}
       {detail && !editId && (
-        <div style={{width:280,flexShrink:0,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.18)",padding:"1.2rem",animation:"adminFadeIn 0.2s ease both"}}>
+        <div style={{width:270,flexShrink:0,background:"rgba(255,255,255,0.03)",border:`1px solid ${accentColor}33`,padding:"1.2rem",animation:"adminFadeIn 0.2s ease both"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:GREEN,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:accentColor,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
             <button onClick={()=>setDetail(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.1rem"}}>✕</button>
           </div>
-          <div style={{marginBottom:"0.75rem"}}>
-            <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.25rem"}}>Type</div>
-            {detail.piece_detachee
-              ? <span style={{background:"rgba(245,158,11,0.15)",color:ORANGE,fontSize:"0.72rem",fontWeight:700,padding:"0.2rem 0.6rem",letterSpacing:"0.06em"}}>PIÈCE DÉTACHÉE</span>
-              : <span style={{background:"rgba(109,212,0,0.1)",color:GREEN,fontSize:"0.72rem",fontWeight:700,padding:"0.2rem 0.6rem",letterSpacing:"0.06em"}}>PIÈCE DE SERVICE</span>
-            }
-          </div>
           {[
-            {label:"Appareil",          val: detail.type_appareil},
-            {label:"Modèle",            val: detail.modele||"—"},
-            {label:"Type de pièce",     val: detail.type_piece},
-            {label:"Coût d'achat",      val: `${detail.cout_fournisseur} $`, color:GREEN},
-            {label: detail.piece_detachee ? "Prix vente détail" : "Coût vente service",
-                                        val: detail.cout_vente!=null?`${detail.cout_vente} $`:"—", color:detail.cout_vente!=null?BLUE:GRAY_DIM},
-            {label:"Fournisseur",       val: detail.fournisseur},
-            {label:"Notes",             val: detail.notes||"—"},
-            {label:"Ajouté le",         val: fmtDate(detail.created_at)},
-            {label:"Mis à jour",        val: fmtDate(detail.updated_at)},
+            {label:"Appareil",    val:detail.type_appareil},
+            {label:"Modèle",      val:detail.modele||"—"},
+            {label:"Pièce",       val:detail.type_piece},
+            {label:"Coût achat",  val:`${detail.cout_fournisseur} $`, color:GREEN},
+            {label:isDetachee?"Prix vente détail":"Vente service", val:detail.cout_vente!=null?`${detail.cout_vente} $`:"—", color:detail.cout_vente!=null?accentColor:GRAY_DIM},
+            {label:"Fournisseur", val:detail.fournisseur},
+            {label:"Notes",       val:detail.notes||"—"},
+            {label:"Ajouté le",   val:fmtDate(detail.created_at)},
+            {label:"Mis à jour",  val:fmtDate(detail.updated_at)},
           ].map(({label,val,color})=>(
-            <div key={label} style={{marginBottom:"0.75rem"}}>
-              <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.15rem"}}>{label}</div>
-              <div style={{fontSize:"0.88rem",color: color||"#fff",fontWeight: color?700:400,wordBreak:"break-word"}}>{val}</div>
+            <div key={label} style={{marginBottom:"0.7rem"}}>
+              <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.12rem"}}>{label}</div>
+              <div style={{fontSize:"0.87rem",color:color||"#fff",fontWeight:color?700:400,wordBreak:"break-word"}}>{val}</div>
             </div>
           ))}
-          <div style={{marginTop:"1rem",display:"flex",gap:"0.5rem"}}>
-            <button onClick={e=>openEdit(detail,e as any)} style={{flex:1,background:GREEN,color:NAVY,border:"none",padding:"0.45rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.85rem"}}>✏️ MODIFIER</button>
-          </div>
+          <button onClick={e=>openEdit(detail,e as any)} style={{width:"100%",marginTop:"0.8rem",background:accentColor,color:NAVY,border:"none",padding:"0.45rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.85rem"}}>✏️ MODIFIER</button>
         </div>
       )}
 
       {/* ── Edit modal ── */}
       {editId && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setEditId(null)}>
-          <div className="admin-modal" onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.25)",padding:"1.5rem",width:480,maxWidth:"96vw",animation:"adminFadeIn 0.2s ease both"}}>
+          <div className="admin-modal" onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:`1px solid ${editForm.piece_detachee?"rgba(245,158,11,0.3)":"rgba(109,212,0,0.25)"}`,padding:"1.5rem",width:500,maxWidth:"96vw",animation:"adminFadeIn 0.2s ease both"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
-              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:GREEN,letterSpacing:"0.06em",textTransform:"uppercase"}}>Modifier la pièce</span>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:editForm.piece_detachee?ORANGE:GREEN,letterSpacing:"0.06em",textTransform:"uppercase"}}>
+                Modifier — {editForm.piece_detachee?"Pièce détachée":"Pièce de service"}
+              </span>
               <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
@@ -2508,16 +2546,24 @@ function CataloguePieces() {
               </div>
               <div><label style={labelSt}>Fournisseur</label><input value={editForm.fournisseur} onChange={e=>setEditForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
               <div style={{gridColumn:"1/-1"}}><label style={labelSt}>Notes</label><input value={editForm.notes} onChange={e=>setEditForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
-              <div style={{gridColumn:"1/-1"}}>
-                <label style={{display:"flex",alignItems:"center",gap:"0.5rem",cursor:"pointer",fontSize:"0.83rem",color:GRAY}}>
-                  <input type="checkbox" checked={editForm.piece_detachee} onChange={e=>setEditForm(p=>({...p,piece_detachee:e.target.checked}))} style={{accentColor:ORANGE,width:15,height:15}}/>
-                  <span>Pièce détachée <span style={{color:ORANGE,fontWeight:600}}>(ne fait pas partie d'un service)</span></span>
-                </label>
+              <div style={{gridColumn:"1/-1",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:"0.8rem"}}>
+                <div style={{fontSize:"0.7rem",color:GRAY,marginBottom:"0.4rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>Déplacer vers</div>
+                <div style={{display:"flex",gap:"0.5rem"}}>
+                  {[{val:false,label:"🔧 Pièce de service",color:GREEN},{val:true,label:"📦 Pièce détachée",color:ORANGE}].map(opt=>(
+                    <button key={String(opt.val)} onClick={()=>setEditForm(p=>({...p,piece_detachee:opt.val}))}
+                      style={{flex:1,padding:"0.4rem",border:`1px solid ${editForm.piece_detachee===opt.val?opt.color:"rgba(255,255,255,0.1)"}`,
+                        background:editForm.piece_detachee===opt.val?`${opt.color}18`:"transparent",
+                        color:editForm.piece_detachee===opt.val?opt.color:GRAY,
+                        cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem"}}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div style={{display:"flex",gap:"0.8rem",justifyContent:"flex-end"}}>
               <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
-              <button onClick={handleSaveEdit} disabled={saving} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:saving?0.6:1}}>
+              <button onClick={handleSaveEdit} disabled={saving} style={{background:editForm.piece_detachee?ORANGE:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:saving?0.6:1}}>
                 {saving?"ENREGISTREMENT...":"SAUVEGARDER"}
               </button>
             </div>
