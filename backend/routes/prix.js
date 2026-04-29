@@ -21,33 +21,49 @@ router.get("/catalogue", auth, (req, res) => {
 });
 
 router.post("/catalogue", auth, (req, res) => {
-  const { type_appareil, modele, type_piece, cout_fournisseur, fournisseur, notes } = req.body;
+  const { type_appareil, modele, type_piece, cout_fournisseur, cout_vente, fournisseur, notes, piece_detachee } = req.body;
   if (!type_appareil || !type_piece || cout_fournisseur == null) {
     return res.status(400).json({ erreur: "Appareil, type de pièce et coût sont obligatoires." });
   }
   const result = db.prepare(`
-    INSERT INTO pieces_catalogue (type_appareil, modele, type_piece, cout_fournisseur, fournisseur, notes)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(type_appareil, modele || null, type_piece, Number(cout_fournisseur), fournisseur || "Tan Star Trade", notes || null);
+    INSERT INTO pieces_catalogue (type_appareil, modele, type_piece, cout_fournisseur, cout_vente, fournisseur, notes, piece_detachee)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    type_appareil, modele || null, type_piece,
+    Number(cout_fournisseur),
+    cout_vente != null ? Number(cout_vente) : null,
+    fournisseur || "Tan Star Trade",
+    notes || null,
+    piece_detachee ? 1 : 0
+  );
   res.status(201).json({ message: "Pièce ajoutée.", id: result.lastInsertRowid });
 });
 
 router.patch("/catalogue/:id", auth, (req, res) => {
-  const { type_appareil, modele, type_piece, cout_fournisseur, fournisseur, notes } = req.body;
+  const { type_appareil, modele, type_piece, cout_fournisseur, cout_vente, fournisseur, notes, piece_detachee } = req.body;
   const existing = db.prepare("SELECT id FROM pieces_catalogue WHERE id = ?").get(req.params.id);
   if (!existing) return res.status(404).json({ erreur: "Pièce introuvable." });
 
   db.prepare(`
     UPDATE pieces_catalogue SET
-      type_appareil = COALESCE(?, type_appareil),
-      modele = COALESCE(?, modele),
-      type_piece = COALESCE(?, type_piece),
+      type_appareil    = COALESCE(?, type_appareil),
+      modele           = COALESCE(?, modele),
+      type_piece       = COALESCE(?, type_piece),
       cout_fournisseur = COALESCE(?, cout_fournisseur),
-      fournisseur = COALESCE(?, fournisseur),
-      notes = COALESCE(?, notes),
-      updated_at = CURRENT_TIMESTAMP
+      cout_vente       = ?,
+      fournisseur      = COALESCE(?, fournisseur),
+      notes            = COALESCE(?, notes),
+      piece_detachee   = ?,
+      updated_at       = CURRENT_TIMESTAMP
     WHERE id = ?
-  `).run(type_appareil, modele, type_piece, cout_fournisseur != null ? Number(cout_fournisseur) : null, fournisseur, notes, req.params.id);
+  `).run(
+    type_appareil, modele, type_piece,
+    cout_fournisseur != null ? Number(cout_fournisseur) : null,
+    cout_vente != null ? Number(cout_vente) : null,
+    fournisseur, notes,
+    piece_detachee ? 1 : 0,
+    req.params.id
+  );
   res.json({ message: "Pièce mise à jour." });
 });
 

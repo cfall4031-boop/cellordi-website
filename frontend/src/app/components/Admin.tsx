@@ -2301,15 +2301,17 @@ function CalculerPrix() {
   );
 }
 
+const BLANK_PIECE = {type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",cout_vente:"",fournisseur:"Tan Star Trade",notes:"",piece_detachee:false};
+
 function CataloguePieces() {
   const [pieces, setPieces] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"Tan Star Trade",notes:""});
+  const [form, setForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
   const [loading, setLoading] = useState(true);
   // ── Edit
   const [editId, setEditId] = useState<number|null>(null);
-  const [editForm, setEditForm] = useState({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"",notes:""});
+  const [editForm, setEditForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
   const [saving, setSaving] = useState(false);
   // ── Detail
   const [detail, setDetail] = useState<any|null>(null);
@@ -2319,22 +2321,41 @@ function CataloguePieces() {
 
   const handleAdd = async () => {
     if(!form.type_appareil||!form.type_piece||!form.cout_fournisseur) return;
-    await prixApi.addPiece({...form,cout_fournisseur:Number(form.cout_fournisseur)});
-    setForm({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"Tan Star Trade",notes:""});
+    await prixApi.addPiece({
+      ...form,
+      cout_fournisseur: Number(form.cout_fournisseur),
+      cout_vente: form.cout_vente ? Number(form.cout_vente) : null,
+      piece_detachee: form.piece_detachee ? 1 : 0,
+    });
+    setForm({...BLANK_PIECE});
     setShowAdd(false); load();
   };
 
   const openEdit = (p:any, e:React.MouseEvent) => {
     e.stopPropagation();
     setEditId(p.id);
-    setEditForm({type_appareil:p.type_appareil,modele:p.modele||"",type_piece:p.type_piece,cout_fournisseur:String(p.cout_fournisseur),fournisseur:p.fournisseur,notes:p.notes||""});
+    setEditForm({
+      type_appareil: p.type_appareil,
+      modele: p.modele||"",
+      type_piece: p.type_piece,
+      cout_fournisseur: String(p.cout_fournisseur),
+      cout_vente: p.cout_vente != null ? String(p.cout_vente) : "",
+      fournisseur: p.fournisseur,
+      notes: p.notes||"",
+      piece_detachee: !!p.piece_detachee,
+    });
     setDetail(null);
   };
 
   const handleSaveEdit = async () => {
     if(!editId) return;
     setSaving(true);
-    await prixApi.updatePiece(editId,{...editForm,cout_fournisseur:Number(editForm.cout_fournisseur)});
+    await prixApi.updatePiece(editId,{
+      ...editForm,
+      cout_fournisseur: Number(editForm.cout_fournisseur),
+      cout_vente: editForm.cout_vente ? Number(editForm.cout_vente) : null,
+      piece_detachee: editForm.piece_detachee ? 1 : 0,
+    });
     setSaving(false); setEditId(null); load();
   };
 
@@ -2364,17 +2385,33 @@ function CataloguePieces() {
 
         {showAdd && (
           <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
               <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
               <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
               <div><label style={labelSt}>Type de pièce *</label><input value={form.type_piece} onChange={e=>setForm(p=>({...p,type_piece:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
-              <div><label style={labelSt}>Coût ($) *</label><input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+              <div>
+                <label style={labelSt}>Coût achat ($) *</label>
+                <input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/>
+              </div>
+              <div>
+                <label style={labelSt}>
+                  {form.piece_detachee ? <span>Prix vente détail ($)</span> : <span>Coût vente service ($)</span>}
+                </label>
+                <input type="number" value={form.cout_vente} onChange={e=>setForm(p=>({...p,cout_vente:e.target.value}))} placeholder="—"
+                  style={{...inputSt,borderColor:form.piece_detachee?"rgba(245,158,11,0.5)":"rgba(109,212,0,0.2)"}}/>
+              </div>
               <div><label style={labelSt}>Fournisseur</label><input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
               <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
             </div>
-            <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+            <div style={{display:"flex",alignItems:"center",gap:"1.5rem",flexWrap:"wrap"}}>
+              <label style={{display:"flex",alignItems:"center",gap:"0.5rem",cursor:"pointer",fontSize:"0.83rem",color:GRAY}}>
+                <input type="checkbox" checked={form.piece_detachee} onChange={e=>setForm(p=>({...p,piece_detachee:e.target.checked}))} style={{accentColor:ORANGE,width:15,height:15}}/>
+                <span>Pièce détachée <span style={{color:ORANGE,fontWeight:600}}>(ne fait pas partie d'un service — vente au détail seulement)</span></span>
+              </label>
+              <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+            </div>
           </div>
         )}
 
@@ -2382,10 +2419,10 @@ function CataloguePieces() {
           <div className="admin-table-scroll" style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
-              {["Appareil","Modèle","Pièce","Coût ($)","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
+              {["Appareil","Modèle","Pièce","Achat ($)","Vente ($)","Type","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
             </tr></thead>
             <tbody>
-              {filtered.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
+              {filtered.length===0 && <tr><td colSpan={9} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
               {filtered.map(p=>{const days=daysSince(p.updated_at); const isActive=detail?.id===p.id; return(
                 <tr key={p.id} onClick={()=>setDetail(isActive?null:p)}
                   style={{cursor:"pointer",background:isActive?"rgba(109,212,0,0.06)":"transparent",transition:"background 0.15s"}}>
@@ -2393,6 +2430,13 @@ function CataloguePieces() {
                   <td style={tdSt}>{p.modele||"—"}</td>
                   <td style={tdSt}>{p.type_piece}</td>
                   <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
+                  <td style={{...tdSt,color:p.cout_vente!=null?BLUE:GRAY_DIM,fontWeight:p.cout_vente!=null?600:400}}>{p.cout_vente!=null?`${p.cout_vente} $`:"—"}</td>
+                  <td style={{...tdSt,whiteSpace:"nowrap"}}>
+                    {p.piece_detachee
+                      ? <span style={{background:"rgba(245,158,11,0.15)",color:ORANGE,fontSize:"0.68rem",fontWeight:700,padding:"0.15rem 0.5rem",letterSpacing:"0.05em"}}>DÉTACHÉE</span>
+                      : <span style={{background:"rgba(109,212,0,0.1)",color:GREEN,fontSize:"0.68rem",fontWeight:700,padding:"0.15rem 0.5rem",letterSpacing:"0.05em"}}>SERVICE</span>
+                    }
+                  </td>
                   <td style={tdSt}>{p.fournisseur}</td>
                   <td style={{...tdSt,color:days>30?"#f59e0b":GRAY,fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
                   <td style={{...tdSt,whiteSpace:"nowrap"}}>
@@ -2414,19 +2458,28 @@ function CataloguePieces() {
             <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:GREEN,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
             <button onClick={()=>setDetail(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.1rem"}}>✕</button>
           </div>
+          <div style={{marginBottom:"0.75rem"}}>
+            <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.25rem"}}>Type</div>
+            {detail.piece_detachee
+              ? <span style={{background:"rgba(245,158,11,0.15)",color:ORANGE,fontSize:"0.72rem",fontWeight:700,padding:"0.2rem 0.6rem",letterSpacing:"0.06em"}}>PIÈCE DÉTACHÉE</span>
+              : <span style={{background:"rgba(109,212,0,0.1)",color:GREEN,fontSize:"0.72rem",fontWeight:700,padding:"0.2rem 0.6rem",letterSpacing:"0.06em"}}>PIÈCE DE SERVICE</span>
+            }
+          </div>
           {[
-            {label:"Appareil",     val: detail.type_appareil},
-            {label:"Modèle",       val: detail.modele||"—"},
-            {label:"Type de pièce",val: detail.type_piece},
-            {label:"Coût fournisseur", val: `${detail.cout_fournisseur} $`, accent:true},
-            {label:"Fournisseur",  val: detail.fournisseur},
-            {label:"Notes",        val: detail.notes||"—"},
-            {label:"Ajouté le",    val: fmtDate(detail.created_at)},
-            {label:"Mis à jour",   val: fmtDate(detail.updated_at)},
-          ].map(({label,val,accent})=>(
+            {label:"Appareil",          val: detail.type_appareil},
+            {label:"Modèle",            val: detail.modele||"—"},
+            {label:"Type de pièce",     val: detail.type_piece},
+            {label:"Coût d'achat",      val: `${detail.cout_fournisseur} $`, color:GREEN},
+            {label: detail.piece_detachee ? "Prix vente détail" : "Coût vente service",
+                                        val: detail.cout_vente!=null?`${detail.cout_vente} $`:"—", color:detail.cout_vente!=null?BLUE:GRAY_DIM},
+            {label:"Fournisseur",       val: detail.fournisseur},
+            {label:"Notes",             val: detail.notes||"—"},
+            {label:"Ajouté le",         val: fmtDate(detail.created_at)},
+            {label:"Mis à jour",        val: fmtDate(detail.updated_at)},
+          ].map(({label,val,color})=>(
             <div key={label} style={{marginBottom:"0.75rem"}}>
               <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.15rem"}}>{label}</div>
-              <div style={{fontSize:"0.88rem",color: accent ? GREEN : "#fff",fontWeight: accent ? 700 : 400,wordBreak:"break-word"}}>{val}</div>
+              <div style={{fontSize:"0.88rem",color: color||"#fff",fontWeight: color?700:400,wordBreak:"break-word"}}>{val}</div>
             </div>
           ))}
           <div style={{marginTop:"1rem",display:"flex",gap:"0.5rem"}}>
@@ -2447,9 +2500,20 @@ function CataloguePieces() {
               <div><label style={labelSt}>Appareil *</label><input value={editForm.type_appareil} onChange={e=>setEditForm(p=>({...p,type_appareil:e.target.value}))} style={inputSt}/></div>
               <div><label style={labelSt}>Modèle</label><input value={editForm.modele} onChange={e=>setEditForm(p=>({...p,modele:e.target.value}))} style={inputSt}/></div>
               <div><label style={labelSt}>Type de pièce *</label><input value={editForm.type_piece} onChange={e=>setEditForm(p=>({...p,type_piece:e.target.value}))} style={inputSt}/></div>
-              <div><label style={labelSt}>Coût ($) *</label><input type="number" value={editForm.cout_fournisseur} onChange={e=>setEditForm(p=>({...p,cout_fournisseur:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Coût achat ($) *</label><input type="number" value={editForm.cout_fournisseur} onChange={e=>setEditForm(p=>({...p,cout_fournisseur:e.target.value}))} style={inputSt}/></div>
+              <div>
+                <label style={labelSt}>{editForm.piece_detachee?"Prix vente détail ($)":"Coût vente service ($)"}</label>
+                <input type="number" value={editForm.cout_vente} onChange={e=>setEditForm(p=>({...p,cout_vente:e.target.value}))} placeholder="—"
+                  style={{...inputSt,borderColor:editForm.piece_detachee?"rgba(245,158,11,0.5)":"rgba(109,212,0,0.2)"}}/>
+              </div>
               <div><label style={labelSt}>Fournisseur</label><input value={editForm.fournisseur} onChange={e=>setEditForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
-              <div><label style={labelSt}>Notes</label><input value={editForm.notes} onChange={e=>setEditForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
+              <div style={{gridColumn:"1/-1"}}><label style={labelSt}>Notes</label><input value={editForm.notes} onChange={e=>setEditForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
+              <div style={{gridColumn:"1/-1"}}>
+                <label style={{display:"flex",alignItems:"center",gap:"0.5rem",cursor:"pointer",fontSize:"0.83rem",color:GRAY}}>
+                  <input type="checkbox" checked={editForm.piece_detachee} onChange={e=>setEditForm(p=>({...p,piece_detachee:e.target.checked}))} style={{accentColor:ORANGE,width:15,height:15}}/>
+                  <span>Pièce détachée <span style={{color:ORANGE,fontWeight:600}}>(ne fait pas partie d'un service)</span></span>
+                </label>
+              </div>
             </div>
             <div style={{display:"flex",gap:"0.8rem",justifyContent:"flex-end"}}>
               <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>

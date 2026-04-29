@@ -225,6 +225,10 @@ db.exec(`
   );
 `);
 
+// ── MIGRATION pieces_catalogue : ajout colonnes cout_vente + piece_detachee ──
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN cout_vente REAL").run(); } catch {}
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN piece_detachee INTEGER DEFAULT 0").run(); } catch {}
+
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (
