@@ -2307,7 +2307,12 @@ function CataloguePieces() {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"Tan Star Trade",notes:""});
   const [loading, setLoading] = useState(true);
+  // ── Edit
   const [editId, setEditId] = useState<number|null>(null);
+  const [editForm, setEditForm] = useState({type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",fournisseur:"",notes:""});
+  const [saving, setSaving] = useState(false);
+  // ── Detail
+  const [detail, setDetail] = useState<any|null>(null);
 
   const load = () => { prixApi.getCatalogue().then((d:any)=>setPieces(d.pieces||[])).catch(console.error).finally(()=>setLoading(false)); };
   useEffect(load,[]);
@@ -2319,7 +2324,24 @@ function CataloguePieces() {
     setShowAdd(false); load();
   };
 
-  const handleDelete = async (id:number) => { if(confirm("Supprimer cette pièce?")) { await prixApi.deletePiece(id); load(); } };
+  const openEdit = (p:any, e:React.MouseEvent) => {
+    e.stopPropagation();
+    setEditId(p.id);
+    setEditForm({type_appareil:p.type_appareil,modele:p.modele||"",type_piece:p.type_piece,cout_fournisseur:String(p.cout_fournisseur),fournisseur:p.fournisseur,notes:p.notes||""});
+    setDetail(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if(!editId) return;
+    setSaving(true);
+    await prixApi.updatePiece(editId,{...editForm,cout_fournisseur:Number(editForm.cout_fournisseur)});
+    setSaving(false); setEditId(null); load();
+  };
+
+  const handleDelete = async (id:number, e:React.MouseEvent) => {
+    e.stopPropagation();
+    if(confirm("Supprimer cette pièce?")) { await prixApi.deletePiece(id); if(detail?.id===id) setDetail(null); load(); }
+  };
 
   const filtered = pieces.filter(p=>`${p.type_appareil} ${p.modele||""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase()));
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
@@ -2327,53 +2349,115 @@ function CataloguePieces() {
   const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
 
   const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
+  const fmtDate = (d:string) => new Date(d).toLocaleDateString("fr-CA",{year:"numeric",month:"short",day:"numeric"});
 
   return (
-    <div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." style={{...inputSt,maxWidth:300}}/>
-        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
-          {showAdd?"✕ Fermer":"+ Ajouter une pièce"}
-        </button>
+    <div style={{display:"flex",gap:"1.2rem",alignItems:"flex-start"}}>
+      {/* ── Main panel ── */}
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher..." style={{...inputSt,maxWidth:300}}/>
+          <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
+            {showAdd?"✕ Fermer":"+ Ajouter une pièce"}
+          </button>
+        </div>
+
+        {showAdd && (
+          <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
+              <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
+              <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
+              <div><label style={labelSt}>Type de pièce *</label><input value={form.type_piece} onChange={e=>setForm(p=>({...p,type_piece:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+              <div><label style={labelSt}>Coût ($) *</label><input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/></div>
+              <div><label style={labelSt}>Fournisseur</label><input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
+            </div>
+            <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+          </div>
+        )}
+
+        {loading?<div style={{color:GRAY}}>Chargement...</div>:(
+          <div className="admin-table-scroll" style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
+              {["Appareil","Modèle","Pièce","Coût ($)","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {filtered.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
+              {filtered.map(p=>{const days=daysSince(p.updated_at); const isActive=detail?.id===p.id; return(
+                <tr key={p.id} onClick={()=>setDetail(isActive?null:p)}
+                  style={{cursor:"pointer",background:isActive?"rgba(109,212,0,0.06)":"transparent",transition:"background 0.15s"}}>
+                  <td style={{...tdSt,color:isActive?GREEN:"#fff",fontWeight:isActive?700:400}}>{p.type_appareil}</td>
+                  <td style={tdSt}>{p.modele||"—"}</td>
+                  <td style={tdSt}>{p.type_piece}</td>
+                  <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
+                  <td style={tdSt}>{p.fournisseur}</td>
+                  <td style={{...tdSt,color:days>30?"#f59e0b":GRAY,fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
+                  <td style={{...tdSt,whiteSpace:"nowrap"}}>
+                    <button onClick={e=>openEdit(p,e)} title="Modifier" style={{background:"transparent",border:"none",color:BLUE,cursor:"pointer",fontSize:"0.9rem",padding:"0 0.3rem"}}>✏️</button>
+                    <button onClick={e=>handleDelete(p.id,e)} title="Supprimer" style={{background:"transparent",border:"none",color:RED,cursor:"pointer",fontSize:"0.85rem",padding:"0 0.3rem"}}>🗑</button>
+                  </td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+          </div>
+        )}
       </div>
 
-      {showAdd && (
-        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
-            <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
-            <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
-            <div><label style={labelSt}>Type de pièce *</label><input value={form.type_piece} onChange={e=>setForm(p=>({...p,type_piece:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
+      {/* ── Detail drawer ── */}
+      {detail && !editId && (
+        <div style={{width:280,flexShrink:0,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.18)",padding:"1.2rem",animation:"adminFadeIn 0.2s ease both"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:GREEN,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
+            <button onClick={()=>setDetail(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.1rem"}}>✕</button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
-            <div><label style={labelSt}>Coût ($) *</label><input type="number" value={form.cout_fournisseur} onChange={e=>setForm(p=>({...p,cout_fournisseur:e.target.value}))} placeholder="45" style={inputSt}/></div>
-            <div><label style={labelSt}>Fournisseur</label><input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
-            <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
+          {[
+            {label:"Appareil",     val: detail.type_appareil},
+            {label:"Modèle",       val: detail.modele||"—"},
+            {label:"Type de pièce",val: detail.type_piece},
+            {label:"Coût fournisseur", val: `${detail.cout_fournisseur} $`, accent:true},
+            {label:"Fournisseur",  val: detail.fournisseur},
+            {label:"Notes",        val: detail.notes||"—"},
+            {label:"Ajouté le",    val: fmtDate(detail.created_at)},
+            {label:"Mis à jour",   val: fmtDate(detail.updated_at)},
+          ].map(({label,val,accent})=>(
+            <div key={label} style={{marginBottom:"0.75rem"}}>
+              <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.15rem"}}>{label}</div>
+              <div style={{fontSize:"0.88rem",color: accent ? GREEN : "#fff",fontWeight: accent ? 700 : 400,wordBreak:"break-word"}}>{val}</div>
+            </div>
+          ))}
+          <div style={{marginTop:"1rem",display:"flex",gap:"0.5rem"}}>
+            <button onClick={e=>openEdit(detail,e as any)} style={{flex:1,background:GREEN,color:NAVY,border:"none",padding:"0.45rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.85rem"}}>✏️ MODIFIER</button>
           </div>
-          <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
         </div>
       )}
 
-      {loading?<div style={{color:GRAY}}>Chargement...</div>:(
-        <div className="admin-table-scroll" style={{overflowX:"auto"}}>
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead><tr style={{borderBottom:"2px solid rgba(109,212,0,0.2)"}}>
-            {["Appareil","Modèle","Pièce","Coût ($)","Fournisseur","MAJ",""].map(h=><th key={h} style={{...tdSt,color:GRAY,fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {filtered.length===0 && <tr><td colSpan={7} style={{...tdSt,textAlign:"center"}}>Aucune pièce</td></tr>}
-            {filtered.map(p=>{const days=daysSince(p.updated_at);return(
-              <tr key={p.id} style={{cursor:"default"}}>
-                <td style={tdSt}>{p.type_appareil}</td>
-                <td style={tdSt}>{p.modele||"—"}</td>
-                <td style={tdSt}>{p.type_piece}</td>
-                <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
-                <td style={tdSt}>{p.fournisseur}</td>
-                <td style={{...tdSt,color:days>30?"#f59e0b":GRAY,fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
-                <td style={tdSt}><button onClick={()=>handleDelete(p.id)} style={{background:"transparent",border:"none",color:RED,cursor:"pointer",fontSize:"0.85rem"}}>🗑</button></td>
-              </tr>
-            );})}
-          </tbody>
-        </table>
+      {/* ── Edit modal ── */}
+      {editId && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setEditId(null)}>
+          <div className="admin-modal" onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.25)",padding:"1.5rem",width:480,maxWidth:"96vw",animation:"adminFadeIn 0.2s ease both"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:GREEN,letterSpacing:"0.06em",textTransform:"uppercase"}}>Modifier la pièce</span>
+              <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.8rem",marginBottom:"0.8rem"}}>
+              <div><label style={labelSt}>Appareil *</label><input value={editForm.type_appareil} onChange={e=>setEditForm(p=>({...p,type_appareil:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Modèle</label><input value={editForm.modele} onChange={e=>setEditForm(p=>({...p,modele:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Type de pièce *</label><input value={editForm.type_piece} onChange={e=>setEditForm(p=>({...p,type_piece:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Coût ($) *</label><input type="number" value={editForm.cout_fournisseur} onChange={e=>setEditForm(p=>({...p,cout_fournisseur:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Fournisseur</label><input value={editForm.fournisseur} onChange={e=>setEditForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
+              <div><label style={labelSt}>Notes</label><input value={editForm.notes} onChange={e=>setEditForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
+            </div>
+            <div style={{display:"flex",gap:"0.8rem",justifyContent:"flex-end"}}>
+              <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
+              <button onClick={handleSaveEdit} disabled={saving} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:saving?0.6:1}}>
+                {saving?"ENREGISTREMENT...":"SAUVEGARDER"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
