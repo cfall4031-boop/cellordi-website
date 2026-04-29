@@ -72,6 +72,17 @@ router.delete("/catalogue/:id", auth, (req, res) => {
   res.json({ message: "Pièce supprimée." });
 });
 
+// Incrémenter le compteur de demandes
+router.post("/catalogue/:id/demande", auth, (req, res) => {
+  const qty = Math.max(1, parseInt(req.body.qty) || 1);
+  const existing = db.prepare("SELECT id FROM pieces_catalogue WHERE id = ?").get(req.params.id);
+  if (!existing) return res.status(404).json({ erreur: "Pièce introuvable." });
+  db.prepare("UPDATE pieces_catalogue SET nb_demandes = nb_demandes + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(qty, req.params.id);
+  const updated = db.prepare("SELECT nb_demandes FROM pieces_catalogue WHERE id = ?").get(req.params.id);
+  res.json({ message: "Demande enregistrée.", nb_demandes: updated.nb_demandes });
+});
+
 // ══════════════════════════════════════════════════════════════════
 // PRIX CONCURRENTS
 // ══════════════════════════════════════════════════════════════════

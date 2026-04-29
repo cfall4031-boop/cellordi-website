@@ -2304,17 +2304,18 @@ function CalculerPrix() {
 const BLANK_PIECE = {type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",cout_vente:"",fournisseur:"Tan Star Trade",notes:"",piece_detachee:false};
 
 // ── Table partagée pour les 2 sections ──────────────────────────────────────
-function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected }: {
+function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, onDemande }: {
   pieces: any[]; isDetachee: boolean;
   onEdit:(p:any,e:React.MouseEvent)=>void; onDelete:(id:number,e:React.MouseEvent)=>void;
   onSelect:(p:any)=>void; selected:any|null;
+  onDemande:(p:any,e:React.MouseEvent)=>void;
 }) {
   const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:"#a8b8d0"};
   const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
   const accentColor = isDetachee ? ORANGE : GREEN;
   const cols = isDetachee
-    ? ["Appareil","Modèle","Pièce","Achat ($)","Prix vente ($)","Fournisseur","MAJ",""]
-    : ["Appareil","Modèle","Pièce","Achat ($)","Vente service ($)","Fournisseur","MAJ",""];
+    ? ["Appareil","Modèle","Pièce","Achat ($)","Prix vente ($)","Demandes","Fournisseur","MAJ",""]
+    : ["Appareil","Modèle","Pièce","Achat ($)","Vente service ($)","Demandes","Fournisseur","MAJ",""];
   return (
     <div className="admin-table-scroll" style={{overflowX:"auto"}}>
     <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -2322,8 +2323,8 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected }
         {cols.map(h=><th key={h} style={{...tdSt,color:"#a8b8d0",fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
       </tr></thead>
       <tbody>
-        {pieces.length===0 && <tr><td colSpan={8} style={{...tdSt,textAlign:"center",color:"#4a6080",padding:"2rem"}}>Aucune pièce dans cette section</td></tr>}
-        {pieces.map(p=>{const days=daysSince(p.updated_at); const isActive=selected?.id===p.id; return(
+        {pieces.length===0 && <tr><td colSpan={9} style={{...tdSt,textAlign:"center",color:"#4a6080",padding:"2rem"}}>Aucune pièce dans cette section</td></tr>}
+        {pieces.map(p=>{const days=daysSince(p.updated_at); const isActive=selected?.id===p.id; const dem=p.nb_demandes||0; return(
           <tr key={p.id} onClick={()=>onSelect(p)}
             style={{cursor:"pointer",background:isActive?`${accentColor}12`:"transparent",transition:"background 0.15s"}}>
             <td style={{...tdSt,color:isActive?accentColor:"#fff",fontWeight:isActive?700:400}}>{p.type_appareil}</td>
@@ -2331,6 +2332,18 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected }
             <td style={tdSt}>{p.type_piece}</td>
             <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
             <td style={{...tdSt,color:p.cout_vente!=null?accentColor:"#4a6080",fontWeight:p.cout_vente!=null?600:400}}>{p.cout_vente!=null?`${p.cout_vente} $`:"—"}</td>
+            <td style={{...tdSt,whiteSpace:"nowrap"}}>
+              <span style={{
+                background: dem>0 ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.05)",
+                color: dem>0 ? BLUE : "#4a6080",
+                fontWeight: dem>0 ? 700 : 400,
+                fontSize:"0.78rem", padding:"0.12rem 0.5rem", marginRight:"0.4rem",
+              }}>{dem}×</span>
+              <button onClick={e=>onDemande(p,e)} title="Enregistrer une demande"
+                style={{background:`rgba(56,189,248,0.12)`,border:`1px solid rgba(56,189,248,0.3)`,color:BLUE,cursor:"pointer",fontSize:"0.72rem",padding:"0.12rem 0.4rem",fontWeight:700,letterSpacing:"0.03em"}}>
+                + demande
+              </button>
+            </td>
             <td style={tdSt}>{p.fournisseur}</td>
             <td style={{...tdSt,color:days>30?"#f59e0b":"#a8b8d0",fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
             <td style={{...tdSt,whiteSpace:"nowrap"}}>
@@ -2356,6 +2369,10 @@ function CataloguePieces() {
   const [editForm, setEditForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
   const [saving, setSaving] = useState(false);
   const [detail, setDetail] = useState<any|null>(null);
+  // ── Demandes
+  const [demandeTarget, setDemandeTarget] = useState<any|null>(null);
+  const [demandeQty, setDemandeQty] = useState("1");
+  const [demandeLoading, setDemandeLoading] = useState(false);
 
   const isDetachee = section === "detachee";
   const accentColor = isDetachee ? ORANGE : GREEN;
@@ -2411,6 +2428,22 @@ function CataloguePieces() {
   };
 
   const handleSelect = (p:any) => { setDetail(detail?.id===p.id?null:p); };
+
+  const openDemande = (p:any, e:React.MouseEvent) => {
+    e.stopPropagation();
+    setDemandeTarget(p); setDemandeQty("1");
+  };
+
+  const handleSaveDemande = async () => {
+    if(!demandeTarget) return;
+    const qty = Math.max(1, parseInt(demandeQty)||1);
+    setDemandeLoading(true);
+    const res = await prixApi.addDemande(demandeTarget.id, qty);
+    // Mettre à jour localement sans recharger toute la liste
+    setPieces(prev => prev.map(p => p.id===demandeTarget.id ? {...p, nb_demandes:(p.nb_demandes||0)+qty} : p));
+    if(detail?.id===demandeTarget.id) setDetail((d:any)=>({...d, nb_demandes:(d.nb_demandes||0)+qty}));
+    setDemandeLoading(false); setDemandeTarget(null);
+  };
 
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
   const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
@@ -2493,7 +2526,8 @@ function CataloguePieces() {
         {loading ? <div style={{color:GRAY}}>Chargement...</div> : (
           <PieceTable pieces={activeList} isDetachee={isDetachee}
             onEdit={openEdit} onDelete={handleDelete}
-            onSelect={handleSelect} selected={detail}/>
+            onSelect={handleSelect} selected={detail}
+            onDemande={openDemande}/>
         )}
       </div>
 
@@ -2503,6 +2537,17 @@ function CataloguePieces() {
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
             <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:accentColor,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
             <button onClick={()=>setDetail(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.1rem"}}>✕</button>
+          </div>
+          {/* Compteur demandes mis en avant */}
+          <div style={{background:"rgba(56,189,248,0.08)",border:"1px solid rgba(56,189,248,0.2)",padding:"0.7rem 0.9rem",marginBottom:"0.9rem",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.2rem"}}>Fois sollicitée</div>
+              <div style={{fontSize:"1.6rem",fontWeight:900,color:BLUE,fontFamily:"'Barlow Condensed',sans-serif",lineHeight:1}}>{detail.nb_demandes||0}<span style={{fontSize:"0.8rem",fontWeight:400,color:GRAY,marginLeft:"0.3rem"}}>demandes</span></div>
+            </div>
+            <button onClick={e=>openDemande(detail,e as any)}
+              style={{background:BLUE,color:NAVY,border:"none",padding:"0.4rem 0.8rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem"}}>
+              + Enregistrer
+            </button>
           </div>
           {[
             {label:"Appareil",    val:detail.type_appareil},
@@ -2521,6 +2566,43 @@ function CataloguePieces() {
             </div>
           ))}
           <button onClick={e=>openEdit(detail,e as any)} style={{width:"100%",marginTop:"0.8rem",background:accentColor,color:NAVY,border:"none",padding:"0.45rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.85rem"}}>✏️ MODIFIER</button>
+        </div>
+      )}
+
+      {/* ── Modal demande ── */}
+      {demandeTarget && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setDemandeTarget(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(56,189,248,0.3)",padding:"1.5rem",width:380,maxWidth:"96vw",animation:"adminFadeIn 0.2s ease both"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:BLUE,letterSpacing:"0.06em",textTransform:"uppercase"}}>Enregistrer une demande</span>
+              <button onClick={()=>setDemandeTarget(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
+            </div>
+            {/* Info pièce */}
+            <div style={{background:"rgba(255,255,255,0.04)",padding:"0.7rem 0.9rem",marginBottom:"1.2rem"}}>
+              <div style={{fontSize:"0.78rem",color:"#fff",fontWeight:600}}>{demandeTarget.type_appareil} {demandeTarget.modele||""}</div>
+              <div style={{fontSize:"0.75rem",color:GRAY}}>{demandeTarget.type_piece}</div>
+              <div style={{fontSize:"0.75rem",color:BLUE,marginTop:"0.3rem",fontWeight:600}}>Demandes actuelles : {demandeTarget.nb_demandes||0}×</div>
+            </div>
+            {/* Qty input */}
+            <div style={{marginBottom:"1.2rem"}}>
+              <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem"}}>Nombre de fois demandée</label>
+              <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
+                <button onClick={()=>setDemandeQty(q=>String(Math.max(1,parseInt(q)||1)-1))}
+                  style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",width:36,height:36,cursor:"pointer",fontSize:"1.1rem",fontWeight:700}}>−</button>
+                <input type="number" min="1" value={demandeQty} onChange={e=>setDemandeQty(e.target.value)}
+                  style={{flex:1,background:"rgba(56,189,248,0.08)",border:"1px solid rgba(56,189,248,0.35)",color:"#fff",padding:"0.5rem",fontSize:"1.1rem",fontWeight:700,textAlign:"center",outline:"none"}}/>
+                <button onClick={()=>setDemandeQty(q=>String((parseInt(q)||1)+1))}
+                  style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",width:36,height:36,cursor:"pointer",fontSize:"1.1rem",fontWeight:700}}>+</button>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:"0.8rem",justifyContent:"flex-end"}}>
+              <button onClick={()=>setDemandeTarget(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
+              <button onClick={handleSaveDemande} disabled={demandeLoading}
+                style={{background:BLUE,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:demandeLoading?0.6:1}}>
+                {demandeLoading?"ENREGISTREMENT...":"CONFIRMER"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

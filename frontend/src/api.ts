@@ -128,6 +128,8 @@ export const prixApi = {
     req<{ message: string }>("PATCH", `/prix/catalogue/${id}`, data),
   deletePiece:      (id: number) =>
     req<{ message: string }>("DELETE", `/prix/catalogue/${id}`),
+  addDemande:       (id: number, qty: number = 1) =>
+    req<{ message: string; nb_demandes: number }>("POST", `/prix/catalogue/${id}/demande`, { qty }),
 
   getConcurrents:   (params: Record<string, string> = {}) =>
     req<{ concurrents: any[] }>("GET", "/prix/concurrents" + toQuery(params)),
