@@ -2383,6 +2383,16 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
   const [editingPieceForm, setEditingPieceForm] = useState({type_piece:"",cout_fournisseur:"",cout_vente:""});
   const [editingSaving, setEditingSaving] = useState(false);
   const [search, setSearch] = useState("");
+  // ── Notes par fiche (localStorage)
+  const NOTES_KEY = "cellordi_fiche_notes";
+  const [ficheNotes, setFicheNotes] = React.useState<Record<string,string>>(()=>{
+    try { return JSON.parse(localStorage.getItem(NOTES_KEY)||"{}"); } catch { return {}; }
+  });
+  const saveNote = (key:string, val:string) => {
+    const next = {...ficheNotes, [key]: val};
+    setFicheNotes(next);
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(next)); } catch {}
+  };
 
   // Grouper les pièces de service par appareil+modèle
   const fiches = React.useMemo(()=>{
@@ -2600,6 +2610,18 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                         )}
                       </div>
                     ))}
+
+                    {/* ── Note de la fiche ── */}
+                    <div style={{padding:"0.55rem 1rem",borderTop:"1px solid rgba(255,255,255,0.05)",background:"rgba(255,255,255,0.015)"}}>
+                      <div style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY_DIM,textTransform:"uppercase",marginBottom:"0.3rem"}}>📝 Note</div>
+                      <textarea
+                        value={ficheNotes[key]||""}
+                        onChange={e=>saveNote(key,e.target.value)}
+                        placeholder="Ajouter une note sur cet appareil…"
+                        rows={2}
+                        style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid rgba(255,255,255,0.08)",color:"#b0b8cc",fontSize:"0.76rem",fontFamily:"'DM Sans',sans-serif",resize:"none",outline:"none",padding:"0.2rem 0",lineHeight:1.5,boxSizing:"border-box"}}
+                      />
+                    </div>
 
                     {/* ── Ajouter une pièce inline ── */}
                     {isAddingHere ? (
