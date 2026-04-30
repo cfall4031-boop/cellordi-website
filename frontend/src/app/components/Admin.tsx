@@ -2327,6 +2327,10 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
   const [addTarget, setAddTarget] = useState<{type_appareil:string;modele:string}|null>(null);
   const [addForm, setAddForm] = useState({type_piece:"",cout_fournisseur:"",cout_vente:""});
   const [addSaving, setAddSaving] = useState(false);
+  // ── Édition pièce inline
+  const [editingPieceId, setEditingPieceId] = useState<number|null>(null);
+  const [editingPieceForm, setEditingPieceForm] = useState({type_piece:"",cout_fournisseur:"",cout_vente:""});
+  const [editingSaving, setEditingSaving] = useState(false);
 
   // Grouper les pièces de service par appareil+modèle
   const fiches = React.useMemo(()=>{
@@ -2398,6 +2402,19 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
     onLoad();
   };
 
+  const handleEditPiece = async () => {
+    if(!editingPieceId||!editingPieceForm.type_piece) return;
+    setEditingSaving(true);
+    await prixApi.updatePiece(editingPieceId, {
+      type_piece: editingPieceForm.type_piece,
+      cout_fournisseur: editingPieceForm.cout_fournisseur ? Number(editingPieceForm.cout_fournisseur) : 0,
+      cout_vente: editingPieceForm.cout_vente ? Number(editingPieceForm.cout_vente) : null,
+    });
+    setEditingSaving(false);
+    setEditingPieceId(null);
+    onLoad();
+  };
+
   const inputSt:React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.4rem 0.6rem",fontSize:"0.82rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"};
   const selSt:React.CSSProperties = {...inputSt, background:"#0e2040", cursor:"pointer"};
   const optSt:React.CSSProperties = {background:"#0e2040", color:"#fff"};
@@ -2460,13 +2477,47 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                 {isOpen && (
                   <div style={{borderTop:`1px solid ${bColor}22`,flex:1}}>
                     {fiche.pieces.map((p:any)=>(
-                      <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0.35rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                        <span style={{fontSize:"0.8rem",color:"#c8c8dc",flex:1,marginRight:"0.5rem"}}>{p.type_piece}</span>
-                        <div style={{display:"flex",alignItems:"center",gap:"0.5rem",flexShrink:0}}>
-                          <span style={{fontSize:"0.75rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur>0?`${p.cout_fournisseur}$`:"—"}</span>
-                          {p.cout_vente!=null && <span style={{fontSize:"0.72rem",color:BLUE,fontWeight:600}}>{p.cout_vente}$</span>}
-                          <span style={{fontSize:"0.68rem",color:GRAY_DIM}}>{p.nb_demandes||0}×</span>
-                        </div>
+                      <div key={p.id} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                        {editingPieceId===p.id ? (
+                          /* ── Formulaire d'édition inline ── */
+                          <div style={{padding:"0.5rem 0.8rem",background:"rgba(109,212,0,0.04)"}}>
+                            <input autoFocus value={editingPieceForm.type_piece}
+                              onChange={e=>setEditingPieceForm(f=>({...f,type_piece:e.target.value}))}
+                              placeholder="Nom de la pièce *"
+                              style={{...inputSt,marginBottom:"0.35rem",fontSize:"0.78rem",padding:"0.3rem 0.5rem"}}/>
+                            <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.35rem"}}>
+                              <input type="number" placeholder="$ achat" value={editingPieceForm.cout_fournisseur}
+                                onChange={e=>setEditingPieceForm(f=>({...f,cout_fournisseur:e.target.value}))}
+                                style={{...inputSt,flex:1,fontSize:"0.78rem",padding:"0.3rem 0.5rem"}}/>
+                              <input type="number" placeholder="$ vente" value={editingPieceForm.cout_vente}
+                                onChange={e=>setEditingPieceForm(f=>({...f,cout_vente:e.target.value}))}
+                                style={{...inputSt,flex:1,fontSize:"0.78rem",padding:"0.3rem 0.5rem"}}/>
+                            </div>
+                            <div style={{display:"flex",gap:"0.4rem"}}>
+                              <button onClick={()=>setEditingPieceId(null)} style={{flex:1,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:GRAY,padding:"0.28rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.75rem"}}>ANNULER</button>
+                              <button onClick={handleEditPiece} disabled={editingSaving||!editingPieceForm.type_piece}
+                                style={{flex:2,background:GREEN,color:NAVY,border:"none",padding:"0.28rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.75rem",opacity:editingSaving?0.6:1}}>
+                                {editingSaving?"...":"✓ SAUVEGARDER"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* ── Ligne normale + boutons discrets ── */
+                          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0.35rem 1rem",gap:"0.4rem"}}>
+                            <span style={{fontSize:"0.8rem",color:"#c8c8dc",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.type_piece}</span>
+                            <div style={{display:"flex",alignItems:"center",gap:"0.4rem",flexShrink:0}}>
+                              <span style={{fontSize:"0.75rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur>0?`${p.cout_fournisseur}$`:"—"}</span>
+                              {p.cout_vente!=null && <span style={{fontSize:"0.72rem",color:BLUE,fontWeight:600}}>{p.cout_vente}$</span>}
+                              <span style={{fontSize:"0.68rem",color:GRAY_DIM}}>{p.nb_demandes||0}×</span>
+                              {/* Bouton modifier — discret */}
+                              <button onClick={e=>{e.stopPropagation();setEditingPieceId(p.id);setEditingPieceForm({type_piece:p.type_piece,cout_fournisseur:p.cout_fournisseur!=null?String(p.cout_fournisseur):"",cout_vente:p.cout_vente!=null?String(p.cout_vente):""});}}
+                                title="Modifier" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(160,160,200,0.35)",fontSize:"0.72rem",padding:"0 2px",lineHeight:1}}>✎</button>
+                              {/* Bouton supprimer — discret */}
+                              <button onClick={async e=>{e.stopPropagation();if(!confirm(`Supprimer "${p.type_piece}" ?`)) return;await prixApi.deletePiece(p.id);onLoad();}}
+                                title="Supprimer" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,80,80,0.3)",fontSize:"0.72rem",padding:"0 2px",lineHeight:1}}>✕</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
 
