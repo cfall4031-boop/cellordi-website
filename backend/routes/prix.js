@@ -20,6 +20,22 @@ router.get("/catalogue", auth, (req, res) => {
   res.json({ pieces: db.prepare(sql).all(...params) });
 });
 
+// Bulk insert — DOIT être avant /:id
+router.post("/catalogue/bulk", auth, (req, res) => {
+  const { pieces } = req.body;
+  if (!Array.isArray(pieces) || pieces.length === 0)
+    return res.status(400).json({ erreur: "Tableau de pièces requis." });
+  const stmt = db.prepare(`
+    INSERT INTO pieces_catalogue (type_appareil,modele,type_piece,cout_fournisseur,cout_vente,fournisseur,notes,piece_detachee)
+    VALUES (?,?,?,?,?,?,?,?)
+  `);
+  db.transaction(rows => {
+    for (const p of rows)
+      stmt.run(p.type_appareil, p.modele||null, p.type_piece, Number(p.cout_fournisseur)||0, null, p.fournisseur||"Tan Star Trade", p.notes||null, 0);
+  })(pieces);
+  res.status(201).json({ message: `${pieces.length} pièces ajoutées.` });
+});
+
 router.post("/catalogue", auth, (req, res) => {
   const { type_appareil, modele, type_piece, cout_fournisseur, cout_vente, fournisseur, notes, piece_detachee } = req.body;
   if (!type_appareil || !type_piece || cout_fournisseur == null) {

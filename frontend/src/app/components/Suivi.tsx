@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FadeUp } from "./FadeUp";
 import { TypewriterTitle } from "./TypewriterTitle";
+import { FloatingInput } from "./FloatingInput";
 import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY, btn, inputStyle, labelStyle } from "../tokens";
 import { ticketsApi } from "../../api";
 
@@ -69,18 +70,17 @@ export function Suivi() {
 
         <FadeUp delay={0.1}>
           <form onSubmit={handleSearch} style={{ marginBottom: "2rem" }}>
-            <label style={labelStyle}>{t("suivi.label")}</label>
-            <div style={{ display: "flex", gap: "0.8rem" }}>
-              <input
+            <div style={{ display: "flex", gap: "0.8rem", alignItems: "flex-start" }}>
+              <FloatingInput
+                label={t("suivi.label")}
                 value={ticket}
                 onChange={(e) => setTicket(e.target.value)}
-                placeholder={t("suivi.placeholder")}
                 required
-                style={{ ...inputStyle, flex: 1 }}
+                containerStyle={{ flex: 1 }}
               />
               <button
                 type="submit"
-                style={{ ...btn(hovBtn ? GREEN_GLOW : GREEN, NAVY), whiteSpace: "nowrap" }}
+                style={{ ...btn(hovBtn ? GREEN_GLOW : GREEN, NAVY), whiteSpace: "nowrap", alignSelf: "flex-end", marginBottom: "0" }}
                 onMouseEnter={() => setHovBtn(true)}
                 onMouseLeave={() => setHovBtn(false)}
               >

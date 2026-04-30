@@ -130,6 +130,8 @@ export const prixApi = {
     req<{ message: string }>("DELETE", `/prix/catalogue/${id}`),
   addDemande:       (id: number, qty: number = 1) =>
     req<{ message: string; nb_demandes: number }>("POST", `/prix/catalogue/${id}/demande`, { qty }),
+  bulkAddPieces:    (pieces: Record<string, unknown>[]) =>
+    req<{ message: string }>("POST", "/prix/catalogue/bulk", { pieces }),
 
   getConcurrents:   (params: Record<string, string> = {}) =>
     req<{ concurrents: any[] }>("GET", "/prix/concurrents" + toQuery(params)),
