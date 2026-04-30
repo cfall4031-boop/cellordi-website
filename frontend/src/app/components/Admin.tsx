@@ -2515,8 +2515,8 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
 
       {/* ── Modal créer fiche ── */}
       {showCreate && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={()=>setShowCreate(false)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.25)",width:520,maxWidth:"96vw",maxHeight:"92vh",display:"flex",flexDirection:"column",animation:"adminFadeIn 0.2s ease both"}}>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:300,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"1.5rem 1rem",overflowY:"auto"}} onClick={()=>setShowCreate(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.25)",width:520,maxWidth:"96vw",maxHeight:"calc(100vh - 3rem)",display:"flex",flexDirection:"column",animation:"adminFadeIn 0.2s ease both"}}>
 
             {/* ── En-tête + champs marque/modèle (fixe) ── */}
             <div style={{padding:"1.25rem 1.5rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
