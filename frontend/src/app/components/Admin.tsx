@@ -2165,111 +2165,111 @@ function Calculateur() {
 }
 
 // ── CONVERTISSEUR DE DEVISES ──────────────────────────────────────
-function Convertisseur() {
-  const [rates, setRates] = React.useState<{usdCad:number;cnyCad:number}|null>(null);
-  const [ratesLoading, setRatesLoading] = React.useState(true);
-  const [ratesError, setRatesError] = React.useState(false);
-  const [lastUpdate, setLastUpdate] = React.useState("");
+// Taux de secours (jamais null — le rendu ne peut pas crasher)
+const CONV_FALLBACK = { usdCad: 1.3650, cnyCad: 0.1883 };
 
-  // Champs USD
+function Convertisseur() {
+  // Rates initialisées avec valeurs de secours → jamais null
+  const [rates, setRates] = React.useState(CONV_FALLBACK);
+  const [status, setStatus] = React.useState<"loading"|"live"|"approx">("loading");
+  const [lastUpdate, setLastUpdate] = React.useState("");
   const [usdAmt, setUsdAmt] = React.useState("");
-  // Champs CNY
   const [cnyAmt, setCnyAmt] = React.useState("");
-  // Champ multi-articles (liste de prix USD)
   const [multiLines, setMultiLines] = React.useState("");
 
-  const fetchRates = async () => {
-    setRatesLoading(true); setRatesError(false);
+  const doFetch = React.useCallback(async () => {
+    setStatus("loading");
+    // Source 1 : open.er-api.com
     try {
-      // open.er-api.com supporte USD, CAD ET CNY — 1 seul appel
-      const res = await fetch("https://open.er-api.com/v6/latest/USD");
-      const data = await res.json();
-      const usdCad: number = data?.rates?.CAD ?? 1.3650;
-      const usdCny: number = data?.rates?.CNY ?? 7.2500;
-      const cnyCad: number = usdCad / usdCny; // cross-rate CNY→CAD
-      setRates({ usdCad, cnyCad });
-      setLastUpdate(new Date().toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"}));
-    } catch(_e) {
-      setRates({ usdCad: 1.3650, cnyCad: 0.1883 }); // fallback approx
-      setRatesError(true);
+      const r = await fetch("https://open.er-api.com/v6/latest/USD");
+      const d = await r.json();
+      const c = Number(d?.rates?.CAD); const y = Number(d?.rates?.CNY);
+      if (c > 0 && y > 0) {
+        setRates({ usdCad: c, cnyCad: c / y });
+        setLastUpdate(new Date().toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"}));
+        setStatus("live"); return;
+      }
+    } catch(_) {}
+    // Source 2 : currency-api (jsDelivr CDN)
+    try {
+      const r = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json");
+      const d = await r.json();
+      const c = Number(d?.usd?.cad); const y = Number(d?.usd?.cny);
+      if (c > 0 && y > 0) {
+        setRates({ usdCad: c, cnyCad: c / y });
+        setLastUpdate(new Date().toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"}));
+        setStatus("live"); return;
+      }
+    } catch(_) {}
+    setStatus("approx");
+  }, []);
+
+  React.useEffect(() => { doFetch(); }, [doFetch]);
+
+  // Résultats (rates jamais null → aucun risque)
+  const usdNum = parseFloat(usdAmt);
+  const cnyNum = parseFloat(cnyAmt);
+  const usdVal = usdAmt && !isNaN(usdNum) ? usdNum * rates.usdCad : null;
+  const cnyVal = cnyAmt && !isNaN(cnyNum) ? cnyNum * rates.cnyCad : null;
+
+  // Facture multi-articles
+  const multiResults: Array<{label:string;usd:number;cad:number}> = React.useMemo(() => {
+    if (!multiLines.trim()) return [];
+    const out: Array<{label:string;usd:number;cad:number}> = [];
+    for (const line of multiLines.split("\n")) {
+      const t = line.trim(); if (!t) continue;
+      const m = t.match(/([\d.,]+)\s*\$?\s*$/); if (!m) continue;
+      const usd = parseFloat(m[1].replace(",",".")); if (isNaN(usd)) continue;
+      const label = t.slice(0, t.length - m[0].length).trim();
+      out.push({ label: label || t, usd, cad: usd * rates.usdCad });
     }
-    setRatesLoading(false);
-  };
+    return out;
+  }, [multiLines, rates.usdCad]);
 
-  React.useEffect(()=>{ fetchRates(); },[]);
-
-  const usdVal = rates && usdAmt ? (parseFloat(usdAmt)*rates.usdCad) : null;
-  const cnyVal = rates && cnyAmt ? (parseFloat(cnyAmt)*rates.cnyCad) : null;
-
-  // Multi-lignes : parser "Écran LCD 12.99" ou "12.99" ou "12,99"
-  const multiResults = React.useMemo(()=>{
-    if(!rates||!multiLines.trim()) return [];
-    return multiLines.split("\n").map(line=>{
-      const trimmed = line.trim();
-      if(!trimmed) return null;
-      const match = trimmed.match(/([\d.,]+)\s*\$?\s*$/);
-      if(!match) return null;
-      const usd = parseFloat(match[1].replace(",","."));
-      if(isNaN(usd)) return null;
-      const label = trimmed.replace(match[0],"").trim();
-      return { label: label||trimmed, usd, cad: usd*rates.usdCad };
-    }).filter(Boolean);
-  },[multiLines, rates]);
-
-  const inSt:React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.65rem 0.8rem",fontSize:"1.1rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4};
-  const cardSt:React.CSSProperties = {background:NAVY_LIGHT,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6,flex:1,minWidth:260};
-  const labelSt:React.CSSProperties = {fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem",display:"block"};
-  const resultSt:React.CSSProperties = {fontSize:"2rem",fontWeight:700,color:GREEN,fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:"0.02em"};
+  const inSt: React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.65rem 0.8rem",fontSize:"1.1rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4};
+  const cardSt: React.CSSProperties = {background:NAVY_LIGHT,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6,flex:1,minWidth:260};
+  const labelSt: React.CSSProperties = {fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem",display:"block"};
+  const bigSt: React.CSSProperties = {fontSize:"2rem",fontWeight:700,color:GREEN,fontFamily:"'Barlow Condensed',sans-serif"};
 
   return (
     <div style={{maxWidth:900}}>
-      {/* ── Taux en direct ── */}
+      {/* ── Bandeau taux ── */}
       <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1.5rem",padding:"0.75rem 1rem",background:"rgba(109,212,0,0.06)",border:"1px solid rgba(109,212,0,0.15)",borderRadius:6}}>
         <span style={{fontSize:"0.8rem",color:GRAY,flex:1}}>
-          {ratesLoading ? "Chargement des taux…" : ratesError
-            ? "⚠️ Taux approximatifs (hors ligne)"
-            : `✅ Taux en direct · mis à jour ${lastUpdate}`}
-          {rates && !ratesLoading && (
-            <span style={{marginLeft:"1.5rem",color:"#c8c8dc"}}>
-              1 USD = <strong style={{color:GREEN}}>{rates.usdCad.toFixed(4)} CAD</strong>
-              <span style={{margin:"0 0.8rem",color:GRAY_DIM}}>·</span>
-              1 CNY = <strong style={{color:GREEN}}>{rates.cnyCad.toFixed(4)} CAD</strong>
+          {status==="loading" && "⏳ Chargement des taux…"}
+          {status==="approx" && "⚠️ Taux approximatifs (vérifiez votre connexion)"}
+          {status==="live" && `✅ Taux en direct · ${lastUpdate}`}
+          {status!=="loading" && (
+            <span style={{marginLeft:"1.2rem",color:"#c8c8dc"}}>
+              1 USD = <strong style={{color:GREEN}}>{rates.usdCad.toFixed(4)}</strong> CAD
+              <span style={{margin:"0 0.6rem",color:GRAY_DIM}}>·</span>
+              1 CNY = <strong style={{color:GREEN}}>{rates.cnyCad.toFixed(4)}</strong> CAD
             </span>
           )}
         </span>
-        <button onClick={fetchRates} disabled={ratesLoading}
-          style={{background:"transparent",border:"1px solid rgba(109,212,0,0.3)",color:GREEN,padding:"0.3rem 0.8rem",cursor:"pointer",fontSize:"0.78rem",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:ratesLoading?0.5:1,borderRadius:4}}>
+        <button onClick={doFetch} disabled={status==="loading"}
+          style={{background:"transparent",border:"1px solid rgba(109,212,0,0.3)",color:GREEN,padding:"0.3rem 0.8rem",cursor:"pointer",fontSize:"0.78rem",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:status==="loading"?0.5:1,borderRadius:4,flexShrink:0}}>
           ↻ Actualiser
         </button>
       </div>
 
-      {/* ── Convertisseurs simples ── */}
+      {/* ── 2 cartes convertisseur ── */}
       <div style={{display:"flex",gap:"1rem",flexWrap:"wrap",marginBottom:"1.5rem"}}>
 
         {/* USD → CAD */}
         <div style={cardSt}>
-          <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"1.2rem"}}>
-            <span style={{fontSize:"1.4rem"}}>🇺🇸</span>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",letterSpacing:"0.06em",color:"#fff"}}>USD → CAD</span>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:"#fff",marginBottom:"1rem"}}>🇺🇸 USD → CAD</div>
+          <label style={labelSt}>Montant USD ($)</label>
+          <input type="number" min="0" step="0.01" value={usdAmt} onChange={e=>setUsdAmt(e.target.value)} placeholder="0.00" style={inSt}/>
+          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
+            {usdVal!=null
+              ? <div><span style={bigSt}>{usdVal.toFixed(2)}</span><span style={{color:GRAY,marginLeft:"0.4rem"}}>$ CAD</span><div style={{fontSize:"0.7rem",color:GRAY_DIM,marginTop:"0.15rem"}}>taux : {rates.usdCad.toFixed(4)}</div></div>
+              : <span style={{color:GRAY_DIM,fontSize:"0.85rem"}}>Entrez un montant</span>}
           </div>
-          <label style={labelSt}>Montant en USD ($)</label>
-          <input type="number" min="0" step="0.01" value={usdAmt}
-            onChange={e=>setUsdAmt(e.target.value)}
-            placeholder="0.00"
-            style={inSt}/>
-          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",flexDirection:"column",justifyContent:"center"}}>
-            {usdVal!=null ? (<>
-              <div style={resultSt}>{usdVal.toFixed(2)} $<span style={{fontSize:"1rem",color:GRAY,marginLeft:"0.3rem"}}>CAD</span></div>
-              {rates && <div style={{fontSize:"0.72rem",color:GRAY,marginTop:"0.2rem"}}>Taux : 1 USD = {rates.usdCad.toFixed(4)} CAD</div>}
-            </>) : (
-              <div style={{color:GRAY_DIM,fontSize:"0.85rem"}}>Entrez un montant</div>
-            )}
-          </div>
-          {/* Raccourcis */}
-          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.6rem"}}>
+          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.7rem"}}>
             {[5,10,20,50,100,200].map(v=>(
               <button key={v} onClick={()=>setUsdAmt(String(v))}
-                style={{background:usdAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${usdAmt===String(v)?"rgba(109,212,0,0.5)":"rgba(255,255,255,0.08)"}`,color:usdAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.55rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
+                style={{background:usdAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${usdAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(255,255,255,0.08)"}`,color:usdAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
                 {v}$
               </button>
             ))}
@@ -2278,29 +2278,18 @@ function Convertisseur() {
 
         {/* CNY → CAD */}
         <div style={cardSt}>
-          <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"1.2rem"}}>
-            <span style={{fontSize:"1.4rem"}}>🇨🇳</span>
-            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",letterSpacing:"0.06em",color:"#fff"}}>CNY → CAD</span>
-            <span style={{fontSize:"0.68rem",color:GRAY,marginLeft:"0.2rem"}}>(Yuan)</span>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:"#fff",marginBottom:"1rem"}}>🇨🇳 CNY → CAD <span style={{fontSize:"0.7rem",color:GRAY,fontWeight:400}}>(Yuan)</span></div>
+          <label style={labelSt}>Montant CNY (¥)</label>
+          <input type="number" min="0" step="0.01" value={cnyAmt} onChange={e=>setCnyAmt(e.target.value)} placeholder="0.00" style={inSt}/>
+          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
+            {cnyVal!=null
+              ? <div><span style={bigSt}>{cnyVal.toFixed(2)}</span><span style={{color:GRAY,marginLeft:"0.4rem"}}>$ CAD</span><div style={{fontSize:"0.7rem",color:GRAY_DIM,marginTop:"0.15rem"}}>taux : {rates.cnyCad.toFixed(4)}</div></div>
+              : <span style={{color:GRAY_DIM,fontSize:"0.85rem"}}>Entrez un montant</span>}
           </div>
-          <label style={labelSt}>Montant en CNY (¥)</label>
-          <input type="number" min="0" step="0.01" value={cnyAmt}
-            onChange={e=>setCnyAmt(e.target.value)}
-            placeholder="0.00"
-            style={inSt}/>
-          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",flexDirection:"column",justifyContent:"center"}}>
-            {cnyVal!=null ? (<>
-              <div style={resultSt}>{cnyVal.toFixed(2)} $<span style={{fontSize:"1rem",color:GRAY,marginLeft:"0.3rem"}}>CAD</span></div>
-              {rates && <div style={{fontSize:"0.72rem",color:GRAY,marginTop:"0.2rem"}}>Taux : 1 CNY = {rates.cnyCad.toFixed(4)} CAD</div>}
-            </>) : (
-              <div style={{color:GRAY_DIM,fontSize:"0.85rem"}}>Entrez un montant</div>
-            )}
-          </div>
-          {/* Raccourcis */}
-          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.6rem"}}>
+          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.7rem"}}>
             {[50,100,200,500,1000,2000].map(v=>(
               <button key={v} onClick={()=>setCnyAmt(String(v))}
-                style={{background:cnyAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${cnyAmt===String(v)?"rgba(109,212,0,0.5)":"rgba(255,255,255,0.08)"}`,color:cnyAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.55rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
+                style={{background:cnyAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${cnyAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(255,255,255,0.08)"}`,color:cnyAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
                 ¥{v}
               </button>
             ))}
@@ -2308,37 +2297,31 @@ function Convertisseur() {
         </div>
       </div>
 
-      {/* ── Conversion multi-articles (facture fournisseur) ── */}
+      {/* ── Facture fournisseur ── */}
       <div style={{background:NAVY_LIGHT,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6}}>
-        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",letterSpacing:"0.06em",color:GREEN,marginBottom:"0.3rem"}}>
-          📋 Conversion facture fournisseur (USD → CAD)
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:GREEN,marginBottom:"0.25rem"}}>📋 Facture fournisseur USD → CAD</div>
+        <div style={{fontSize:"0.75rem",color:GRAY,marginBottom:"0.8rem"}}>
+          Une ligne par article : <code style={{color:"#c8c8dc",background:"rgba(255,255,255,0.06)",padding:"0 4px",borderRadius:2}}>Écran OLED 24.99</code>
         </div>
-        <div style={{fontSize:"0.76rem",color:GRAY,marginBottom:"0.8rem"}}>
-          Une ligne par article — format : <code style={{color:"#c8c8dc",background:"rgba(255,255,255,0.06)",padding:"0 4px"}}>Nom de la pièce 12.99</code> ou juste <code style={{color:"#c8c8dc",background:"rgba(255,255,255,0.06)",padding:"0 4px"}}>12.99</code>
-        </div>
-        <textarea
-          value={multiLines}
-          onChange={e=>setMultiLines(e.target.value)}
+        <textarea value={multiLines} onChange={e=>setMultiLines(e.target.value)}
           placeholder={"Écran OLED iPhone 14 24.99\nBatterie Samsung S23 8.50\nConnecteur USB-C 3.20"}
-          rows={5}
-          style={{...inSt,resize:"vertical",lineHeight:1.6,fontSize:"0.85rem"}}
-        />
-        {multiResults.length>0 && (
+          rows={5} style={{...inSt,resize:"vertical",lineHeight:1.6,fontSize:"0.85rem"}}/>
+        {multiResults.length > 0 && (
           <div style={{marginTop:"1rem",border:"1px solid rgba(255,255,255,0.07)",borderRadius:4,overflow:"hidden"}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr auto auto",background:"rgba(255,255,255,0.04)",padding:"0.4rem 0.8rem",fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",gap:"1rem"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",background:"rgba(255,255,255,0.04)",padding:"0.4rem 0.8rem",fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase"}}>
               <span>Article</span><span style={{textAlign:"right"}}>USD</span><span style={{textAlign:"right"}}>CAD</span>
             </div>
-            {(multiResults as any[]).map((item,i)=>(
-              <div key={i} style={{display:"grid",gridTemplateColumns:"1fr auto auto",padding:"0.45rem 0.8rem",borderTop:"1px solid rgba(255,255,255,0.04)",fontSize:"0.83rem",gap:"1rem",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+            {multiResults.map((item,i)=>(
+              <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",padding:"0.4rem 0.8rem",borderTop:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
                 <span style={{color:"#c8c8dc"}}>{item.label}</span>
-                <span style={{textAlign:"right",color:GRAY,fontFamily:"monospace"}}>{item.usd.toFixed(2)} $</span>
-                <span style={{textAlign:"right",color:GREEN,fontWeight:700,fontFamily:"monospace"}}>{item.cad.toFixed(2)} $</span>
+                <span style={{textAlign:"right",color:GRAY,fontFamily:"monospace"}}>{item.usd.toFixed(2)}</span>
+                <span style={{textAlign:"right",color:GREEN,fontWeight:700,fontFamily:"monospace"}}>{item.cad.toFixed(2)}</span>
               </div>
             ))}
-            <div style={{display:"grid",gridTemplateColumns:"1fr auto auto",padding:"0.5rem 0.8rem",borderTop:`2px solid rgba(109,212,0,0.2)`,gap:"1rem",background:"rgba(109,212,0,0.04)"}}>
-              <span style={{fontWeight:700,fontSize:"0.85rem",color:"#fff"}}>TOTAL</span>
-              <span style={{textAlign:"right",fontWeight:700,color:GRAY,fontFamily:"monospace"}}>{(multiResults as any[]).reduce((s,i)=>s+i.usd,0).toFixed(2)} $</span>
-              <span style={{textAlign:"right",fontWeight:700,color:GREEN,fontFamily:"monospace",fontSize:"1rem"}}>{(multiResults as any[]).reduce((s,i)=>s+i.cad,0).toFixed(2)} $</span>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",padding:"0.5rem 0.8rem",borderTop:"2px solid rgba(109,212,0,0.2)",background:"rgba(109,212,0,0.04)"}}>
+              <span style={{fontWeight:700,color:"#fff",fontSize:"0.85rem"}}>TOTAL</span>
+              <span style={{textAlign:"right",fontWeight:700,color:GRAY,fontFamily:"monospace"}}>{multiResults.reduce((s,i)=>s+i.usd,0).toFixed(2)}</span>
+              <span style={{textAlign:"right",fontWeight:700,color:GREEN,fontFamily:"monospace",fontSize:"1rem"}}>{multiResults.reduce((s,i)=>s+i.cad,0).toFixed(2)}</span>
             </div>
           </div>
         )}
