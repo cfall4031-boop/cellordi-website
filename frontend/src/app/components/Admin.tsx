@@ -2323,6 +2323,10 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
   const [costs, setCosts] = useState<Record<string,string>>({});
   const [creating, setCreating] = useState(false);
   const [expandedFiche, setExpandedFiche] = useState<string|null>(null);
+  // ── Ajout pièce sur fiche existante
+  const [addTarget, setAddTarget] = useState<{type_appareil:string;modele:string}|null>(null);
+  const [addForm, setAddForm] = useState({type_piece:"",cout_fournisseur:"",cout_vente:""});
+  const [addSaving, setAddSaving] = useState(false);
 
   // Grouper les pièces de service par appareil+modèle
   const fiches = React.useMemo(()=>{
@@ -2369,6 +2373,23 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
     setCreating(false); setShowCreate(false); onLoad();
   };
 
+  const handleAddPiece = async () => {
+    if(!addTarget||!addForm.type_piece) return;
+    setAddSaving(true);
+    await prixApi.addPiece({
+      type_appareil: addTarget.type_appareil,
+      modele: addTarget.modele||null,
+      type_piece: addForm.type_piece,
+      cout_fournisseur: addForm.cout_fournisseur ? Number(addForm.cout_fournisseur) : 0,
+      cout_vente: addForm.cout_vente ? Number(addForm.cout_vente) : null,
+      piece_detachee: 0,
+    });
+    setAddSaving(false);
+    setAddTarget(null);
+    setAddForm({type_piece:"",cout_fournisseur:"",cout_vente:""});
+    onLoad();
+  };
+
   const inputSt:React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.4rem 0.6rem",fontSize:"0.82rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"};
   const selSt:React.CSSProperties = {...inputSt, background:"#0e2040", cursor:"pointer"};
   const optSt:React.CSSProperties = {background:"#0e2040", color:"#fff"};
@@ -2389,41 +2410,79 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
           Aucune fiche — créez une fiche pour un appareil pour commencer.
         </div>
       ) : (
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:"1rem"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"0.85rem"}}>
           {fiches.map(fiche=>{
             const key = `${fiche.type_appareil}||${fiche.modele}`;
             const isOpen = expandedFiche===key;
             const bColor = BRAND_COLOR[fiche.type_appareil]||GREEN;
             const totalPieces = fiche.pieces.length;
+            const isAddingHere = addTarget?.type_appareil===fiche.type_appareil && addTarget?.modele===(fiche.modele||"");
             return (
-              <div key={key} style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${bColor}22`,overflow:"hidden",transition:"border-color 0.2s"}}>
-                {/* Card header */}
-                <div style={{padding:"0.9rem 1rem",borderBottom:`1px solid ${bColor}22`,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}
+              <div key={key} style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${isOpen?bColor+"55":bColor+"22"}`,overflow:"hidden",transition:"border-color 0.2s",display:"flex",flexDirection:"column"}}>
+                {/* Card header — cliquable */}
+                <div style={{padding:"0.75rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}
                   onClick={()=>setExpandedFiche(isOpen?null:key)}>
-                  <div>
-                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:bColor,letterSpacing:"0.03em",textTransform:"uppercase"}}>
+                  <div style={{minWidth:0}}>
+                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem",color:bColor,letterSpacing:"0.05em",textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
                       {fiche.type_appareil}
                     </div>
-                    <div style={{fontSize:"0.88rem",color:"#fff",fontWeight:600,marginTop:"0.1rem"}}>{fiche.modele||"—"}</div>
+                    <div style={{fontSize:"0.82rem",color:"#fff",fontWeight:600,marginTop:"0.05rem",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{fiche.modele||<span style={{color:GRAY_DIM,fontStyle:"italic"}}>Sans modèle</span>}</div>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
-                    <span style={{background:`${bColor}20`,color:bColor,fontSize:"0.72rem",fontWeight:700,padding:"0.2rem 0.6rem"}}>{totalPieces} pièce{totalPieces>1?"s":""}</span>
-                    <span style={{color:GRAY,fontSize:"0.9rem"}}>{isOpen?"▲":"▼"}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:"0.4rem",flexShrink:0,marginLeft:"0.5rem"}}>
+                    <span style={{background:`${bColor}22`,color:bColor,fontSize:"0.68rem",fontWeight:700,padding:"0.15rem 0.5rem",whiteSpace:"nowrap"}}>{totalPieces} pce{totalPieces>1?"s":""}</span>
+                    <span style={{color:GRAY,fontSize:"0.8rem"}}>{isOpen?"▲":"▼"}</span>
                   </div>
                 </div>
-                {/* Pièces list */}
+
+                {/* Pièces list (expanded) */}
                 {isOpen && (
-                  <div style={{padding:"0.6rem 0"}}>
+                  <div style={{borderTop:`1px solid ${bColor}22`,flex:1}}>
                     {fiche.pieces.map((p:any)=>(
-                      <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0.4rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                        <span style={{fontSize:"0.82rem",color:"#c8c8dc"}}>{p.type_piece}</span>
-                        <div style={{display:"flex",alignItems:"center",gap:"0.8rem"}}>
-                          {p.cout_fournisseur>0 && <span style={{fontSize:"0.78rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</span>}
-                          {p.cout_vente!=null && <span style={{fontSize:"0.78rem",color:BLUE,fontWeight:600}}>{p.cout_vente} $</span>}
-                          <span style={{fontSize:"0.72rem",color:GRAY_DIM}}>{p.nb_demandes||0}×</span>
+                      <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0.35rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                        <span style={{fontSize:"0.8rem",color:"#c8c8dc",flex:1,marginRight:"0.5rem"}}>{p.type_piece}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:"0.5rem",flexShrink:0}}>
+                          <span style={{fontSize:"0.75rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur>0?`${p.cout_fournisseur}$`:"—"}</span>
+                          {p.cout_vente!=null && <span style={{fontSize:"0.72rem",color:BLUE,fontWeight:600}}>{p.cout_vente}$</span>}
+                          <span style={{fontSize:"0.68rem",color:GRAY_DIM}}>{p.nb_demandes||0}×</span>
                         </div>
                       </div>
                     ))}
+
+                    {/* ── Ajouter une pièce inline ── */}
+                    {isAddingHere ? (
+                      <div style={{padding:"0.6rem 0.8rem",borderTop:"1px solid rgba(109,212,0,0.15)",background:"rgba(109,212,0,0.04)"}}>
+                        <input
+                          autoFocus
+                          placeholder="Nom de la pièce *"
+                          value={addForm.type_piece}
+                          onChange={e=>setAddForm(f=>({...f,type_piece:e.target.value}))}
+                          style={{...inputSt,marginBottom:"0.4rem",fontSize:"0.78rem",padding:"0.35rem 0.5rem"}}
+                        />
+                        <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.4rem"}}>
+                          <input type="number" placeholder="$ achat" value={addForm.cout_fournisseur}
+                            onChange={e=>setAddForm(f=>({...f,cout_fournisseur:e.target.value}))}
+                            style={{...inputSt,flex:1,fontSize:"0.78rem",padding:"0.35rem 0.5rem"}}/>
+                          <input type="number" placeholder="$ vente" value={addForm.cout_vente}
+                            onChange={e=>setAddForm(f=>({...f,cout_vente:e.target.value}))}
+                            style={{...inputSt,flex:1,fontSize:"0.78rem",padding:"0.35rem 0.5rem"}}/>
+                        </div>
+                        <div style={{display:"flex",gap:"0.4rem"}}>
+                          <button onClick={()=>setAddTarget(null)} style={{flex:1,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:GRAY,padding:"0.3rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.78rem"}}>ANNULER</button>
+                          <button onClick={handleAddPiece} disabled={addSaving||!addForm.type_piece}
+                            style={{flex:2,background:GREEN,color:NAVY,border:"none",padding:"0.3rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.78rem",opacity:addSaving?0.6:1}}>
+                            {addSaving?"...":"✓ AJOUTER"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{padding:"0.5rem 1rem",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                        <button
+                          onClick={e=>{e.stopPropagation();setAddTarget({type_appareil:fiche.type_appareil,modele:fiche.modele||""});setAddForm({type_piece:"",cout_fournisseur:"",cout_vente:""}); }}
+                          style={{width:"100%",background:"rgba(109,212,0,0.07)",border:"1px dashed rgba(109,212,0,0.3)",color:GREEN,padding:"0.35rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.8rem",letterSpacing:"0.05em"}}>
+                          + Ajouter une pièce
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
