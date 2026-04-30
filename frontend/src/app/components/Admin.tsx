@@ -2382,6 +2382,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
   const [editingPieceId, setEditingPieceId] = useState<number|null>(null);
   const [editingPieceForm, setEditingPieceForm] = useState({type_piece:"",cout_fournisseur:"",cout_vente:""});
   const [editingSaving, setEditingSaving] = useState(false);
+  const [search, setSearch] = useState("");
 
   // Grouper les pièces de service par appareil+modèle
   const fiches = React.useMemo(()=>{
@@ -2470,12 +2471,36 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
   const selSt:React.CSSProperties = {...inputSt, background:"#0e2040", cursor:"pointer"};
   const optSt:React.CSSProperties = {background:"#0e2040", color:"#fff"};
 
+  const q = search.trim().toLowerCase();
+  const visibleFiches = q
+    ? fiches.filter(f =>
+        f.type_appareil.toLowerCase().includes(q) ||
+        (f.modele||"").toLowerCase().includes(q) ||
+        f.pieces.some((p:any) => p.type_piece.toLowerCase().includes(q))
+      )
+    : fiches;
+
   return (
     <div>
-      {/* ── Bouton créer ── */}
-      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.5rem"}}>
+      {/* ── Barre de recherche + bouton créer ── */}
+      <div style={{display:"flex",alignItems:"center",gap:"0.8rem",marginBottom:"1.2rem"}}>
+        <div style={{position:"relative",flex:1,maxWidth:340}}>
+          <span style={{position:"absolute",left:"0.65rem",top:"50%",transform:"translateY(-50%)",color:GRAY_DIM,fontSize:"0.85rem",pointerEvents:"none"}}>🔍</span>
+          <input
+            value={search}
+            onChange={e=>setSearch(e.target.value)}
+            placeholder="Rechercher une fiche (marque, modèle, pièce…)"
+            style={{...inputSt,paddingLeft:"2rem",fontSize:"0.82rem"}}
+          />
+        </div>
+        {search && (
+          <button onClick={()=>setSearch("")}
+            style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"0.8rem",padding:"0.3rem 0.5rem",whiteSpace:"nowrap"}}>
+            ✕ Effacer
+          </button>
+        )}
         <button onClick={openCreate}
-          style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.4rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem"}}>
+          style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.4rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem",marginLeft:"auto",whiteSpace:"nowrap"}}>
           + Créer une fiche appareil
         </button>
       </div>
@@ -2485,9 +2510,13 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
         <div style={{textAlign:"center",padding:"3rem",color:GRAY_DIM,fontSize:"0.9rem"}}>
           Aucune fiche — créez une fiche pour un appareil pour commencer.
         </div>
+      ) : visibleFiches.length===0 ? (
+        <div style={{textAlign:"center",padding:"2rem",color:GRAY_DIM,fontSize:"0.9rem"}}>
+          Aucune fiche ne correspond à « {search} »
+        </div>
       ) : (
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:"0.85rem"}}>
-          {fiches.map(fiche=>{
+          {visibleFiches.map(fiche=>{
             const key = `${fiche.type_appareil}||${fiche.modele}`;
             const isOpen = expandedFiche===key;
             const bColor = BRAND_COLOR[fiche.type_appareil]||GREEN;
