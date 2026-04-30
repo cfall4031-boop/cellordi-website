@@ -2309,8 +2309,59 @@ const PIECE_TEMPLATES: Record<string, string[]> = {
   "Samsung": ["Écran AMOLED","Batterie","Caméra arrière principale","Caméra avant","Caméra ultra grand-angle","Connecteur USB-C","Haut-parleur","Microphone","Vibreur","Dos en verre"],
 };
 const DEVICE_MODELS: Record<string, string[]> = {
-  "Apple":   ["iPhone 7","iPhone 8","iPhone X","iPhone XR","iPhone XS","iPhone 11","iPhone 12","iPhone 12 Pro","iPhone 13","iPhone 13 Pro","iPhone 14","iPhone 14 Pro","iPhone 15","iPhone 15 Pro","iPhone 15 Pro Max"],
-  "Samsung": ["Galaxy S21","Galaxy S21 Ultra","Galaxy S22","Galaxy S22 Ultra","Galaxy S23","Galaxy S23 Ultra","Galaxy S24","Galaxy S24 Ultra","Galaxy A16","Galaxy A54","Galaxy Note Ultra"],
+  "Apple": [
+    // iPhone SE
+    "iPhone SE (2e gén)","iPhone SE (3e gén)",
+    // iPhone 6-8
+    "iPhone 6","iPhone 6 Plus","iPhone 6s","iPhone 6s Plus",
+    "iPhone 7","iPhone 7 Plus","iPhone 8","iPhone 8 Plus",
+    // iPhone X
+    "iPhone X","iPhone XR","iPhone XS","iPhone XS Max",
+    // iPhone 11
+    "iPhone 11","iPhone 11 Pro","iPhone 11 Pro Max",
+    // iPhone 12
+    "iPhone 12","iPhone 12 Mini","iPhone 12 Pro","iPhone 12 Pro Max",
+    // iPhone 13
+    "iPhone 13","iPhone 13 Mini","iPhone 13 Pro","iPhone 13 Pro Max",
+    // iPhone 14
+    "iPhone 14","iPhone 14 Plus","iPhone 14 Pro","iPhone 14 Pro Max",
+    // iPhone 15
+    "iPhone 15","iPhone 15 Plus","iPhone 15 Pro","iPhone 15 Pro Max",
+    // iPhone 16
+    "iPhone 16","iPhone 16 Plus","iPhone 16 Pro","iPhone 16 Pro Max",
+    // iPad
+    "iPad (9e gén)","iPad (10e gén)",
+    "iPad Mini 6","iPad Mini 7",
+    "iPad Air (M1)","iPad Air (M2)","iPad Air (M3)",
+    "iPad Pro 11\" (M4)","iPad Pro 13\" (M4)",
+    // Mac
+    "MacBook Air 13\" (M1)","MacBook Air 13\" (M2)","MacBook Air 15\" (M3)",
+    "MacBook Pro 14\" (M3)","MacBook Pro 16\" (M3)",
+  ],
+  "Samsung": [
+    // Série S récente
+    "Galaxy S24","Galaxy S24+","Galaxy S24 Ultra","Galaxy S24 FE",
+    "Galaxy S23","Galaxy S23+","Galaxy S23 Ultra","Galaxy S23 FE",
+    "Galaxy S22","Galaxy S22+","Galaxy S22 Ultra",
+    "Galaxy S21","Galaxy S21+","Galaxy S21 Ultra","Galaxy S21 FE",
+    "Galaxy S20","Galaxy S20+","Galaxy S20 Ultra","Galaxy S20 FE",
+    "Galaxy S10","Galaxy S10+","Galaxy S10e",
+    "Galaxy S9","Galaxy S9+",
+    // Série Note
+    "Galaxy Note 20","Galaxy Note 20 Ultra",
+    "Galaxy Note 10","Galaxy Note 10+",
+    "Galaxy Note 9","Galaxy Note 8",
+    // Série Z (pliables)
+    "Galaxy Z Fold 5","Galaxy Z Fold 6",
+    "Galaxy Z Flip 5","Galaxy Z Flip 6",
+    // Série A (populaire)
+    "Galaxy A16","Galaxy A15","Galaxy A55","Galaxy A54","Galaxy A53",
+    "Galaxy A35","Galaxy A34","Galaxy A25","Galaxy A24",
+    "Galaxy A14","Galaxy A13","Galaxy A05",
+    // Tablettes
+    "Galaxy Tab S9","Galaxy Tab S9+","Galaxy Tab S9 Ultra",
+    "Galaxy Tab S8","Galaxy Tab S8+","Galaxy Tab A8",
+  ],
 };
 const BRAND_COLOR: Record<string,string> = { "Apple": "#38bdf8", "Samsung": "#6dd400" };
 
