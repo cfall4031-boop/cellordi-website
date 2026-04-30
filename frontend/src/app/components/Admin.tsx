@@ -2598,7 +2598,12 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                             <div style={{display:"flex",alignItems:"center",gap:"0.4rem",flexShrink:0}}>
                               <span style={{fontSize:"0.75rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur>0?`${p.cout_fournisseur}$`:"—"}</span>
                               {p.cout_vente!=null && <span style={{fontSize:"0.72rem",color:BLUE,fontWeight:600}}>{p.cout_vente}$</span>}
-                              <span style={{fontSize:"0.68rem",color:GRAY_DIM}}>{p.nb_demandes||0}×</span>
+                              <button
+                                onClick={async e=>{e.stopPropagation(); await prixApi.addDemande(p.id,1); onLoad();}}
+                                title="Enregistrer une demande (+1)"
+                                style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:(p.nb_demandes||0)>0?BLUE:GRAY_DIM,fontSize:"0.68rem",fontWeight:(p.nb_demandes||0)>0?700:400,lineHeight:1}}>
+                                {p.nb_demandes||0}×
+                              </button>
                               {/* Bouton modifier — discret */}
                               <button onClick={e=>{e.stopPropagation();setEditingPieceId(p.id);setEditingPieceForm({type_piece:p.type_piece,cout_fournisseur:p.cout_fournisseur!=null?String(p.cout_fournisseur):"",cout_vente:p.cout_vente!=null?String(p.cout_vente):""});}}
                                 title="Modifier" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(160,160,200,0.35)",fontSize:"0.72rem",padding:"0 2px",lineHeight:1}}>✎</button>
@@ -2755,8 +2760,8 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, 
   const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
   const accentColor = isDetachee ? ORANGE : GREEN;
   const cols = isDetachee
-    ? ["Appareil","Modèle","Pièce","Achat ($)","Prix vente ($)","Demandes","Fournisseur","MAJ",""]
-    : ["Appareil","Modèle","Pièce","Achat ($)","Vente service ($)","Demandes","Fournisseur","MAJ",""];
+    ? ["Appareil","Modèle","Pièce","Achat ($)","Prix vente ($)","Fournisseur","MAJ",""]
+    : ["Appareil","Modèle","Pièce","Achat ($)","Vente service ($)","Fournisseur","MAJ",""];
   return (
     <div className="admin-table-scroll" style={{overflowX:"auto"}}>
     <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -2764,8 +2769,8 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, 
         {cols.map(h=><th key={h} style={{...tdSt,color:"#a8b8d0",fontWeight:700,fontSize:"0.7rem",textTransform:"uppercase",letterSpacing:"0.08em",whiteSpace:"nowrap"}}>{h}</th>)}
       </tr></thead>
       <tbody>
-        {pieces.length===0 && <tr><td colSpan={9} style={{...tdSt,textAlign:"center",color:"#4a6080",padding:"2rem"}}>Aucune pièce dans cette section</td></tr>}
-        {pieces.map(p=>{const days=daysSince(p.updated_at); const isActive=selected?.id===p.id; const dem=p.nb_demandes||0; return(
+        {pieces.length===0 && <tr><td colSpan={8} style={{...tdSt,textAlign:"center",color:"#4a6080",padding:"2rem"}}>Aucune pièce dans cette section</td></tr>}
+        {pieces.map(p=>{const days=daysSince(p.updated_at); const isActive=selected?.id===p.id; return(
           <tr key={p.id} onClick={()=>onSelect(p)}
             style={{cursor:"pointer",background:isActive?`${accentColor}12`:"transparent",transition:"background 0.15s"}}>
             <td style={{...tdSt,color:isActive?accentColor:"#fff",fontWeight:isActive?700:400}}>{p.type_appareil}</td>
@@ -2773,18 +2778,6 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, 
             <td style={tdSt}>{p.type_piece}</td>
             <td style={{...tdSt,color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</td>
             <td style={{...tdSt,color:p.cout_vente!=null?accentColor:"#4a6080",fontWeight:p.cout_vente!=null?600:400}}>{p.cout_vente!=null?`${p.cout_vente} $`:"—"}</td>
-            <td style={{...tdSt,whiteSpace:"nowrap"}}>
-              <span style={{
-                background: dem>0 ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.05)",
-                color: dem>0 ? BLUE : "#4a6080",
-                fontWeight: dem>0 ? 700 : 400,
-                fontSize:"0.78rem", padding:"0.12rem 0.5rem", marginRight:"0.4rem",
-              }}>{dem}×</span>
-              <button onClick={e=>onDemande(p,e)} title="Enregistrer une demande"
-                style={{background:`rgba(56,189,248,0.12)`,border:`1px solid rgba(56,189,248,0.3)`,color:BLUE,cursor:"pointer",fontSize:"0.72rem",padding:"0.12rem 0.4rem",fontWeight:700,letterSpacing:"0.03em"}}>
-                + demande
-              </button>
-            </td>
             <td style={tdSt}>{p.fournisseur}</td>
             <td style={{...tdSt,color:days>30?"#f59e0b":"#a8b8d0",fontWeight:days>30?600:400}}>{days>0?`il y a ${days}j`:"aujourd'hui"}</td>
             <td style={{...tdSt,whiteSpace:"nowrap"}}>
