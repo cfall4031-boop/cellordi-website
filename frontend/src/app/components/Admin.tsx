@@ -2181,14 +2181,16 @@ function Convertisseur() {
   const fetchRates = async () => {
     setRatesLoading(true); setRatesError(false);
     try {
-      const [r1, r2] = await Promise.all([
-        fetch("https://api.frankfurter.app/latest?from=USD&to=CAD").then(r=>r.json()),
-        fetch("https://api.frankfurter.app/latest?from=CNY&to=CAD").then(r=>r.json()),
-      ]);
-      setRates({ usdCad: r1.rates.CAD, cnyCad: r2.rates.CAD });
+      // open.er-api.com supporte USD, CAD ET CNY — 1 seul appel
+      const res = await fetch("https://open.er-api.com/v6/latest/USD");
+      const data = await res.json();
+      const usdCad: number = data?.rates?.CAD ?? 1.3650;
+      const usdCny: number = data?.rates?.CNY ?? 7.2500;
+      const cnyCad: number = usdCad / usdCny; // cross-rate CNY→CAD
+      setRates({ usdCad, cnyCad });
       setLastUpdate(new Date().toLocaleTimeString("fr-CA",{hour:"2-digit",minute:"2-digit"}));
-    } catch {
-      setRates({ usdCad: 1.3650, cnyCad: 0.1880 }); // fallback approx
+    } catch(_e) {
+      setRates({ usdCad: 1.3650, cnyCad: 0.1883 }); // fallback approx
       setRatesError(true);
     }
     setRatesLoading(false);
