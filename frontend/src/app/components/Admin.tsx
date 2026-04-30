@@ -2339,13 +2339,16 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
     return Object.values(grouped).sort((a,b)=>a.type_appareil.localeCompare(b.type_appareil));
   },[pieces]);
 
+  // Pièces custom saisies librement (une par ligne)
+  const [customPieces, setCustomPieces] = useState("");
+
   const openCreate = () => {
     const template = PIECE_TEMPLATES[brand]||[];
     const checked: Record<string,boolean> = {};
     const costMap: Record<string,string> = {};
     template.forEach(p=>{ checked[p]=true; costMap[p]=""; });
     setCheckedPieces(checked); setCosts(costMap);
-    setModel(DEVICE_MODELS[brand]?.[0]||"");
+    setCustomPieces("");
     setShowCreate(true);
   };
 
@@ -2356,21 +2359,26 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
     const costMap: Record<string,string> = {};
     template.forEach(p=>{ checked[p]=true; costMap[p]=""; });
     setCheckedPieces(checked); setCosts(costMap);
-    setModel(DEVICE_MODELS[b]?.[0]||"");
+    setModel("");
   };
 
   const handleCreate = async () => {
-    if(!model) return;
-    const selected = Object.entries(checkedPieces).filter(([,v])=>v).map(([k])=>k);
-    if(selected.length===0) return;
-    setCreating(true);
-    const piecesToAdd = selected.map(type_piece=>({
-      type_appareil: brand, modele: model, type_piece,
-      cout_fournisseur: costs[type_piece] ? Number(costs[type_piece]) : 0,
-      fournisseur: "Tan Star Trade",
+    if(!brand||!model) return;
+    const fromTemplate = Object.entries(checkedPieces).filter(([,v])=>v).map(([k])=>({
+      type_appareil:brand, modele:model, type_piece:k,
+      cout_fournisseur: costs[k] ? Number(costs[k]) : 0,
+      fournisseur:"Tan Star Trade",
     }));
-    await prixApi.bulkAddPieces(piecesToAdd);
-    setCreating(false); setShowCreate(false); onLoad();
+    const fromCustom = customPieces.split("\n").map(s=>s.trim()).filter(Boolean).map(type_piece=>({
+      type_appareil:brand, modele:model, type_piece,
+      cout_fournisseur:0, fournisseur:"Tan Star Trade",
+    }));
+    const all = [...fromTemplate, ...fromCustom];
+    if(all.length===0) return;
+    setCreating(true);
+    await prixApi.bulkAddPieces(all);
+    setCreating(false); setShowCreate(false);
+    setCustomPieces(""); onLoad();
   };
 
   const handleAddPiece = async () => {
@@ -2514,47 +2522,72 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
               <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
             </div>
 
-            {/* Step 1 — Marque + Modèle */}
+            {/* Marque + Modèle libres avec suggestions */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.8rem",marginBottom:"1.2rem"}}>
               <div>
-                <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Marque</label>
-                <select value={brand} onChange={e=>handleBrandChange(e.target.value)} style={selSt}>
-                  {Object.keys(PIECE_TEMPLATES).map(b=><option key={b} value={b} style={optSt}>{b}</option>)}
-                </select>
+                <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>
+                  Marque *
+                </label>
+                <input
+                  list="dl-brands" value={brand}
+                  onChange={e=>handleBrandChange(e.target.value)}
+                  placeholder="Apple, Samsung, iPad..."
+                  style={inputSt}/>
+                <datalist id="dl-brands">
+                  {Object.keys(PIECE_TEMPLATES).map(b=><option key={b} value={b}/>)}
+                </datalist>
               </div>
               <div>
-                <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Modèle *</label>
-                <select value={model} onChange={e=>setModel(e.target.value)} style={selSt}>
-                  {(DEVICE_MODELS[brand]||[]).map(m=><option key={m} value={m} style={optSt}>{m}</option>)}
-                </select>
+                <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>
+                  Modèle *
+                </label>
+                <input
+                  list="dl-models" value={model}
+                  onChange={e=>setModel(e.target.value)}
+                  placeholder="iPhone 14 Pro, Galaxy S24..."
+                  style={inputSt}/>
+                <datalist id="dl-models">
+                  {(DEVICE_MODELS[brand]||[]).map(m=><option key={m} value={m}/>)}
+                </datalist>
               </div>
             </div>
 
-            {/* Step 2 — Pièces */}
-            <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.6rem"}}>
-              Pièces à inclure — cochez et entrez les coûts d'achat
-            </div>
-            <div style={{border:"1px solid rgba(255,255,255,0.08)",marginBottom:"1.2rem"}}>
-              {(PIECE_TEMPLATES[brand]||[]).map((piece,i)=>(
-                <div key={piece} style={{display:"flex",alignItems:"center",gap:"0.8rem",padding:"0.55rem 0.8rem",borderBottom:i<(PIECE_TEMPLATES[brand]||[]).length-1?"1px solid rgba(255,255,255,0.05)":"none",background:checkedPieces[piece]?"rgba(109,212,0,0.04)":"transparent"}}>
-                  <input type="checkbox" checked={!!checkedPieces[piece]} onChange={e=>setCheckedPieces(p=>({...p,[piece]:e.target.checked}))} style={{accentColor:GREEN,flexShrink:0,width:14,height:14}}/>
-                  <span style={{flex:1,fontSize:"0.83rem",color:checkedPieces[piece]?"#fff":"#4a6080"}}>{piece}</span>
-                  <div style={{width:90,flexShrink:0}}>
+            {/* Pièces du template (si marque connue) */}
+            {(PIECE_TEMPLATES[brand]||[]).length > 0 && (<>
+              <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.5rem"}}>
+                Pièces suggérées — cochez et entrez les coûts d'achat
+              </div>
+              <div style={{border:"1px solid rgba(255,255,255,0.08)",marginBottom:"1rem"}}>
+                {(PIECE_TEMPLATES[brand]||[]).map((piece,i)=>(
+                  <div key={piece} style={{display:"flex",alignItems:"center",gap:"0.8rem",padding:"0.5rem 0.8rem",borderBottom:i<(PIECE_TEMPLATES[brand]||[]).length-1?"1px solid rgba(255,255,255,0.05)":"none",background:checkedPieces[piece]?"rgba(109,212,0,0.04)":"transparent"}}>
+                    <input type="checkbox" checked={!!checkedPieces[piece]} onChange={e=>setCheckedPieces(p=>({...p,[piece]:e.target.checked}))} style={{accentColor:GREEN,flexShrink:0,width:14,height:14}}/>
+                    <span style={{flex:1,fontSize:"0.83rem",color:checkedPieces[piece]?"#fff":"#4a6080"}}>{piece}</span>
                     <input type="number" placeholder="$ achat" value={costs[piece]||""} onChange={e=>setCosts(p=>({...p,[piece]:e.target.value}))}
                       disabled={!checkedPieces[piece]}
-                      style={{...inputSt,width:90,fontSize:"0.78rem",padding:"0.3rem 0.5rem",opacity:checkedPieces[piece]?1:0.3}}/>
+                      style={{...inputSt,width:85,flexShrink:0,fontSize:"0.78rem",padding:"0.3rem 0.5rem",opacity:checkedPieces[piece]?1:0.3}}/>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </>)}
+
+            {/* Pièces personnalisées — toujours disponible */}
+            <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem"}}>
+              {(PIECE_TEMPLATES[brand]||[]).length>0 ? "Pièces supplémentaires (optionnel)" : "Pièces à créer *"} — une par ligne
             </div>
+            <textarea
+              value={customPieces}
+              onChange={e=>setCustomPieces(e.target.value)}
+              placeholder={"Écran LCD\nBatterie\nConnecteur de charge..."}
+              rows={4}
+              style={{...inputSt,resize:"vertical",lineHeight:1.6,marginBottom:"1.2rem"}}/>
 
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <span style={{fontSize:"0.78rem",color:GRAY}}>
-                {Object.values(checkedPieces).filter(Boolean).length} pièce(s) sélectionnée(s)
+                {Object.values(checkedPieces).filter(Boolean).length + customPieces.split("\n").filter(s=>s.trim()).length} pièce(s) à créer
               </span>
               <div style={{display:"flex",gap:"0.8rem"}}>
                 <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
-                <button onClick={handleCreate} disabled={creating||!model}
+                <button onClick={handleCreate} disabled={creating||!brand||!model}
                   style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:creating?0.6:1}}>
                   {creating?"CRÉATION...":"CRÉER LA FICHE"}
                 </button>
