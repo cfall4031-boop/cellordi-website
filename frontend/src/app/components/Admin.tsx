@@ -2422,7 +2422,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                 {/* Card header — cliquable */}
                 <div style={{padding:"0.75rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}
                   onClick={()=>setExpandedFiche(isOpen?null:key)}>
-                  <div style={{minWidth:0}}>
+                  <div style={{minWidth:0,flex:1}}>
                     <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem",color:bColor,letterSpacing:"0.05em",textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
                       {fiche.type_appareil}
                     </div>
@@ -2431,6 +2431,20 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                   <div style={{display:"flex",alignItems:"center",gap:"0.4rem",flexShrink:0,marginLeft:"0.5rem"}}>
                     <span style={{background:`${bColor}22`,color:bColor,fontSize:"0.68rem",fontWeight:700,padding:"0.15rem 0.5rem",whiteSpace:"nowrap"}}>{totalPieces} pce{totalPieces>1?"s":""}</span>
                     <span style={{color:GRAY,fontSize:"0.8rem"}}>{isOpen?"▲":"▼"}</span>
+                    <button
+                      onClick={async e=>{
+                        e.stopPropagation();
+                        if(!confirm(`Supprimer la fiche "${fiche.type_appareil} ${fiche.modele||""}" et ses ${totalPieces} pièce(s) ?`)) return;
+                        await Promise.all(fiche.pieces.map((p:any)=>prixApi.deletePiece(p.id)));
+                        if(expandedFiche===key) setExpandedFiche(null);
+                        onLoad();
+                      }}
+                      title="Supprimer cette fiche"
+                      style={{background:"transparent",border:"none",color:"rgba(255,77,77,0.5)",cursor:"pointer",fontSize:"0.85rem",padding:"0.1rem 0.2rem",lineHeight:1,transition:"color 0.15s"}}
+                      onMouseEnter={e=>(e.currentTarget.style.color=RED)}
+                      onMouseLeave={e=>(e.currentTarget.style.color="rgba(255,77,77,0.5)")}>
+                      🗑
+                    </button>
                   </div>
                 </div>
 
