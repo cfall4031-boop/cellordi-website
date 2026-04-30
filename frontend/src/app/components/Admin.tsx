@@ -2227,7 +2227,7 @@ function Convertisseur() {
   }, [multiLines, rates.usdCad]);
 
   const inSt: React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.65rem 0.8rem",fontSize:"1.1rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4};
-  const cardSt: React.CSSProperties = {background:NAVY_LIGHT,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6,flex:1,minWidth:260};
+  const cardSt: React.CSSProperties = {background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6,flex:1,minWidth:260};
   const labelSt: React.CSSProperties = {fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem",display:"block"};
   const bigSt: React.CSSProperties = {fontSize:"2rem",fontWeight:700,color:GREEN,fontFamily:"'Barlow Condensed',sans-serif"};
 
@@ -2298,7 +2298,7 @@ function Convertisseur() {
       </div>
 
       {/* ── Facture fournisseur ── */}
-      <div style={{background:NAVY_LIGHT,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6}}>
+      <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6}}>
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:GREEN,marginBottom:"0.25rem"}}>📋 Facture fournisseur USD → CAD</div>
         <div style={{fontSize:"0.75rem",color:GRAY,marginBottom:"0.8rem"}}>
           Une ligne par article : <code style={{color:"#c8c8dc",background:"rgba(255,255,255,0.06)",padding:"0 4px",borderRadius:2}}>Écran OLED 24.99</code>
