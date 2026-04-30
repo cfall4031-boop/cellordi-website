@@ -959,14 +959,36 @@ export default function ServiceDetail() {
   if (!svc) {
     return (
       <div style={{ background: NAVY, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <style>{`body { margin:0; background: ${NAVY}; } *, *::before, *::after { box-sizing: border-box; }`}</style>
+        <style>{`body { margin:0; background: ${NAVY}; } *, *::before, *::after { box-sizing: border-box; }
+          @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        `}</style>
         <Navbar />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.5rem", padding: "2rem" }}>
-          <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "5rem", color: GREEN, lineHeight: 1 }}>404</span>
-          <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "2rem", color: WHITE, margin: 0 }}>{t("serviceDetail.not_found")}</h1>
-          <a href="/#services" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "1rem", color: GREEN, textDecoration: "none", letterSpacing: "0.07em" }}>
-            {t("serviceDetail.back")}
-          </a>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.2rem", padding: "3rem 2rem", textAlign: "center" }}>
+          {/* Icône horloge animée */}
+          <div style={{ fontSize: "4rem", lineHeight: 1, animation: "pulse 2s ease-in-out infinite" }}>🛠️</div>
+          {/* Badge */}
+          <div style={{ background: "rgba(109,212,0,0.12)", border: "1px solid rgba(109,212,0,0.35)", color: GREEN, fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0.3rem 1rem", borderRadius: 999 }}>
+            {i18n.language === "en" ? "Coming soon" : "Bientôt disponible"}
+          </div>
+          {/* Titre */}
+          <h1 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(1.8rem, 5vw, 2.8rem)", color: WHITE, margin: 0, lineHeight: 1.15 }}>
+            {i18n.language === "en" ? "We're working on it" : "On travaille dessus"}
+          </h1>
+          {/* Sous-titre */}
+          <p style={{ color: GRAY, fontFamily: FONT_BODY, fontSize: "1rem", maxWidth: 440, margin: 0, lineHeight: 1.6 }}>
+            {i18n.language === "en"
+              ? "This service page is under development. In the meantime, feel free to contact us for more information."
+              : "Cette page de service est en cours de développement. En attendant, n'hésitez pas à nous contacter pour plus d'informations."}
+          </p>
+          {/* Boutons */}
+          <div style={{ display: "flex", gap: "0.8rem", flexWrap: "wrap", justifyContent: "center", marginTop: "0.5rem" }}>
+            <a href="/#contact" style={{ background: GREEN, color: NAVY, fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.9rem", letterSpacing: "0.07em", padding: "0.65rem 1.8rem", textDecoration: "none", borderRadius: 4 }}>
+              {i18n.language === "en" ? "Contact us" : "Nous contacter"}
+            </a>
+            <a href="/#services" style={{ background: "transparent", color: GREEN, fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.9rem", letterSpacing: "0.07em", padding: "0.65rem 1.8rem", textDecoration: "none", border: "1px solid rgba(109,212,0,0.4)", borderRadius: 4 }}>
+              ← {i18n.language === "en" ? "All services" : "Tous les services"}
+            </a>
+          </div>
         </div>
         <Footer />
       </div>
