@@ -2370,7 +2370,8 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
   };
 
   const inputSt:React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.4rem 0.6rem",fontSize:"0.82rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"};
-  const selSt:React.CSSProperties = {...inputSt,cursor:"pointer"};
+  const selSt:React.CSSProperties = {...inputSt, background:"#0e2040", cursor:"pointer"};
+  const optSt:React.CSSProperties = {background:"#0e2040", color:"#fff"};
 
   return (
     <div>
@@ -2445,13 +2446,13 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
               <div>
                 <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Marque</label>
                 <select value={brand} onChange={e=>handleBrandChange(e.target.value)} style={selSt}>
-                  {Object.keys(PIECE_TEMPLATES).map(b=><option key={b} value={b}>{b}</option>)}
+                  {Object.keys(PIECE_TEMPLATES).map(b=><option key={b} value={b} style={optSt}>{b}</option>)}
                 </select>
               </div>
               <div>
                 <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Modèle *</label>
                 <select value={model} onChange={e=>setModel(e.target.value)} style={selSt}>
-                  {(DEVICE_MODELS[brand]||[]).map(m=><option key={m} value={m}>{m}</option>)}
+                  {(DEVICE_MODELS[brand]||[]).map(m=><option key={m} value={m} style={optSt}>{m}</option>)}
                 </select>
               </div>
             </div>
