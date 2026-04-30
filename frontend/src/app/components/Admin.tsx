@@ -2303,6 +2303,196 @@ function CalculerPrix() {
 
 const BLANK_PIECE = {type_appareil:"",modele:"",type_piece:"",cout_fournisseur:"",cout_vente:"",fournisseur:"Tan Star Trade",notes:"",piece_detachee:false};
 
+// ── Templates pièces communes par marque ─────────────────────────────────────
+const PIECE_TEMPLATES: Record<string, string[]> = {
+  "Apple":   ["Écran OLED","Batterie","Caméra arrière principale","Caméra avant (Face ID)","Connecteur de charge","Haut-parleur principal","Écouteur (haut-parleur d'appel)","Microphone","Vibreur (Taptic Engine)","Bouton volume / mute"],
+  "Samsung": ["Écran AMOLED","Batterie","Caméra arrière principale","Caméra avant","Caméra ultra grand-angle","Connecteur USB-C","Haut-parleur","Microphone","Vibreur","Dos en verre"],
+};
+const DEVICE_MODELS: Record<string, string[]> = {
+  "Apple":   ["iPhone 7","iPhone 8","iPhone X","iPhone XR","iPhone XS","iPhone 11","iPhone 12","iPhone 12 Pro","iPhone 13","iPhone 13 Pro","iPhone 14","iPhone 14 Pro","iPhone 15","iPhone 15 Pro","iPhone 15 Pro Max"],
+  "Samsung": ["Galaxy S21","Galaxy S21 Ultra","Galaxy S22","Galaxy S22 Ultra","Galaxy S23","Galaxy S23 Ultra","Galaxy S24","Galaxy S24 Ultra","Galaxy A16","Galaxy A54","Galaxy Note Ultra"],
+};
+const BRAND_COLOR: Record<string,string> = { "Apple": "#38bdf8", "Samsung": "#6dd400" };
+
+// ── Composant Fiches Appareils ───────────────────────────────────────────────
+function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [brand, setBrand] = useState("Apple");
+  const [model, setModel] = useState("");
+  const [checkedPieces, setCheckedPieces] = useState<Record<string,boolean>>({});
+  const [costs, setCosts] = useState<Record<string,string>>({});
+  const [creating, setCreating] = useState(false);
+  const [expandedFiche, setExpandedFiche] = useState<string|null>(null);
+
+  // Grouper les pièces de service par appareil+modèle
+  const fiches = React.useMemo(()=>{
+    const grouped: Record<string,{type_appareil:string;modele:string;pieces:any[]}> = {};
+    pieces.filter(p=>!p.piece_detachee).forEach(p=>{
+      const key = `${p.type_appareil}||${p.modele||""}`;
+      if(!grouped[key]) grouped[key] = {type_appareil:p.type_appareil, modele:p.modele||"", pieces:[]};
+      grouped[key].pieces.push(p);
+    });
+    return Object.values(grouped).sort((a,b)=>a.type_appareil.localeCompare(b.type_appareil));
+  },[pieces]);
+
+  const openCreate = () => {
+    const template = PIECE_TEMPLATES[brand]||[];
+    const checked: Record<string,boolean> = {};
+    const costMap: Record<string,string> = {};
+    template.forEach(p=>{ checked[p]=true; costMap[p]=""; });
+    setCheckedPieces(checked); setCosts(costMap);
+    setModel(DEVICE_MODELS[brand]?.[0]||"");
+    setShowCreate(true);
+  };
+
+  const handleBrandChange = (b:string) => {
+    setBrand(b);
+    const template = PIECE_TEMPLATES[b]||[];
+    const checked: Record<string,boolean> = {};
+    const costMap: Record<string,string> = {};
+    template.forEach(p=>{ checked[p]=true; costMap[p]=""; });
+    setCheckedPieces(checked); setCosts(costMap);
+    setModel(DEVICE_MODELS[b]?.[0]||"");
+  };
+
+  const handleCreate = async () => {
+    if(!model) return;
+    const selected = Object.entries(checkedPieces).filter(([,v])=>v).map(([k])=>k);
+    if(selected.length===0) return;
+    setCreating(true);
+    const piecesToAdd = selected.map(type_piece=>({
+      type_appareil: brand, modele: model, type_piece,
+      cout_fournisseur: costs[type_piece] ? Number(costs[type_piece]) : 0,
+      fournisseur: "Tan Star Trade",
+    }));
+    await prixApi.bulkAddPieces(piecesToAdd);
+    setCreating(false); setShowCreate(false); onLoad();
+  };
+
+  const inputSt:React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.4rem 0.6rem",fontSize:"0.82rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"};
+  const selSt:React.CSSProperties = {...inputSt,cursor:"pointer"};
+
+  return (
+    <div>
+      {/* ── Bouton créer ── */}
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.5rem"}}>
+        <button onClick={openCreate}
+          style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.4rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem"}}>
+          + Créer une fiche appareil
+        </button>
+      </div>
+
+      {/* ── Grille de fiches ── */}
+      {fiches.length===0 ? (
+        <div style={{textAlign:"center",padding:"3rem",color:GRAY_DIM,fontSize:"0.9rem"}}>
+          Aucune fiche — créez une fiche pour un appareil pour commencer.
+        </div>
+      ) : (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:"1rem"}}>
+          {fiches.map(fiche=>{
+            const key = `${fiche.type_appareil}||${fiche.modele}`;
+            const isOpen = expandedFiche===key;
+            const bColor = BRAND_COLOR[fiche.type_appareil]||GREEN;
+            const totalPieces = fiche.pieces.length;
+            return (
+              <div key={key} style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${bColor}22`,overflow:"hidden",transition:"border-color 0.2s"}}>
+                {/* Card header */}
+                <div style={{padding:"0.9rem 1rem",borderBottom:`1px solid ${bColor}22`,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}
+                  onClick={()=>setExpandedFiche(isOpen?null:key)}>
+                  <div>
+                    <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:bColor,letterSpacing:"0.03em",textTransform:"uppercase"}}>
+                      {fiche.type_appareil}
+                    </div>
+                    <div style={{fontSize:"0.88rem",color:"#fff",fontWeight:600,marginTop:"0.1rem"}}>{fiche.modele||"—"}</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
+                    <span style={{background:`${bColor}20`,color:bColor,fontSize:"0.72rem",fontWeight:700,padding:"0.2rem 0.6rem"}}>{totalPieces} pièce{totalPieces>1?"s":""}</span>
+                    <span style={{color:GRAY,fontSize:"0.9rem"}}>{isOpen?"▲":"▼"}</span>
+                  </div>
+                </div>
+                {/* Pièces list */}
+                {isOpen && (
+                  <div style={{padding:"0.6rem 0"}}>
+                    {fiche.pieces.map((p:any)=>(
+                      <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0.4rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+                        <span style={{fontSize:"0.82rem",color:"#c8c8dc"}}>{p.type_piece}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:"0.8rem"}}>
+                          {p.cout_fournisseur>0 && <span style={{fontSize:"0.78rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur} $</span>}
+                          {p.cout_vente!=null && <span style={{fontSize:"0.78rem",color:BLUE,fontWeight:600}}>{p.cout_vente} $</span>}
+                          <span style={{fontSize:"0.72rem",color:GRAY_DIM}}>{p.nb_demandes||0}×</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Modal créer fiche ── */}
+      {showCreate && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:"1rem"}} onClick={()=>setShowCreate(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.25)",padding:"1.5rem",width:520,maxWidth:"96vw",maxHeight:"85vh",overflowY:"auto",animation:"adminFadeIn 0.2s ease both"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1.2rem"}}>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:GREEN,letterSpacing:"0.06em",textTransform:"uppercase"}}>Créer une fiche appareil</span>
+              <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
+            </div>
+
+            {/* Step 1 — Marque + Modèle */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.8rem",marginBottom:"1.2rem"}}>
+              <div>
+                <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Marque</label>
+                <select value={brand} onChange={e=>handleBrandChange(e.target.value)} style={selSt}>
+                  {Object.keys(PIECE_TEMPLATES).map(b=><option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Modèle *</label>
+                <select value={model} onChange={e=>setModel(e.target.value)} style={selSt}>
+                  {(DEVICE_MODELS[brand]||[]).map(m=><option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Step 2 — Pièces */}
+            <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.6rem"}}>
+              Pièces à inclure — cochez et entrez les coûts d'achat
+            </div>
+            <div style={{border:"1px solid rgba(255,255,255,0.08)",marginBottom:"1.2rem"}}>
+              {(PIECE_TEMPLATES[brand]||[]).map((piece,i)=>(
+                <div key={piece} style={{display:"flex",alignItems:"center",gap:"0.8rem",padding:"0.55rem 0.8rem",borderBottom:i<(PIECE_TEMPLATES[brand]||[]).length-1?"1px solid rgba(255,255,255,0.05)":"none",background:checkedPieces[piece]?"rgba(109,212,0,0.04)":"transparent"}}>
+                  <input type="checkbox" checked={!!checkedPieces[piece]} onChange={e=>setCheckedPieces(p=>({...p,[piece]:e.target.checked}))} style={{accentColor:GREEN,flexShrink:0,width:14,height:14}}/>
+                  <span style={{flex:1,fontSize:"0.83rem",color:checkedPieces[piece]?"#fff":"#4a6080"}}>{piece}</span>
+                  <div style={{width:90,flexShrink:0}}>
+                    <input type="number" placeholder="$ achat" value={costs[piece]||""} onChange={e=>setCosts(p=>({...p,[piece]:e.target.value}))}
+                      disabled={!checkedPieces[piece]}
+                      style={{...inputSt,width:90,fontSize:"0.78rem",padding:"0.3rem 0.5rem",opacity:checkedPieces[piece]?1:0.3}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:"0.78rem",color:GRAY}}>
+                {Object.values(checkedPieces).filter(Boolean).length} pièce(s) sélectionnée(s)
+              </span>
+              <div style={{display:"flex",gap:"0.8rem"}}>
+                <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
+                <button onClick={handleCreate} disabled={creating||!model}
+                  style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:creating?0.6:1}}>
+                  {creating?"CRÉATION...":"CRÉER LA FICHE"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Table partagée pour les 2 sections ──────────────────────────────────────
 function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, onDemande }: {
   pieces: any[]; isDetachee: boolean;
@@ -2360,7 +2550,7 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, 
 
 function CataloguePieces() {
   const [pieces, setPieces] = useState<any[]>([]);
-  const [section, setSection] = useState<"service"|"detachee">("service");
+  const [section, setSection] = useState<"service"|"detachee"|"fiches">("service");
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
@@ -2375,8 +2565,12 @@ function CataloguePieces() {
   const [demandeLoading, setDemandeLoading] = useState(false);
 
   const isDetachee = section === "detachee";
-  const accentColor = isDetachee ? ORANGE : GREEN;
-  const accentBg = isDetachee ? "rgba(245,158,11,0.12)" : "rgba(109,212,0,0.12)";
+  const isFiches   = section === "fiches";
+  const accentColor = isDetachee ? ORANGE : isFiches ? "#c084fc" : GREEN;
+  const accentBg = isDetachee ? "rgba(245,158,11,0.12)" : isFiches ? "rgba(192,132,252,0.12)" : "rgba(109,212,0,0.12)";
+
+  // Nombre d'appareils distincts dans les fiches (non-détachées avec modèle)
+  const fichesCount = new Set(serviceList.map(p=>`${p.type_appareil}||${p.modele||""}`)).size;
 
   const load = () => { prixApi.getCatalogue().then((d:any)=>setPieces(d.pieces||[])).catch(console.error).finally(()=>setLoading(false)); };
   useEffect(load,[]);
@@ -2456,8 +2650,9 @@ function CataloguePieces() {
         {/* ── Section tabs ── */}
         <div style={{display:"flex",gap:0,marginBottom:"1.5rem",border:"1px solid rgba(255,255,255,0.08)",overflow:"hidden"}}>
           {([
-            {id:"service"   as const, icon:"🔧", label:"Pièces de service",  count:serviceList.length,  color:GREEN,  bg:"rgba(109,212,0,0.12)"},
-            {id:"detachee"  as const, icon:"📦", label:"Pièces détachées",   count:detacheeList.length, color:ORANGE, bg:"rgba(245,158,11,0.12)"},
+            {id:"service"  as const, icon:"🔧", label:"Pièces de service",  count:serviceList.length,  color:GREEN,        bg:"rgba(109,212,0,0.12)"},
+            {id:"detachee" as const, icon:"📦", label:"Pièces détachées",   count:detacheeList.length, color:ORANGE,       bg:"rgba(245,158,11,0.12)"},
+            {id:"fiches"   as const, icon:"📋", label:"Fiches appareils",   count:fichesCount,         color:"#c084fc",    bg:"rgba(192,132,252,0.12)"},
           ]).map(tab=>{
             const isOn = section===tab.id;
             return (
@@ -2480,6 +2675,10 @@ function CataloguePieces() {
           })}
         </div>
 
+        {/* ── Fiches appareils ── */}
+        {isFiches && <FichesAppareils pieces={pieces} onLoad={load}/>}
+
+        {!isFiches && (<>
         {/* ── Section header ── */}
         <div style={{marginBottom:"1rem",padding:"0.6rem 1rem",background:accentBg,borderLeft:`3px solid ${accentColor}`}}>
           <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem",color:accentColor,letterSpacing:"0.08em",textTransform:"uppercase"}}>
@@ -2529,10 +2728,11 @@ function CataloguePieces() {
             onSelect={handleSelect} selected={detail}
             onDemande={openDemande}/>
         )}
+        </>)}
       </div>
 
       {/* ── Detail drawer ── */}
-      {detail && !editId && (
+      {!isFiches && detail && !editId && (
         <div style={{width:270,flexShrink:0,background:"rgba(255,255,255,0.03)",border:`1px solid ${accentColor}33`,padding:"1.2rem",animation:"adminFadeIn 0.2s ease both"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
             <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:accentColor,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
