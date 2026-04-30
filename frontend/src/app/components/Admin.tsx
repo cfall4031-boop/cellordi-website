@@ -2569,9 +2569,6 @@ function CataloguePieces() {
   const accentColor = isDetachee ? ORANGE : isFiches ? "#c084fc" : GREEN;
   const accentBg = isDetachee ? "rgba(245,158,11,0.12)" : isFiches ? "rgba(192,132,252,0.12)" : "rgba(109,212,0,0.12)";
 
-  // Nombre d'appareils distincts dans les fiches (non-détachées avec modèle)
-  const fichesCount = new Set(serviceList.map(p=>`${p.type_appareil}||${p.modele||""}`)).size;
-
   const load = () => { prixApi.getCatalogue().then((d:any)=>setPieces(d.pieces||[])).catch(console.error).finally(()=>setLoading(false)); };
   useEffect(load,[]);
 
@@ -2579,6 +2576,9 @@ function CataloguePieces() {
   const detacheeList = pieces.filter(p=> p.piece_detachee);
   const activeList   = (isDetachee ? detacheeList : serviceList)
     .filter(p=>`${p.type_appareil} ${p.modele||""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase()));
+
+  // Nombre d'appareils distincts dans les fiches — DOIT être après serviceList
+  const fichesCount = new Set(serviceList.map(p=>`${p.type_appareil}||${p.modele||""}`)).size;
 
   const handleAdd = async () => {
     if(!form.type_appareil||!form.type_piece||!form.cout_fournisseur) return;
