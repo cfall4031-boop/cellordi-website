@@ -2131,14 +2131,13 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
 
 // ── CALCULATEUR DE PRIX ──────────────────────────────────────────
 function Calculateur() {
-  const [subTab, setSubTab] = useState<"calculer"|"catalogue"|"concurrents"|"appareils"|"convertisseur"|"calculatrice">("calculer");
+  const [subTab, setSubTab] = useState<"calculer"|"catalogue"|"concurrents"|"appareils"|"calculatrice">("calculer");
   const tabs = [
     { id:"calculer" as const, icon:"🧮", label:"Calculer" },
     { id:"catalogue" as const, icon:"📦", label:"Catalogue pièces" },
     { id:"concurrents" as const, icon:"🏪", label:"Prix concurrents" },
     { id:"appareils" as const, icon:"📱", label:"Valeur appareils" },
-    { id:"convertisseur" as const, icon:"💱", label:"Convertisseur" },
-    { id:"calculatrice" as const, icon:"🏦", label:"Calculatrice" },
+    { id:"calculatrice" as const, icon:"🏦", label:"Calculatrice & Convertisseur" },
   ];
   return (
     <div className="admin-fade">
@@ -2159,8 +2158,16 @@ function Calculateur() {
         {subTab==="catalogue" && <CataloguePieces/>}
         {subTab==="concurrents" && <PrixConcurrents/>}
         {subTab==="appareils" && <ValeurAppareils/>}
-        {subTab==="convertisseur" && <Convertisseur/>}
-        {subTab==="calculatrice" && <CalculatriceAffaires/>}
+        {subTab==="calculatrice" && (
+          <>
+            <CalculatriceAffaires/>
+            <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",margin:"2.5rem 0 2rem",display:"flex",alignItems:"center",gap:"0.8rem"}}>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:GRAY,letterSpacing:"0.06em",whiteSpace:"nowrap"}}>💱 CONVERTISSEUR DE DEVISES</span>
+              <div style={{flex:1,height:1,background:"rgba(255,255,255,0.06)"}}/>
+            </div>
+            <Convertisseur/>
+          </>
+        )}
       </div>
     </div>
   );
