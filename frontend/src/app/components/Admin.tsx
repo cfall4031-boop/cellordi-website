@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   authApi, rdvApi, ticketsApi, clientsApi,
   messagesApi, dechargesApi, prixApi, notificationsApi, setToken, removeToken, getToken
@@ -8,14 +8,12 @@ import {
 const MobileCtx = React.createContext<{ isMobile: boolean; openSidebar: () => void }>({ isMobile: false, openSidebar: () => {} });
 
 // ── TOKENS ────────────────────────────────────────────────────
-const NAVY       = "#e8edf5";   // page background (light)
-const NAVY_MID   = "#ffffff";   // card / surface (white)
-const DARK       = "#0b1c35";   // old navy — sidebar bg + button text on green
-const SIDEBAR_BG = "#0e2040";   // sidebar / bottom-nav background
+const NAVY       = "#0b1c35";
+const NAVY_MID   = "#0e2040";
 const GREEN      = "#6dd400";
 const GREEN_DIM  = "rgba(109,212,0,0.12)";
-const GRAY       = "#475569";   // secondary text on light bg
-const GRAY_DIM   = "#94a3b8";   // tertiary text on light bg
+const GRAY       = "#a8b8d0";
+const GRAY_DIM   = "#4a6080";
 const RED        = "#ff4d4d";
 const ORANGE     = "#f59e0b";
 const BLUE       = "#38bdf8";
@@ -37,7 +35,7 @@ const statutColors: Record<string, { bg: string; color: string; label: string }>
 };
 
 function Badge({ statut }: { statut: string }) {
-  const s = statutColors[statut] || { bg:"rgba(0,0,0,0.09)", color:GRAY, label:statut };
+  const s = statutColors[statut] || { bg:"rgba(255,255,255,0.1)", color:GRAY, label:statut };
   return (
     <span style={{ background:s.bg, color:s.color, fontSize:"0.72rem", fontWeight:700,
       letterSpacing:"0.06em", padding:"0.25rem 0.7rem", whiteSpace:"nowrap" as const }}>
@@ -49,28 +47,10 @@ function Badge({ statut }: { statut: string }) {
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=DM+Sans:wght@300;400;500&display=swap');
   .admin-wrap *, .admin-wrap *::before, .admin-wrap *::after { box-sizing: border-box; }
-  .admin-wrap { font-family: 'DM Sans', sans-serif; background: ${NAVY}; color: #111827; }
-  .admin-wrap main { color: #111827; background: ${NAVY}; }
-  .admin-wrap main input, .admin-wrap main textarea, .admin-wrap main select { color: #111827 !important; }
-  /* ── Carte blanche standard ── */
-  .admin-card { background:#fff; border-radius:12px; box-shadow:0 1px 8px rgba(0,0,0,0.07); border:1px solid rgba(0,0,0,0.05); }
-  /* ── Typographie ── */
-  .admin-wrap h1, .admin-wrap h2, .admin-wrap h3 { color: #111827; letter-spacing:-0.01em; }
-  .admin-wrap p { color: #6b7280; }
-  /* ── Inputs globaux ── */
-  .admin-wrap input, .admin-wrap textarea, .admin-wrap select {
-    background: #fff !important; color: #111827 !important;
-    border: 1px solid #d1d5db !important; border-radius: 8px !important;
-  }
-  .admin-wrap input:focus, .admin-wrap textarea:focus, .admin-wrap select:focus {
-    outline: none !important; border-color: ${GREEN} !important;
-    box-shadow: 0 0 0 3px rgba(109,212,0,0.12) !important;
-  }
-  .admin-wrap input::placeholder, .admin-wrap textarea::placeholder { color: #9ca3af !important; }
-  /* ── Scrollbar ── */
+  .admin-wrap { font-family: 'DM Sans', sans-serif; background: ${NAVY}; color: #fff; }
   .admin-wrap ::-webkit-scrollbar { width: 5px; }
   .admin-wrap ::-webkit-scrollbar-track { background: ${NAVY}; }
-  .admin-wrap ::-webkit-scrollbar-thumb { background: ${GREEN}; border-radius:3px; }
+  .admin-wrap ::-webkit-scrollbar-thumb { background: ${GREEN}; }
   .admin-wrap table { border-collapse: collapse; width: 100%; }
   @keyframes adminFadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
   .admin-fade { animation: adminFadeIn 0.35s ease both; }
@@ -78,9 +58,6 @@ const globalStyles = `
   .admin-wrap input:focus, .admin-wrap textarea:focus { outline: none; border-color: ${GREEN} !important; }
 
   /* ── MOBILE RESPONSIVE ──────────────────────────────────── */
-  @media (max-width: 900px) {
-    .admin-grid-greeting { grid-template-columns: 1fr !important; }
-  }
   @media (max-width: 768px) {
     .admin-wrap table { font-size: 0.8rem; }
     .admin-wrap th, .admin-wrap td { padding: 0.5rem 0.6rem !important; font-size: 0.78rem !important; }
@@ -123,12 +100,12 @@ const thStyle: React.CSSProperties = {
 };
 const tdStyle: React.CSSProperties = {
   padding:"0.85rem 1rem", fontSize:"0.87rem",
-  borderBottom:"1px solid rgba(0,0,0,0.05)", verticalAlign:"middle"
+  borderBottom:"1px solid rgba(255,255,255,0.04)", verticalAlign:"middle"
 };
 
 const inpStyle: React.CSSProperties = {
-  width:"100%", background:"rgba(0,0,0,0.04)",
-  border:"1px solid rgba(109,212,0,0.25)", color:"#0f172a",
+  width:"100%", background:"rgba(255,255,255,0.05)",
+  border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
   fontFamily:"'DM Sans',sans-serif", fontSize:"0.95rem",
   padding:"0.85rem 1rem", outline:"none", transition:"border-color 0.2s"
 };
@@ -155,22 +132,17 @@ function Login({ onLogin }: { onLogin: (token: string, nom: string) => void }) {
 
   return (
     <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
-      background:`radial-gradient(ellipse 80% 80% at 50% 0%, rgba(109,212,0,0.05) 0%, transparent 60%), ${NAVY}` }}>
+      background:`radial-gradient(ellipse 80% 80% at 50% 0%, rgba(109,212,0,0.06) 0%, transparent 60%), ${NAVY}` }}>
       <div className="admin-login-box" style={{ width:400, animation:"adminFadeIn 0.5s ease" }}>
         <div style={{ textAlign:"center", marginBottom:"2.5rem" }}>
-          {/* Logo mark */}
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:"0.6rem"}}>
-            <span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:800,fontSize:"3rem",color:GREEN,letterSpacing:"-0.04em",lineHeight:0.9}}>co</span>
-            <div style={{height:3,width:52,background:`linear-gradient(90deg,transparent,${GREEN},transparent)`,marginTop:6,borderRadius:2}}/>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.8rem", fontWeight:900, marginBottom:"0.3rem" }}>
+            RÉPARATION <span style={{color:GREEN}}>CeLL&amp;Ordi</span>
           </div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700, color:DARK, marginBottom:"0.2rem", letterSpacing:"0.06em" }}>
-            RÉPARATION CeLL&amp;Ordi
-          </div>
-          <div style={{ fontSize:"0.75rem", color:GRAY, letterSpacing:"0.12em", textTransform:"uppercase" }}>
+          <div style={{ fontSize:"0.82rem", color:GRAY, letterSpacing:"0.1em", textTransform:"uppercase" }}>
             Panneau d'administration
           </div>
         </div>
-        <div className="admin-login-inner" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.2)", padding:"2.5rem", borderRadius:8, boxShadow:"0 8px 32px rgba(0,0,0,0.08)" }}>
+        <div className="admin-login-inner" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.15)", padding:"2.5rem" }}>
           <div style={{ marginBottom:"1.2rem" }}>
             <label style={{ display:"block", fontSize:"0.75rem", fontWeight:600, letterSpacing:"0.1em", color:GRAY, textTransform:"uppercase", marginBottom:"0.4rem" }}>Courriel</label>
             <input value={email} onChange={e=>setEmail(e.target.value)} type="email"
@@ -185,7 +157,7 @@ function Login({ onLogin }: { onLogin: (token: string, nom: string) => void }) {
           </div>
           {error && <div style={{ background:"rgba(255,77,77,0.1)", border:"1px solid rgba(255,77,77,0.3)", color:RED, fontSize:"0.84rem", padding:"0.6rem 0.9rem", marginBottom:"1rem" }}>{error}</div>}
           <button onClick={handle} disabled={loading} style={{
-            width:"100%", background:loading?"rgba(109,212,0,0.5)":GREEN, color:DARK,
+            width:"100%", background:loading?"rgba(109,212,0,0.5)":GREEN, color:NAVY,
             fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:"1.1rem",
             letterSpacing:"0.1em", padding:"0.95rem", border:"none", cursor:loading?"not-allowed":"pointer",
             clipPath:"polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%)", transition:"all 0.2s"
@@ -336,16 +308,14 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
         }}/>
       )}
       <aside style={{
-        width:240, flexShrink:0, background:SIDEBAR_BG,
-        borderRight:"1px solid rgba(109,212,0,0.12)",
+        width:240, flexShrink:0, background:NAVY_MID,
+        borderRight:"1px solid rgba(109,212,0,0.1)",
         display:"flex", flexDirection:"column",
         position:"fixed", top:0, left:0, bottom:0, zIndex:100,
         transform: isMobile && !sidebarOpen ? "translateX(-240px)" : "translateX(0)",
-        transition: "transform 0.25s ease",
-        boxShadow:"4px 0 24px rgba(0,0,0,0.18)"
+        transition: "transform 0.25s ease"
       }}>
-        {/* ── Logo ── */}
-        <div style={{ padding:"1.4rem 1.2rem 1.2rem", borderBottom:"1px solid rgba(109,212,0,0.12)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ padding:"1.4rem 1.2rem 1.2rem", borderBottom:"1px solid rgba(109,212,0,0.1)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",lineHeight:1}}>
               <span style={{fontFamily:"'DM Sans',sans-serif",fontWeight:800,fontSize:"1.75rem",color:GREEN,letterSpacing:"-0.03em",lineHeight:0.92}}>co</span>
@@ -353,25 +323,25 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
             </div>
             <div>
               <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.88rem",color:"#fff",letterSpacing:"0.04em",lineHeight:1.1}}>CeLL&amp;Ordi</div>
-              <div style={{fontSize:"0.58rem",color:"#6a8aaa",letterSpacing:"0.12em",textTransform:"uppercase",marginTop:1}}>Admin Panel</div>
+              <div style={{fontSize:"0.58rem",color:GRAY_DIM,letterSpacing:"0.12em",textTransform:"uppercase",marginTop:1}}>Admin Panel</div>
             </div>
           </div>
           {isMobile && (
             <button onClick={() => setSidebarOpen(false)} style={{
-              background:"none", border:"none", color:"#6a8aaa", fontSize:"1.4rem", cursor:"pointer", padding:"0.2rem"
+              background:"none", border:"none", color:GRAY, fontSize:"1.4rem", cursor:"pointer", padding:"0.2rem"
             }}>✕</button>
           )}
         </div>
 
-        <nav style={{ flex:1, padding:"0.75rem 0", overflowY:"auto" }}>
+        <nav style={{ flex:1, padding:"1rem 0", overflowY:"auto" }}>
           {NAV_ITEMS.map(item => (
             <button key={item.id} onClick={()=>handleNavClick(item.id)} style={{
               width:"100%", display:"flex", alignItems:"center", gap:"0.75rem",
-              padding:"0.7rem 1.2rem",
-              background:active===item.id?"rgba(109,212,0,0.12)":"transparent",
+              padding:"0.75rem 1.2rem",
+              background:active===item.id?"rgba(109,212,0,0.1)":"transparent",
               borderTop:"none", borderRight:"none", borderBottom:"none",
               borderLeft:`3px solid ${active===item.id?GREEN:"transparent"}`,
-              color:active===item.id?"#fff":"#8fa8c4", cursor:"pointer",
+              color:active===item.id?"#fff":GRAY, cursor:"pointer",
               fontSize:"0.88rem", fontWeight:active===item.id?600:400,
               textAlign:"left", transition:"all 0.15s"
             }}>
@@ -381,14 +351,15 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
           ))}
         </nav>
 
-        <div style={{ padding:"1rem 1.2rem", borderTop:"1px solid rgba(109,212,0,0.12)" }}>
+        <div style={{ padding:"1rem 1.2rem", borderTop:"1px solid rgba(109,212,0,0.1)" }}>
+          {/* Push notification toggle + test */}
           {pushSupported && (
             <>
               <button onClick={togglePush} disabled={pushLoading} style={{
                 width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:"0.5rem",
-                background: pushEnabled ? "rgba(109,212,0,0.1)" : "transparent",
-                border:`1px solid ${pushEnabled ? GREEN : "#3a5070"}`,
-                color: pushEnabled ? GREEN : "#6a8aaa",
+                background: pushEnabled ? GREEN_DIM : "transparent",
+                border:`1px solid ${pushEnabled ? GREEN : GRAY_DIM}`,
+                color: pushEnabled ? GREEN : GRAY,
                 fontSize:"0.78rem", padding:"0.5rem", cursor: pushLoading ? "wait" : "pointer",
                 marginBottom:"0.4rem", fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
               }}>
@@ -398,7 +369,7 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
                 <div style={{ display:"flex", gap:"0.3rem", marginBottom:"0.4rem" }}>
                   <button onClick={testPush} style={{
                     flex:1, background:"transparent",
-                    border:"1px solid #3a5070", color:"#6a8aaa",
+                    border:`1px solid ${GRAY_DIM}`, color:GRAY,
                     fontSize:"0.72rem", padding:"0.35rem", cursor:"pointer",
                     fontFamily:"'DM Sans',sans-serif"
                   }}>
@@ -406,7 +377,7 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
                   </button>
                   <button onClick={resetPush} disabled={pushLoading} style={{
                     flex:1, background:"transparent",
-                    border:"1px solid #3a5070", color:"#6a8aaa",
+                    border:`1px solid ${GRAY_DIM}`, color:GRAY,
                     fontSize:"0.72rem", padding:"0.35rem", cursor: pushLoading ? "wait" : "pointer",
                     fontFamily:"'DM Sans',sans-serif"
                   }}>
@@ -427,19 +398,18 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
               )}
             </>
           )}
-          <div style={{ fontSize:"0.78rem", color:"#6a8aaa", marginBottom:"0.6rem" }}>
+          <div style={{ fontSize:"0.78rem", color:GRAY, marginBottom:"0.6rem" }}>
             Connecté : <strong style={{color:"#fff"}}>{adminNom}</strong>
           </div>
           <a href="/" style={{
             display:"block", textAlign:"center", textDecoration:"none",
             background:"transparent", border:"1px solid rgba(109,212,0,0.3)",
-            color:GREEN, fontSize:"0.78rem", padding:"0.4rem", marginBottom:"0.4rem", cursor:"pointer",
-            borderRadius:4
+            color:GREEN, fontSize:"0.78rem", padding:"0.4rem", marginBottom:"0.4rem", cursor:"pointer"
           }}>← Site public</a>
           <button onClick={onLogout} style={{
             width:"100%", background:"transparent", border:"1px solid rgba(255,77,77,0.3)",
             color:RED, fontSize:"0.82rem", padding:"0.5rem", cursor:"pointer",
-            fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s", borderRadius:4
+            fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
           }}>
             Déconnexion
           </button>
@@ -454,21 +424,20 @@ function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
   const { isMobile, openSidebar } = React.useContext(MobileCtx);
   const now = new Date().toLocaleDateString("fr-CA", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
   return (
-    <div style={{ padding: isMobile ? "1rem 0.8rem" : "1.4rem 2rem 1rem",
-      display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:"0.75rem",
-      background:"transparent" }}>
+    <div style={{ padding: isMobile ? "0.85rem 0.6rem" : "1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)",
+      display:"flex", alignItems:"center", justifyContent:"space-between", gap:"0.75rem" }}>
       <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
         {isMobile && (
           <button onClick={openSidebar} style={{
-            background:"none", border:"none", color:"#374151", fontSize:"1.5rem", cursor:"pointer", padding:"0.2rem"
+            background:"none", border:"none", color:"#fff", fontSize:"1.5rem", cursor:"pointer", padding:"0.2rem"
           }}>☰</button>
         )}
         <div>
-          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: isMobile ? "1.4rem" : "2rem", fontWeight:900, margin:0, color:"#111827", letterSpacing:"-0.01em", lineHeight:1 }}>{title}</h1>
-          {subtitle && <p style={{ fontSize:"0.8rem", color:"#6b7280", marginTop:"0.25rem", margin:"0.25rem 0 0", fontWeight:400 }}>{subtitle}</p>}
+          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: isMobile ? "1.2rem" : "1.6rem", fontWeight:900, margin:0 }}>{title}</h1>
+          {subtitle && <p style={{ fontSize:"0.82rem", color:GRAY, marginTop:"0.1rem", margin:0 }}>{subtitle}</p>}
         </div>
       </div>
-      {!isMobile && <div style={{ fontSize:"0.78rem", color:"#9ca3af", background:"#fff", padding:"0.35rem 0.85rem", borderRadius:20, border:"1px solid rgba(0,0,0,0.07)", fontWeight:500 }}>{now}</div>}
+      {!isMobile && <div style={{ fontSize:"0.82rem", color:GRAY_DIM }}>{now}</div>}
     </div>
   );
 }
@@ -527,73 +496,56 @@ function Overview() {
     <div className="admin-fade">
       <Topbar title="Vue d'ensemble" subtitle="Tableau de bord — Réparation CeLL&Ordi"/>
       <div className="admin-content-pad" style={{ padding:"2rem" }}>
-        {/* ── Greeting + featured card ── */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"1.25rem",marginBottom:"1.75rem",alignItems:"stretch"}} className="admin-grid-greeting">
-          {/* Gradient feature card */}
-          <div style={{background:`linear-gradient(135deg, #3aad00 0%, ${GREEN} 100%)`,borderRadius:14,padding:"1.5rem 2rem",boxShadow:"0 4px 20px rgba(109,212,0,0.28)",display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:110}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-              <div>
-                <div style={{fontSize:"0.75rem",fontWeight:600,color:"rgba(255,255,255,0.75)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.3rem"}}>RDV aujourd'hui</div>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:"3rem",color:"#fff",lineHeight:0.9}}>{rdvsAujourdhui.length}</div>
-              </div>
-              <div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>📅</div>
-            </div>
-            <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.75)",marginTop:"0.8rem"}}>Réservations confirmées ce jour</div>
-          </div>
-          {/* Greeting card */}
-          <div style={{background:"#fff",borderRadius:14,padding:"1.2rem 1.6rem",boxShadow:"0 1px 8px rgba(0,0,0,0.07)",border:"1px solid rgba(0,0,0,0.05)",display:"flex",alignItems:"center",gap:"1rem",minWidth:320}}>
-            <span style={{fontSize:"2rem"}}>👋</span>
-            <div>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.25rem",color:"#111827",letterSpacing:"0.01em"}}>{getGreeting()}</div>
-              <div style={{fontSize:"0.76rem",color:"#6b7280",marginTop:"0.2rem",maxWidth:260}}>Voici un aperçu de votre journée.</div>
-            </div>
+        {/* ── Greeting ── */}
+        <div style={{marginBottom:"1.5rem",padding:"1rem 1.4rem",background:NAVY_MID,borderRadius:8,border:`1px solid rgba(109,212,0,0.15)`,borderLeft:`4px solid ${GREEN}`,display:"flex",alignItems:"center",gap:"0.9rem"}}>
+          <span style={{fontSize:"1.5rem"}}>👋</span>
+          <div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.25rem",color:"#fff",letterSpacing:"0.02em"}}>{getGreeting()}</div>
+            <div style={{fontSize:"0.76rem",color:GRAY,marginTop:"0.1rem"}}>Bienvenue dans votre tableau de bord.</div>
           </div>
         </div>
-        <div className="admin-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
-          {statCards.slice(1).map((s,i) => (
-            <div key={i} style={{ background:"#fff", border:"1px solid rgba(0,0,0,0.05)",
-              padding:"1.4rem 1.6rem", borderRadius:12, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.9rem" }}>
-                <div style={{fontSize:"0.75rem",fontWeight:600,color:"#6b7280",textTransform:"uppercase",letterSpacing:"0.08em"}}>{s.label}</div>
-                <div style={{background:`${s.color}18`,borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem"}}>{s.icon}</div>
+        <div className="admin-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
+          {statCards.map((s,i) => (
+            <div key={i} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)",
+              borderTop:`3px solid ${s.color}`, padding:"1.4rem" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"0.8rem" }}>
+                <span style={{fontSize:"1.6rem"}}>{s.icon}</span>
               </div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2.4rem", fontWeight:900, color:"#111827", lineHeight:1 }}>{s.value}</div>
-              <div style={{display:"flex",alignItems:"center",gap:"0.4rem",marginTop:"0.5rem"}}>
-                <span style={{fontSize:"0.72rem",color:s.color,fontWeight:600,background:`${s.color}15`,padding:"0.1rem 0.45rem",borderRadius:20}}>↑ actif</span>
-              </div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2.5rem", fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
+              <div style={{ fontSize:"0.8rem", color:GRAY, marginTop:"0.3rem" }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         <div className="admin-grid-2" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
-          <div style={{ background:"#fff", border:"1px solid rgba(0,0,0,0.05)", padding:"1.5rem 1.75rem", borderRadius:14, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.15rem", fontWeight:700, marginBottom:"1rem", color:"#111827", letterSpacing:"0.01em" }}>
-              RDV Aujourd'hui <span style={{color:GREEN,fontSize:"0.95rem"}}>({rdvsAujourdhui.length})</span>
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem" }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700, marginBottom:"1rem" }}>
+              RDV Aujourd'hui ({rdvsAujourdhui.length})
             </div>
-            {rdvsAujourdhui.length === 0 && <div style={{color:"#9ca3af", fontSize:"0.85rem"}}>Aucun RDV aujourd'hui</div>}
+            {rdvsAujourdhui.length === 0 && <div style={{color:GRAY_DIM, fontSize:"0.85rem"}}>Aucun RDV aujourd'hui</div>}
             {rdvsAujourdhui.map((r:any) => (
               <div key={r.id} style={{ display:"flex", alignItems:"center", gap:"0.8rem",
-                padding:"0.65rem 0", borderBottom:"1px solid rgba(0,0,0,0.05)" }}>
-                <div style={{ background:"rgba(109,212,0,0.1)", color:GREEN, fontFamily:"'Barlow Condensed',sans-serif",
-                  fontWeight:700, fontSize:"0.85rem", padding:"0.3rem 0.6rem", minWidth:52, textAlign:"center", borderRadius:6 }}>
+                padding:"0.7rem 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ background:GREEN_DIM, color:GREEN, fontFamily:"'Barlow Condensed',sans-serif",
+                  fontWeight:700, fontSize:"0.85rem", padding:"0.3rem 0.6rem", minWidth:52, textAlign:"center" }}>
                   {r.heure || "--:--"}
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:"0.9rem", fontWeight:500, color:"#111827" }}>{r.prenom} {r.nom}</div>
-                  <div style={{ fontSize:"0.75rem", color:"#6b7280" }}>{r.type_appareil}</div>
+                  <div style={{ fontSize:"0.9rem", fontWeight:500 }}>{r.prenom} {r.nom}</div>
+                  <div style={{ fontSize:"0.75rem", color:GRAY }}>{r.type_appareil}</div>
                 </div>
                 <Badge statut={r.statut}/>
               </div>
             ))}
           </div>
 
-          <div style={{ background:"#fff", border:"1px solid rgba(0,0,0,0.05)", padding:"1.5rem 1.75rem", borderRadius:14, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.15rem", fontWeight:700, marginBottom:"1rem", color:"#111827", letterSpacing:"0.01em" }}>
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem" }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700, marginBottom:"1rem" }}>
               Tickets Récents
             </div>
             {ticketsRecents.map((t:any) => (
               <div key={t.id} style={{ display:"flex", alignItems:"center", gap:"0.8rem",
-                padding:"0.6rem 0", borderBottom:"1px solid rgba(0,0,0,0.04)" }}>
+                padding:"0.6rem 0", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ fontFamily:"'Barlow Condensed',sans-serif", color:GREEN, fontWeight:700, fontSize:"0.78rem", minWidth:130 }}>
                   {t.numero}
                 </div>
@@ -752,7 +704,7 @@ function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () 
         zIndex: 299, overflowY: "auto" as const, display: "flex", flexDirection: "column" as const,
         fontFamily: "'DM Sans',sans-serif" }}>
         {/* Header */}
-        <div style={{ padding: "1.2rem 1.4rem", borderBottom: "1px solid rgba(0,0,0,0.06)",
+        <div style={{ padding: "1.2rem 1.4rem", borderBottom: "1px solid rgba(255,255,255,0.07)",
           display: "flex", alignItems: "flex-start", gap: "0.8rem", flexShrink: 0 }}>
           <div style={{ width: 12, height: 12, borderRadius: "50%", background: c.border, marginTop: 5, flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
@@ -760,11 +712,11 @@ function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () 
             <div style={{ fontSize: "1.05rem", fontWeight: 600, color: "#fff", marginTop: "0.2rem" }}>{event.title}</div>
             <div style={{ fontSize: "0.8rem", color: GRAY, marginTop: "0.1rem" }}>{event.subtitle}</div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(0,0,0,0.1)",
+          <button onClick={onClose} style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)",
             color: GRAY, fontSize: "0.95rem", cursor: "pointer", padding: "0.2rem 0.55rem", borderRadius: 8 }}>✕</button>
         </div>
         {/* Statut */}
-        <div style={{ padding: "0.7rem 1.4rem", borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
+        <div style={{ padding: "0.7rem 1.4rem", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
           <Badge statut={event.statut} />
         </div>
         {/* Fields */}
@@ -832,7 +784,7 @@ function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
     <div style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
 
       {/* ── Day column headers ── */}
-      <div style={{ display: "flex", borderBottom: "1px solid rgba(0,0,0,0.07)", flexShrink: 0 }}>
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
         <div style={{ width: timeColW, flexShrink: 0, display: "flex", alignItems: "flex-end",
           justifyContent: "flex-end", padding: "0 0.4rem 0.45rem" }}>
           {!isMobile && <span style={{ fontSize: "0.55rem", color: GRAY_DIM, letterSpacing: "0.04em" }}>EST</span>}
@@ -843,7 +795,7 @@ function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
           return (
             <div key={i} style={{ flex: 1, textAlign: "center" as const,
               padding: isMobile ? "0.45rem 0.1rem 0.4rem" : "0.55rem 0.25rem 0.5rem",
-              borderLeft: "1px solid rgba(0,0,0,0.05)",
+              borderLeft: "1px solid rgba(255,255,255,0.06)",
               background: isToday ? "rgba(109,212,0,0.04)" : "transparent" }}>
               <div style={{ fontSize: isMobile ? "0.55rem" : "0.63rem", fontWeight: 700, letterSpacing: "0.06em",
                 textTransform: "uppercase" as const, marginBottom: "0.25rem",
@@ -863,7 +815,7 @@ function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
       </div>
 
       {/* ── All-day strip (tickets, messages, RDVs without time) ── */}
-      <div style={{ display: "flex", borderBottom: "1px solid rgba(0,0,0,0.07)",
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.08)",
         flexShrink: 0, minHeight: 36 }}>
         <div style={{ width: timeColW, flexShrink: 0, display: "flex", alignItems: "center",
           justifyContent: "flex-end", paddingRight: "0.55rem" }}>
@@ -875,7 +827,7 @@ function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
           const isToday = ds === td;
           const dayEvs = allDay.filter(e => e.date === ds);
           return (
-            <div key={i} style={{ flex: 1, borderLeft: "1px solid rgba(0,0,0,0.04)",
+            <div key={i} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.05)",
               padding: "4px 4px", background: isToday ? "rgba(109,212,0,0.03)" : "transparent" }}>
               {dayEvs.map(e => (
                 <CalEventCard key={`${e.type}-${e.id}`} e={e} compact onClick={() => onSelect(e)} />
@@ -919,7 +871,7 @@ function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
             const isToday = ds === td;
             const dayTimed = timedRdvs.filter(e => e.date === ds);
             return (
-              <div key={di} style={{ flex: 1, borderLeft: "1px solid rgba(0,0,0,0.05)",
+              <div key={di} style={{ flex: 1, borderLeft: "1px solid rgba(255,255,255,0.06)",
                 position: "relative" as const, height: totalH,
                 background: isToday ? "rgba(109,212,0,0.025)" : "transparent" }}>
 
@@ -927,13 +879,13 @@ function CalWeekView({ events, refDate, onSelect, isMobile = false }: {
                 {Array.from({ length: CAL_END_H - CAL_START_H + 1 }, (_, i) => (
                   <div key={i} style={{ position: "absolute" as const,
                     top: i * CAL_SLOT_H * 2, left: 0, right: 0, height: 1,
-                    background: "rgba(0,0,0,0.06)" }} />
+                    background: "rgba(255,255,255,0.07)" }} />
                 ))}
                 {/* Half-hour lines */}
                 {Array.from({ length: CAL_TOTAL_SLOTS }, (_, i) => i % 2 === 1 && (
                   <div key={`h${i}`} style={{ position: "absolute" as const,
                     top: i * CAL_SLOT_H, left: 0, right: 0, height: 1,
-                    background: "rgba(0,0,0,0.02)" }} />
+                    background: "rgba(255,255,255,0.025)" }} />
                 ))}
 
                 {/* Current time line */}
@@ -985,7 +937,7 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
     <div style={{ display: "flex", flexDirection: "column" as const, height: "100%", overflow: "hidden" }}>
       {/* Day headers */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)",
-        borderBottom: "1px solid rgba(0,0,0,0.07)", flexShrink: 0 }}>
+        borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
         {JOURS_LABEL.map(d => (
           <div key={d} style={{ textAlign: "center" as const, padding: "0.6rem 0.4rem",
             fontSize: "0.65rem", color: GRAY_DIM, fontWeight: 700,
@@ -998,8 +950,8 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
         {cells.map((day, i) => {
           if (!day) return (
             <div key={i} style={{ background: "rgba(0,0,0,0.15)",
-              borderRight: "1px solid rgba(0,0,0,0.03)",
-              borderBottom: "1px solid rgba(0,0,0,0.03)" }} />
+              borderRight: "1px solid rgba(255,255,255,0.04)",
+              borderBottom: "1px solid rgba(255,255,255,0.04)" }} />
           );
           const ds = toDS(day);
           const isToday = ds === td;
@@ -1007,7 +959,7 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
           const visible = dayEvs.slice(0, 3);
           const more = dayEvs.length - 3;
           return (
-            <div key={i} style={{ border: "1px solid rgba(0,0,0,0.04)", padding: "6px 5px",
+            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.05)", padding: "6px 5px",
               overflow: "hidden", display: "flex", flexDirection: "column" as const,
               background: isToday ? "rgba(109,212,0,0.04)" : "transparent" }}>
               <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -1046,7 +998,7 @@ function MobileBottomNav({ active, setActive }: { active: string; setActive: (s:
   return (
     <nav style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: SIDEBAR_BG, borderTop: "1px solid rgba(109,212,0,0.15)",
+      background: NAVY_MID, borderTop: "1px solid rgba(255,255,255,0.12)",
       display: "flex", height: 58,
     }}>
       {BOTTOM_NAV_ITEMS.map(item => {
@@ -1056,7 +1008,7 @@ function MobileBottomNav({ active, setActive }: { active: string; setActive: (s:
             flex: 1, display: "flex", flexDirection: "column" as const,
             alignItems: "center", justifyContent: "center", gap: 2,
             border: "none", background: "transparent", cursor: "pointer",
-            color: isActive ? GREEN : "#6a8aaa", padding: "4px 0",
+            color: isActive ? GREEN : GRAY_DIM, padding: "4px 0",
             borderTop: isActive ? `2px solid ${GREEN}` : "2px solid transparent",
             transition: "color 0.15s, border-color 0.15s",
           }}>
@@ -1140,7 +1092,7 @@ function AdminCalendar() {
   })();
 
   const navBtn: React.CSSProperties = {
-    background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.09)",
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
     color: GRAY, fontSize: "1.1rem", cursor: "pointer", padding: "0.28rem 0.75rem",
     borderRadius: 8, lineHeight: 1, transition: "background 0.15s",
   };
@@ -1152,7 +1104,7 @@ function AdminCalendar() {
       <div style={{
         display: "flex", alignItems: "center", gap: "0.6rem",
         padding: "0.7rem 1.1rem", background: NAVY_MID,
-        borderBottom: "1px solid rgba(0,0,0,0.07)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
         flexShrink: 0, flexWrap: "wrap" as const,
       }}>
 
@@ -1196,8 +1148,8 @@ function AdminCalendar() {
         }}>Aujourd'hui</button>
 
         {/* Week / Month toggle */}
-        <div style={{ display: "flex", background: "rgba(0,0,0,0.04)",
-          border: "1px solid rgba(0,0,0,0.09)", borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ display: "flex", background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, overflow: "hidden" }}>
           {(["week","month"] as const).map(v => (
             <button key={v} onClick={() => setView(v)} style={{
               padding: "0.3rem 0.85rem", border: "none", cursor: "pointer",
@@ -1384,12 +1336,12 @@ function Rendez_vous() {
             ＋ Nouveau rendez-vous
           </button>
           <button onClick={()=>setShowDispo(d=>!d)}
-            style={{ background:showDispo ? "rgba(0,0,0,0.09)" : "rgba(0,0,0,0.04)", color:GRAY,
-              border:"1px solid rgba(0,0,0,0.1)", padding:"0.55rem 1.2rem", fontSize:"0.84rem",
+            style={{ background:showDispo ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)", color:GRAY,
+              border:"1px solid rgba(255,255,255,0.12)", padding:"0.55rem 1.2rem", fontSize:"0.84rem",
               cursor:"pointer", fontFamily:"'DM Sans',sans-serif", borderRadius:12 }}>
             🗓 {showDispo ? "Masquer disponibilités" : "Gérer disponibilités"}
           </button>
-          <button onClick={load} style={{ background:"transparent", color:GRAY, border:"1px solid rgba(0,0,0,0.09)",
+          <button onClick={load} style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
             padding:"0.5rem 1rem", fontSize:"0.82rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif", marginLeft:"auto", borderRadius:12 }}>
             ↻ Actualiser
           </button>
@@ -1403,7 +1355,7 @@ function Rendez_vous() {
             </p>
 
             {/* ── ÉTAPE 1 : Date + Créneau ── */}
-            <div style={{ background:"rgba(109,212,0,0.04)", border:"1px solid rgba(0,0,0,0.06)", padding:"1.2rem", marginBottom:"1.2rem" }}>
+            <div style={{ background:"rgba(109,212,0,0.04)", border:"1px solid rgba(109,212,0,0.15)", padding:"1.2rem", marginBottom:"1.2rem" }}>
               <p style={{ color:GREEN, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
                 📅 Étape 1 — Date &amp; Créneau
               </p>
@@ -1413,7 +1365,7 @@ function Rendez_vous() {
                   <input type="date" value={newRdv.date}
                     onChange={e => { setSlots([]); setNewRdv(p=>({...p,date:e.target.value,heure:""})); }}
                     min={formatDate(today)}
-                    style={{ width:"100%", background:"rgba(0,0,0,0.05)", border:`2px solid ${newRdv.date ? GREEN+"55" : "rgba(109,212,0,0.2)"}`,
+                    style={{ width:"100%", background:"rgba(255,255,255,0.06)", border:`2px solid ${newRdv.date ? GREEN+"55" : "rgba(109,212,0,0.2)"}`,
                       color:"#fff", padding:"0.6rem 0.75rem", fontSize:"0.95rem", fontFamily:"'DM Sans',sans-serif",
                       boxSizing:"border-box" as const, outline:"none", colorScheme:"dark" }} />
                 </div>
@@ -1437,9 +1389,9 @@ function Rendez_vous() {
                       {slots.map(h=>(
                         <button key={h} type="button" onClick={()=>setNewRdv(p=>({...p,heure:h}))}
                           style={{
-                            background: newRdv.heure===h ? GREEN : "rgba(0,0,0,0.05)",
+                            background: newRdv.heure===h ? GREEN : "rgba(255,255,255,0.06)",
                             color: newRdv.heure===h ? NAVY : GRAY,
-                            border: `2px solid ${newRdv.heure===h ? GREEN : "rgba(0,0,0,0.1)"}`,
+                            border: `2px solid ${newRdv.heure===h ? GREEN : "rgba(255,255,255,0.12)"}`,
                             padding:"0.45rem 0.9rem", fontSize:"0.9rem", cursor:"pointer",
                             fontFamily:"'DM Sans',sans-serif", fontWeight: newRdv.heure===h ? 700 : 400,
                             transition:"all 0.12s",
@@ -1462,7 +1414,7 @@ function Rendez_vous() {
             </div>
 
             {/* ── ÉTAPE 2 : Infos client ── */}
-            <div style={{ background:"rgba(0,0,0,0.02)", border:"1px solid rgba(0,0,0,0.07)", padding:"1.2rem" }}>
+            <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.08)", padding:"1.2rem" }}>
               <p style={{ color:GRAY, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
                 👤 Étape 2 — Informations client
               </p>
@@ -1474,7 +1426,7 @@ function Rendez_vous() {
                     <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>{label}</label>
                     <input value={(newRdv as any)[name as string]} onChange={e=>setNewRdv(p=>({...p,[name as string]:e.target.value}))}
                       type={type as string} placeholder={ph as string}
-                      style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.06)",
+                      style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
                         color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
                   </div>
                 ))}
@@ -1483,7 +1435,7 @@ function Rendez_vous() {
                 <div>
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Service</label>
                   <select value={newRdv.service} onChange={e=>setNewRdv(p=>({...p,service:e.target.value}))}
-                    style={{ width:"100%", background:NAVY, border:"1px solid rgba(0,0,0,0.06)", color:"#fff",
+                    style={{ width:"100%", background:NAVY, border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
                       padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", outline:"none" }}>
                     {SERVICES.map(s=><option key={s} value={s} style={{background:NAVY}}>{s}</option>)}
                   </select>
@@ -1492,7 +1444,7 @@ function Rendez_vous() {
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Appareil / Modèle</label>
                   <input value={newRdv.appareil} onChange={e=>setNewRdv(p=>({...p,appareil:e.target.value}))}
                     placeholder="iPhone 13, Dell XPS 15…"
-                    style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.06)",
+                    style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
                       color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
                 </div>
               </div>
@@ -1500,7 +1452,7 @@ function Rendez_vous() {
                 <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Description / Problème</label>
                 <textarea value={newRdv.description} onChange={e=>setNewRdv(p=>({...p,description:e.target.value}))}
                   rows={3} placeholder="Décrire le problème…"
-                  style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.06)",
+                  style={{ width:"100%", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(109,212,0,0.15)",
                     color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", resize:"vertical" as const, boxSizing:"border-box" as const, outline:"none" }} />
               </div>
             </div>
@@ -1509,13 +1461,13 @@ function Rendez_vous() {
             {createOk  && <p style={{ color:GREEN, fontSize:"0.85rem", marginTop:"1rem", fontFamily:"'DM Sans',sans-serif" }}>{createOk}</p>}
             <div style={{ display:"flex", gap:"0.75rem", marginTop:"1.25rem" }}>
               <button onClick={submitNewRdv} disabled={creating}
-                style={{ background:creating?"rgba(109,212,0,0.4)":GREEN, color:DARK, border:"none",
+                style={{ background:creating?"rgba(109,212,0,0.4)":GREEN, color:NAVY, border:"none",
                   padding:"0.55rem 1.4rem", fontSize:"0.85rem", fontWeight:700, cursor:creating?"not-allowed":"pointer",
                   fontFamily:"'DM Sans',sans-serif" }}>
                 {creating ? "Création…" : "✓ Créer le rendez-vous"}
               </button>
               <button onClick={()=>{ setShowForm(false); setCreateErr(null); setCreateOk(null); setNewRdv(emptyForm); setSlots([]); }}
-                style={{ background:"transparent", color:GRAY, border:"1px solid rgba(0,0,0,0.09)",
+                style={{ background:"transparent", color:GRAY, border:"1px solid rgba(255,255,255,0.1)",
                   padding:"0.55rem 1rem", fontSize:"0.85rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 Annuler
               </button>
@@ -1525,7 +1477,7 @@ function Rendez_vous() {
 
         {/* ── Tableau disponibilités ── */}
         {showDispo && (
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.09)", padding:"1.25rem", marginBottom:"1.5rem", overflowX:"auto" }}>
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(255,255,255,0.1)", padding:"1.25rem", marginBottom:"1.5rem", overflowX:"auto" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"1rem", flexWrap:"wrap", gap:"0.5rem" }}>
               <p style={{ color:GRAY, fontWeight:700, fontSize:"0.82rem", textTransform:"uppercase", letterSpacing:"0.08em", margin:0, fontFamily:"'DM Sans',sans-serif" }}>
                 🗓 Tableau de disponibilités — cliquez pour activer / désactiver
@@ -1569,8 +1521,8 @@ function Rendez_vous() {
                             title={actif ? "Cliquer pour fermer" : "Cliquer pour ouvrir"}
                             style={{
                               width:"36px", height:"28px", cursor:"pointer",
-                              background: actif ? "rgba(109,212,0,0.15)" : "rgba(0,0,0,0.02)",
-                              border: `1px solid ${actif ? "rgba(109,212,0,0.4)" : "rgba(0,0,0,0.07)"}`,
+                              background: actif ? "rgba(109,212,0,0.15)" : "rgba(255,255,255,0.03)",
+                              border: `1px solid ${actif ? "rgba(109,212,0,0.4)" : "rgba(255,255,255,0.08)"}`,
                               color: actif ? GREEN : GRAY_DIM,
                               fontSize:"0.82rem", transition:"all 0.15s",
                             }}>
@@ -1593,7 +1545,7 @@ function Rendez_vous() {
         <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:"1.5rem", alignItems:"start" }} className="cal-grid admin-cal-grid">
 
           {/* Calendrier */}
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", padding:"1rem", flexShrink:0, borderRadius:16 }}>
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1rem", flexShrink:0, borderRadius:16 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.75rem" }}>
               <button onClick={prevMonth} style={{ background:"transparent", border:"none", color:GRAY, cursor:"pointer", fontSize:"1rem", padding:"0.2rem 0.5rem" }}>◀</button>
               <span style={{ color:"#fff", fontWeight:700, fontSize:"0.88rem", fontFamily:"'DM Sans',sans-serif" }}>
@@ -1639,7 +1591,7 @@ function Rendez_vous() {
               })}
             </div>
             {selDate && (
-              <button onClick={()=>setSelDate(null)} style={{ width:"100%", marginTop:"0.75rem", background:"transparent", border:"1px solid rgba(0,0,0,0.09)", color:GRAY, padding:"0.35rem", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
+              <button onClick={()=>setSelDate(null)} style={{ width:"100%", marginTop:"0.75rem", background:"transparent", border:"1px solid rgba(255,255,255,0.1)", color:GRAY, padding:"0.35rem", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 ✕ Voir tous les RDVs
               </button>
             )}
@@ -1661,9 +1613,9 @@ function Rendez_vous() {
             <div style={{ display:"flex", gap:"0.4rem", marginBottom:"1rem", flexWrap:"wrap" }}>
               {["actifs","en_attente","confirme","archives","tous"].map(f=>(
                 <button key={f} onClick={()=>setFilter(f)} style={{
-                  background:filter===f ? (f==="archives"?"rgba(0,0,0,0.1)":GREEN) : "rgba(0,0,0,0.04)",
+                  background:filter===f ? (f==="archives"?"rgba(255,255,255,0.12)":GREEN) : "rgba(255,255,255,0.05)",
                   color:filter===f ? (f==="archives"?"#fff":NAVY) : (f==="archives"?GRAY:"#fff"),
-                  border:`1px solid ${f==="archives"?"rgba(0,0,0,0.12)":"rgba(109,212,0,0.2)"}`,
+                  border:`1px solid ${f==="archives"?"rgba(255,255,255,0.15)":"rgba(109,212,0,0.2)"}`,
                   padding:"0.45rem 0.95rem", fontSize:"0.8rem", cursor:"pointer",
                   fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s", borderRadius:10
                 }}>
@@ -1674,7 +1626,7 @@ function Rendez_vous() {
             {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
             <>
             {/* Desktop table */}
-            <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", overflowX:"auto" }}>
+            <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
               <table>
                 <thead>
                   <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -1686,7 +1638,7 @@ function Rendez_vous() {
                 <tbody>
                   {filtered.map((r:any)=>(
                     <tr key={r.id}
-                      onMouseEnter={e=>(e.currentTarget.style.background="rgba(0,0,0,0.02)")}
+                      onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
                       onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
                       <td style={{...tdStyle, fontWeight:500}}>{r.prenom} {r.nom}</td>
                       <td style={{...tdStyle, color:GRAY}}>{r.telephone || "—"}</td>
@@ -1730,7 +1682,7 @@ function Rendez_vous() {
             {/* Mobile cards */}
             <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
               {filtered.map((r:any)=>(
-                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", borderRadius:14, padding:"1rem" }}>
+                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.5rem" }}>
                     <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{r.prenom} {r.nom}</span>
                     {r.telephone && <a href={`tel:${r.telephone}`} style={{ color:GREEN, fontSize:"1.1rem", textDecoration:"none" }}>📞</a>}
@@ -1886,10 +1838,10 @@ function Tickets() {
           <div className="admin-flex-col-mobile" style={{display:"flex", gap:"0.8rem", marginBottom:"1.2rem"}}>
             <input value={search} onChange={e=>setSearch(e.target.value)}
               placeholder="🔍  Rechercher par nom, numéro, appareil..."
-              style={{ flex:1, background:"rgba(0,0,0,0.04)", border:"1px solid rgba(109,212,0,0.2)",
+              style={{ flex:1, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(109,212,0,0.2)",
                 color:"#fff", padding:"0.8rem 1rem", fontSize:"0.9rem", fontFamily:"'DM Sans',sans-serif",
                 outline:"none" }}/>
-            <button onClick={()=>setShowCreate(true)} style={{ background:GREEN, color:DARK,
+            <button onClick={()=>setShowCreate(true)} style={{ background:GREEN, color:NAVY,
               fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:"0.95rem",
               letterSpacing:"0.06em", padding:"0.8rem 1.2rem", border:"none", cursor:"pointer",
               whiteSpace:"nowrap" }}>
@@ -1898,14 +1850,14 @@ function Tickets() {
             <button onClick={()=>setShowArchived(p=>!p)} style={{
               background: showArchived ? "rgba(109,212,0,0.1)" : "transparent",
               color: showArchived ? GREEN : GRAY,
-              border: `1px solid ${showArchived ? "rgba(109,212,0,0.3)" : "rgba(0,0,0,0.09)"}`,
+              border: `1px solid ${showArchived ? "rgba(109,212,0,0.3)" : "rgba(255,255,255,0.1)"}`,
               padding:"0.8rem 1rem", cursor:"pointer", fontSize:"0.82rem",
               fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap"
             }}>
               🗃 {showArchived ? "Masquer archives" : "Voir archives"}
             </button>
             <button onClick={load} style={{ background:"transparent", color:GRAY,
-              border:"1px solid rgba(0,0,0,0.09)", padding:"0.8rem", cursor:"pointer" }}>↻</button>
+              border:"1px solid rgba(255,255,255,0.1)", padding:"0.8rem", cursor:"pointer" }}>↻</button>
           </div>
 
           {statutErr && (
@@ -1920,7 +1872,7 @@ function Tickets() {
           {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
           <>
           {/* Desktop table */}
-          <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", overflowX:"auto" }}>
+          <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
             <table>
               <thead>
                 <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -1997,7 +1949,7 @@ function Tickets() {
           <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
             {filtered.map((t:any)=>(
               <div key={t.id} onClick={()=>setSelected(t)}
-                style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", borderRadius:14, padding:"1rem", cursor:"pointer" }}>
+                style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem", cursor:"pointer" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.3rem" }}>
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",color:GREEN,fontWeight:700,fontSize:"0.85rem"}}>{t.numero}</span>
                   <Badge statut={t.statut}/>
@@ -2064,8 +2016,8 @@ function Tickets() {
             <div style={{ display:"flex", flexDirection:"column", gap:"0.4rem" }}>
               {statutsList.map(s=>(
                 <button key={s} onClick={()=>changeStatut(selected.id,s)} style={{
-                  background:selected.statut===s?"rgba(109,212,0,0.15)":"rgba(0,0,0,0.02)",
-                  border:`1px solid ${selected.statut===s?GREEN:"rgba(0,0,0,0.07)"}`,
+                  background:selected.statut===s?"rgba(109,212,0,0.15)":"rgba(255,255,255,0.03)",
+                  border:`1px solid ${selected.statut===s?GREEN:"rgba(255,255,255,0.08)"}`,
                   color:selected.statut===s?GREEN:GRAY, padding:"0.5rem 0.8rem",
                   fontSize:"0.82rem", cursor:"pointer", textAlign:"left",
                   fontFamily:"'DM Sans',sans-serif", transition:"all 0.15s"
@@ -2086,14 +2038,14 @@ function Tickets() {
                 onChange={e => setNewUpdate(e.target.value)}
                 placeholder="Ex: Écran commandé, arrivée prévue jeudi..."
                 rows={2}
-                style={{ flex:1, background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.09)",
+                style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)",
                   color:"#fff", padding:"0.5rem 0.7rem", fontSize:"0.82rem", fontFamily:"'DM Sans',sans-serif",
                   resize:"vertical", minHeight:"50px" }}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addUpdate(); } }}
               />
             </div>
             <button onClick={addUpdate} disabled={!newUpdate.trim()} style={{
-              background: newUpdate.trim() ? GREEN : "rgba(0,0,0,0.04)",
+              background: newUpdate.trim() ? GREEN : "rgba(255,255,255,0.05)",
               color: newUpdate.trim() ? NAVY : GRAY_DIM,
               border:"none", padding:"0.45rem 1rem", fontSize:"0.8rem", fontWeight:700,
               cursor: newUpdate.trim() ? "pointer" : "default", fontFamily:"'DM Sans',sans-serif",
@@ -2106,7 +2058,7 @@ function Tickets() {
             ) : (
               <div style={{ display:"flex", flexDirection:"column", gap:"0.6rem", borderLeft:`2px solid ${GREEN}33`, paddingLeft:"1rem" }}>
                 {updates.map((u: any) => (
-                  <div key={u.id} style={{ position:"relative", background:"rgba(0,0,0,0.02)", padding:"0.6rem 0.7rem", borderRadius:"4px" }}>
+                  <div key={u.id} style={{ position:"relative", background:"rgba(255,255,255,0.02)", padding:"0.6rem 0.7rem", borderRadius:"4px" }}>
                     <div style={{ position:"absolute", left:"-1.35rem", top:"0.7rem", width:"8px", height:"8px", borderRadius:"50%", background:GREEN }} />
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                       <div style={{ fontSize:"0.7rem", color:GRAY_DIM, marginBottom:"0.3rem" }}>
@@ -2149,7 +2101,7 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
     <div style={{marginBottom:"1rem"}}>
       <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>{label}</label>
       <input {...opts} name={name} value={form[name]} onChange={e=>setForm(p=>({...p,[name]:e.target.value}))}
-        style={{width:"100%",background:"rgba(0,0,0,0.04)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",
+        style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",
           padding:"0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
     </div>
   );
@@ -2177,18 +2129,18 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
             <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"}}>Problème *</label>
             <textarea required value={form.probleme} onChange={e=>setForm(p=>({...p,probleme:e.target.value}))} rows={3}
               placeholder="Décrivez le problème..."
-              style={{width:"100%",background:"rgba(0,0,0,0.04)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",
+              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",
                 padding:"0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none",resize:"vertical"}}/>
           </div>
           {error && <div style={{color:RED,fontSize:"0.85rem",marginBottom:"1rem"}}>{error}</div>}
           <div style={{display:"flex",gap:"0.8rem"}}>
-            <button type="submit" disabled={loading} style={{flex:1,background:loading?"rgba(109,212,0,0.5)":GREEN,color:DARK,
+            <button type="submit" disabled={loading} style={{flex:1,background:loading?"rgba(109,212,0,0.5)":GREEN,color:NAVY,
               fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",letterSpacing:"0.08em",
               padding:"0.8rem",border:"none",cursor:loading?"not-allowed":"pointer"}}>
               {loading?"CRÉATION...":"CRÉER LE TICKET"}
             </button>
             <button type="button" onClick={onClose} style={{background:"transparent",color:GRAY,
-              border:"1px solid rgba(0,0,0,0.12)",padding:"0.8rem 1.2rem",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+              border:"1px solid rgba(255,255,255,0.15)",padding:"0.8rem 1.2rem",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
               Annuler
             </button>
           </div>
@@ -2215,7 +2167,7 @@ function Calculateur() {
         <div style={{display:"flex",gap:"0.5rem",marginBottom:"1.5rem",flexWrap:"wrap"}}>
           {tabs.map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)}
-              style={{background:subTab===t.id?GREEN:"rgba(0,0,0,0.03)",color:subTab===t.id?NAVY:GRAY,
+              style={{background:subTab===t.id?GREEN:"rgba(255,255,255,0.04)",color:subTab===t.id?NAVY:GRAY,
                 border:`1px solid ${subTab===t.id?GREEN:"rgba(109,212,0,0.2)"}`,padding:"0.5rem 1.1rem",
                 cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:subTab===t.id?700:400,
                 fontSize:"0.9rem",letterSpacing:"0.05em",borderRadius:4}}>
@@ -2230,9 +2182,9 @@ function Calculateur() {
         {subTab==="calculatrice" && (
           <>
             <CalculatriceAffaires/>
-            <div style={{borderTop:"1px solid rgba(0,0,0,0.07)",margin:"2.5rem 0 2rem",display:"flex",alignItems:"center",gap:"0.8rem"}}>
+            <div style={{borderTop:"1px solid rgba(255,255,255,0.08)",margin:"2.5rem 0 2rem",display:"flex",alignItems:"center",gap:"0.8rem"}}>
               <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:GRAY,letterSpacing:"0.06em",whiteSpace:"nowrap"}}>💱 CONVERTISSEUR DE DEVISES</span>
-              <div style={{flex:1,height:1,background:"rgba(0,0,0,0.05)"}}/>
+              <div style={{flex:1,height:1,background:"rgba(255,255,255,0.06)"}}/>
             </div>
             <Convertisseur/>
           </>
@@ -2312,21 +2264,21 @@ function Convertisseur() {
     return out;
   }, [multiLines, rates.usdCad]);
 
-  const inSt: React.CSSProperties = {background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.1)",color:"#0f172a",padding:"0.65rem 0.8rem",fontSize:"1.1rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4};
-  const cardSt: React.CSSProperties = {background:NAVY_MID,border:"1px solid rgba(0,0,0,0.08)",padding:"1.5rem",borderRadius:6,flex:1,minWidth:260,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"};
+  const inSt: React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.65rem 0.8rem",fontSize:"1.1rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4};
+  const cardSt: React.CSSProperties = {background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6,flex:1,minWidth:260};
   const labelSt: React.CSSProperties = {fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem",display:"block"};
   const bigSt: React.CSSProperties = {fontSize:"2rem",fontWeight:700,color:GREEN,fontFamily:"'Barlow Condensed',sans-serif"};
 
   return (
     <div style={{maxWidth:900}}>
       {/* ── Bandeau taux ── */}
-      <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1.5rem",padding:"0.75rem 1rem",background:"rgba(109,212,0,0.06)",border:"1px solid rgba(0,0,0,0.06)",borderRadius:6}}>
+      <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1.5rem",padding:"0.75rem 1rem",background:"rgba(109,212,0,0.06)",border:"1px solid rgba(109,212,0,0.15)",borderRadius:6}}>
         <span style={{fontSize:"0.8rem",color:GRAY,flex:1}}>
           {status==="loading" && "⏳ Chargement des taux…"}
           {status==="approx" && "⚠️ Taux approximatifs (vérifiez votre connexion)"}
           {status==="live" && `✅ Taux en direct · ${lastUpdate}`}
           {status!=="loading" && (
-            <span style={{marginLeft:"1.2rem",color:"#374151"}}>
+            <span style={{marginLeft:"1.2rem",color:"#c8c8dc"}}>
               1 USD = <strong style={{color:GREEN}}>{rates.usdCad.toFixed(4)}</strong> CAD
               <span style={{margin:"0 0.6rem",color:GRAY_DIM}}>·</span>
               1 CNY = <strong style={{color:GREEN}}>{rates.cnyCad.toFixed(4)}</strong> CAD
@@ -2356,7 +2308,7 @@ function Convertisseur() {
           </div>
           <label style={labelSt}>Montant {usdDir ? "USD ($)" : "CAD ($)"}</label>
           <input type="number" min="0" step="0.01" value={usdAmt} onChange={e=>setUsdAmt(e.target.value)} placeholder="0.00" style={inSt}/>
-          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(0,0,0,0.02)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
+          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
             {usdVal!=null
               ? <div>
                   <span style={bigSt}>{usdVal.toFixed(2)}</span>
@@ -2370,7 +2322,7 @@ function Convertisseur() {
           <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.7rem"}}>
             {[5,10,20,50,100,200].map(v=>(
               <button key={v} onClick={()=>setUsdAmt(String(v))}
-                style={{background:usdAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(0,0,0,0.03)",border:`1px solid ${usdAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(0,0,0,0.07)"}`,color:usdAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
+                style={{background:usdAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${usdAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(255,255,255,0.08)"}`,color:usdAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
                 {v}$
               </button>
             ))}
@@ -2391,7 +2343,7 @@ function Convertisseur() {
           </div>
           <label style={labelSt}>Montant {cnyDir ? "CNY (¥)" : "CAD ($)"}</label>
           <input type="number" min="0" step="0.01" value={cnyAmt} onChange={e=>setCnyAmt(e.target.value)} placeholder="0.00" style={inSt}/>
-          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(0,0,0,0.02)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
+          <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
             {cnyVal!=null
               ? <div>
                   <span style={bigSt}>{cnyVal.toFixed(2)}</span>
@@ -2405,7 +2357,7 @@ function Convertisseur() {
           <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.7rem"}}>
             {(cnyDir?[50,100,200,500,1000,2000]:[20,50,100,200,500,1000]).map(v=>(
               <button key={v} onClick={()=>setCnyAmt(String(v))}
-                style={{background:cnyAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(0,0,0,0.03)",border:`1px solid ${cnyAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(0,0,0,0.07)"}`,color:cnyAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
+                style={{background:cnyAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${cnyAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(255,255,255,0.08)"}`,color:cnyAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
                 {cnyDir?"¥":"$"}{v}
               </button>
             ))}
@@ -2414,22 +2366,22 @@ function Convertisseur() {
       </div>
 
       {/* ── Facture fournisseur ── */}
-      <div style={{background:NAVY_MID,border:"1px solid rgba(0,0,0,0.06)",padding:"1.5rem",borderRadius:6}}>
+      <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",padding:"1.5rem",borderRadius:6}}>
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:GREEN,marginBottom:"0.25rem"}}>📋 Facture fournisseur USD → CAD</div>
         <div style={{fontSize:"0.75rem",color:GRAY,marginBottom:"0.8rem"}}>
-          Une ligne par article : <code style={{color:"#374151",background:"rgba(0,0,0,0.06)",padding:"0 4px",borderRadius:2}}>Écran OLED 24.99</code>
+          Une ligne par article : <code style={{color:"#c8c8dc",background:"rgba(255,255,255,0.06)",padding:"0 4px",borderRadius:2}}>Écran OLED 24.99</code>
         </div>
         <textarea value={multiLines} onChange={e=>setMultiLines(e.target.value)}
           placeholder={"Écran OLED iPhone 14 24.99\nBatterie Samsung S23 8.50\nConnecteur USB-C 3.20"}
           rows={5} style={{...inSt,resize:"vertical",lineHeight:1.6,fontSize:"0.85rem"}}/>
         {multiResults.length > 0 && (
-          <div style={{marginTop:"1rem",border:"1px solid rgba(0,0,0,0.06)",borderRadius:4,overflow:"hidden"}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",background:"rgba(0,0,0,0.03)",padding:"0.4rem 0.8rem",fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase"}}>
+          <div style={{marginTop:"1rem",border:"1px solid rgba(255,255,255,0.07)",borderRadius:4,overflow:"hidden"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",background:"rgba(255,255,255,0.04)",padding:"0.4rem 0.8rem",fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase"}}>
               <span>Article</span><span style={{textAlign:"right"}}>USD</span><span style={{textAlign:"right"}}>CAD</span>
             </div>
             {multiResults.map((item,i)=>(
-              <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",padding:"0.4rem 0.8rem",borderTop:"1px solid rgba(0,0,0,0.03)",fontSize:"0.82rem",background:i%2===0?"transparent":"rgba(0,0,0,0.02)"}}>
-                <span style={{color:"#374151"}}>{item.label}</span>
+              <div key={i} style={{display:"grid",gridTemplateColumns:"1fr 90px 90px",padding:"0.4rem 0.8rem",borderTop:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                <span style={{color:"#c8c8dc"}}>{item.label}</span>
                 <span style={{textAlign:"right",color:GRAY,fontFamily:"monospace"}}>{item.usd.toFixed(2)}</span>
                 <span style={{textAlign:"right",color:GREEN,fontWeight:700,fontFamily:"monospace"}}>{item.cad.toFixed(2)}</span>
               </div>
@@ -2487,11 +2439,11 @@ function CalculerPrix() {
     if(c==="vert") return {bg:"rgba(109,212,0,0.15)",color:GREEN,text:"COMPÉTITIF ✅"};
     if(c==="orange") return {bg:"rgba(245,158,11,0.15)",color:"#f59e0b",text:"BORDERLINE ⚠️"};
     if(c==="rouge") return {bg:"rgba(239,68,68,0.15)",color:RED,text:"TROP CHER ❌"};
-    return {bg:"rgba(0,0,0,0.04)",color:GRAY,text:"DONNÉES MANQUANTES"};
+    return {bg:"rgba(255,255,255,0.05)",color:GRAY,text:"DONNÉES MANQUANTES"};
   };
 
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
-  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(0,0,0,0.04)",border:"1px solid rgba(109,212,0,0.25)",color:"#0f172a",padding:"0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
 
   return (
     <div className="admin-grid-2" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"2rem"}}>
@@ -2513,8 +2465,8 @@ function CalculerPrix() {
           <div style={{display:"flex",gap:"0.4rem"}}>
             {[50,75,100,125,150].map(v=>(
               <button key={v} type="button" onClick={()=>setMainOeuvre(v)}
-                style={{background:mainOeuvre===v?GREEN:"rgba(0,0,0,0.05)",color:mainOeuvre===v?NAVY:GRAY,
-                  border:`1px solid ${mainOeuvre===v?GREEN:"rgba(0,0,0,0.09)"}`,padding:"0.3rem 0.7rem",
+                style={{background:mainOeuvre===v?GREEN:"rgba(255,255,255,0.06)",color:mainOeuvre===v?NAVY:GRAY,
+                  border:`1px solid ${mainOeuvre===v?GREEN:"rgba(255,255,255,0.1)"}`,padding:"0.3rem 0.7rem",
                   cursor:"pointer",fontSize:"0.8rem",fontFamily:"'DM Sans',sans-serif",fontWeight:mainOeuvre===v?700:400}}>
                 {v}$
               </button>
@@ -2522,7 +2474,7 @@ function CalculerPrix() {
           </div>
         </div>
         <button onClick={calculer} disabled={loading||!appareil||!reparation}
-          style={{width:"100%",background:loading?"rgba(109,212,0,0.5)":GREEN,color:DARK,
+          style={{width:"100%",background:loading?"rgba(109,212,0,0.5)":GREEN,color:NAVY,
             fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",letterSpacing:"0.08em",
             padding:"0.9rem",border:"none",cursor:loading?"wait":"pointer",marginTop:"0.5rem"}}>
           {loading?"CALCUL...":"🧮 CALCULER LE PRIX"}
@@ -2546,10 +2498,10 @@ function CalculerPrix() {
             </div>
 
             {/* Cost breakdown */}
-            <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.05)",padding:"1rem",marginBottom:"1rem"}}>
+            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"1rem",marginBottom:"1rem"}}>
               <div style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.3rem"}}><span>Pièce</span><span>{result.cout_piece!=null?`${result.cout_piece} $`:"—"}</span></div>
               <div style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.3rem"}}><span>Main d'œuvre</span><span>{result.main_oeuvre} $</span></div>
-              <div style={{borderTop:"1px solid rgba(0,0,0,0.09)",paddingTop:"0.4rem",display:"flex",justifyContent:"space-between",color:"#fff",fontSize:"0.9rem",fontWeight:700}}><span>Coût total</span><span>{result.cout_total!=null?`${result.cout_total} $`:"—"}</span></div>
+              <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",paddingTop:"0.4rem",display:"flex",justifyContent:"space-between",color:"#fff",fontSize:"0.9rem",fontWeight:700}}><span>Coût total</span><span>{result.cout_total!=null?`${result.cout_total} $`:"—"}</span></div>
             </div>
 
             {/* Competitiveness badge */}
@@ -2560,16 +2512,16 @@ function CalculerPrix() {
             );})()}
 
             {/* Competitors */}
-            <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.05)",padding:"1rem",marginBottom:"1rem"}}>
+            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"1rem",marginBottom:"1rem"}}>
               <div style={{fontSize:"0.7rem",fontWeight:700,color:GRAY,letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"0.5rem"}}>Concurrents</div>
               {[["CD Solution",result.concurrents?.cd_solution],["Fix Moi",result.concurrents?.fix_moi],["Mobile Klinik",result.concurrents?.mobile_klinik]].map(([name,val])=>(
                 <div key={name as string} style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.2rem"}}><span>{name}</span><span>{val!=null?`${val} $`:"—"}</span></div>
               ))}
-              <div style={{borderTop:"1px solid rgba(0,0,0,0.09)",paddingTop:"0.3rem",marginTop:"0.3rem",display:"flex",justifyContent:"space-between",color:"#fff",fontSize:"0.88rem",fontWeight:600}}><span>Moyenne</span><span>{result.concurrents?.moyenne!=null?`${result.concurrents.moyenne} $`:"—"}</span></div>
+              <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",paddingTop:"0.3rem",marginTop:"0.3rem",display:"flex",justifyContent:"space-between",color:"#fff",fontSize:"0.88rem",fontWeight:600}}><span>Moyenne</span><span>{result.concurrents?.moyenne!=null?`${result.concurrents.moyenne} $`:"—"}</span></div>
             </div>
 
             {/* Device value & ratio */}
-            <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.05)",padding:"1rem",marginBottom:"1rem"}}>
+            <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",padding:"1rem",marginBottom:"1rem"}}>
               <div style={{display:"flex",justifyContent:"space-between",color:GRAY,fontSize:"0.85rem",marginBottom:"0.3rem"}}><span>Valeur appareil</span><span>{result.valeur_appareil!=null?`${result.valeur_appareil} $`:"—"}</span></div>
               <div style={{display:"flex",justifyContent:"space-between",color:result.ratio_reparation_valeur>50?"#f59e0b":result.ratio_reparation_valeur>75?RED:GRAY,fontSize:"0.85rem",fontWeight:result.ratio_reparation_valeur>50?700:400}}><span>Ratio réparation/valeur</span><span>{result.ratio_reparation_valeur!=null?`${result.ratio_reparation_valeur}%`:"—"}</span></div>
               {result.ratio_reparation_valeur>50 && <div style={{color:"#f59e0b",fontSize:"0.78rem",marginTop:"0.4rem"}}>⚠️ La réparation coûte plus de 50% de la valeur. Envisager une réduction.</div>}
@@ -2737,9 +2689,9 @@ function CalculatriceAffaires() {
   };
   const btnNum:  React.CSSProperties = {...btnBase, background:"#1a2540", color:"#fff"};
   const btnOp:   React.CSSProperties = {...btnBase, background:"#1f3560", color:"#38bdf8"};
-  const btnGreen:React.CSSProperties = {...btnBase, background:GREEN,     color:DARK};
+  const btnGreen:React.CSSProperties = {...btnBase, background:GREEN,     color:NAVY};
   const btnRed:  React.CSSProperties = {...btnBase, background:"rgba(255,77,77,0.15)", color:"#ff6b6b"};
-  const inpSt:   React.CSSProperties = {background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.12)",color:"#0f172a",padding:"0.5rem 0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4,boxSizing:"border-box" as const};
+  const inpSt:   React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.5rem 0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4,boxSizing:"border-box" as const};
 
   const Btn = ({label, style, onClick, span=1}:{label:string;style:React.CSSProperties;onClick:()=>void;span?:number}) => (
     <button onClick={onClick} style={{...style, gridColumn:`span ${span}`}}>{label}</button>
@@ -2750,10 +2702,10 @@ function CalculatriceAffaires() {
 
       {/* ══ COLONNE GAUCHE — calculatrice ══ */}
       <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
-        <div style={{background:SIDEBAR_BG,border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.12)"}}>
+        <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,overflow:"hidden"}}>
           {/* Affichage */}
-          <div style={{padding:"1rem 1.2rem",background:"rgba(0,0,0,0.35)",minHeight:90}}>
-            <div style={{fontSize:"0.7rem",color:"#6a8aaa",minHeight:18}}>
+          <div style={{padding:"1rem 1.2rem",background:"rgba(0,0,0,0.2)",minHeight:90}}>
+            <div style={{fontSize:"0.7rem",color:GRAY_DIM,minHeight:18}}>
               {stored!==null&&op ? `${fmt(stored)} ${op}` : "\u00a0"}
             </div>
             <div style={{fontSize:"2.6rem",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",color:"#fff",textAlign:"right",letterSpacing:"0.02em",lineHeight:1.1,wordBreak:"break-all"}}>
@@ -2797,9 +2749,9 @@ function CalculatriceAffaires() {
 
         {/* Historique */}
         {history.length>0 && (
-          <div style={{background:SIDEBAR_BG,border:"1px solid rgba(0,0,0,0.06)",borderRadius:6,padding:"0.8rem 1rem"}}>
-            <div style={{fontSize:"0.65rem",fontWeight:700,color:"#6a8aaa",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:"0.4rem"}}>Historique</div>
-            {history.map((h,i)=><div key={i} style={{fontSize:"0.78rem",color:i===0?"#c8c8dc":"#4a6080",padding:"0.15rem 0",borderBottom:i<history.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontFamily:"monospace"}}>{h}</div>)}
+          <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:6,padding:"0.8rem 1rem"}}>
+            <div style={{fontSize:"0.65rem",fontWeight:700,color:GRAY_DIM,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:"0.4rem"}}>Historique</div>
+            {history.map((h,i)=><div key={i} style={{fontSize:"0.78rem",color:i===0?"#c8c8dc":GRAY_DIM,padding:"0.15rem 0",borderBottom:i<history.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontFamily:"monospace"}}>{h}</div>)}
           </div>
         )}
       </div>
@@ -2808,7 +2760,7 @@ function CalculatriceAffaires() {
       <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
 
         {/* Taxes Québec */}
-        <div style={{background:NAVY_MID,border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,padding:"1.2rem"}}>
+        <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,padding:"1.2rem"}}>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:GREEN,marginBottom:"0.2rem"}}>🏛️ Taxes Québec</div>
           <div style={{fontSize:"0.7rem",color:GRAY_DIM,marginBottom:"0.9rem"}}>TPS 5% · TVQ 9,975% · Total 14,975%</div>
 
@@ -2816,7 +2768,7 @@ function CalculatriceAffaires() {
           <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.8rem"}}>
             {([["add","Ajouter les taxes"],["remove","Enlever les taxes"]] as const).map(([m,lbl])=>(
               <button key={m} onClick={()=>setTaxMode(m)}
-                style={{flex:1,padding:"0.4rem",border:`1px solid ${taxMode===m?GREEN:"rgba(0,0,0,0.09)"}`,background:taxMode===m?"rgba(109,212,0,0.12)":"transparent",color:taxMode===m?GREEN:GRAY,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.8rem",borderRadius:4}}>
+                style={{flex:1,padding:"0.4rem",border:`1px solid ${taxMode===m?GREEN:"rgba(255,255,255,0.1)"}`,background:taxMode===m?"rgba(109,212,0,0.12)":"transparent",color:taxMode===m?GREEN:GRAY,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.8rem",borderRadius:4}}>
                 {lbl}
               </button>
             ))}
@@ -2831,13 +2783,13 @@ function CalculatriceAffaires() {
           {baseNum>0 && (
             <div style={{marginTop:"0.9rem",display:"flex",flexDirection:"column",gap:"0.35rem"}}>
               {[
-                {lbl: taxMode==="add"?"Prix avant taxes":"Prix HT",    val: priceHT,   color:"#374151"},
+                {lbl: taxMode==="add"?"Prix avant taxes":"Prix HT",    val: priceHT,   color:"#c8c8dc"},
                 {lbl: "TPS (5%)",                                       val: taxTPS,    color:BLUE},
                 {lbl: "TVQ (9,975%)",                                   val: taxTVQ,    color:"#a78bfa"},
                 {lbl: "Total des taxes",                                val: taxTotal,  color:ORANGE},
                 {lbl: taxMode==="add"?"PRIX TTC":"PRIX HT",            val: taxMode==="add"?priceTTC:priceHT, color:GREEN, bold:true},
               ].map(row=>(
-                <div key={row.lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.35rem 0.7rem",borderRadius:4,background:row.bold?"rgba(109,212,0,0.08)":"rgba(0,0,0,0.02)",border:row.bold?`1px solid rgba(109,212,0,0.2)`:"1px solid transparent"}}>
+                <div key={row.lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.35rem 0.7rem",borderRadius:4,background:row.bold?"rgba(109,212,0,0.08)":"rgba(255,255,255,0.02)",border:row.bold?`1px solid rgba(109,212,0,0.2)`:"1px solid transparent"}}>
                   <span style={{fontSize:"0.8rem",color:GRAY,fontWeight:row.bold?700:400}}>{row.lbl}</span>
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:row.bold?"1.15rem":"0.9rem",color:row.color}}>{row.val.toFixed(2)} $</span>
                 </div>
@@ -2847,7 +2799,7 @@ function CalculatriceAffaires() {
         </div>
 
         {/* Marge bénéficiaire */}
-        <div style={{background:NAVY_MID,border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,padding:"1.2rem"}}>
+        <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,padding:"1.2rem"}}>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:ORANGE,marginBottom:"0.8rem"}}>📈 Marge bénéficiaire</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.5rem",marginBottom:"0.6rem"}}>
             <div>
@@ -2865,7 +2817,7 @@ function CalculatriceAffaires() {
           <div style={{display:"flex",gap:"0.3rem",flexWrap:"wrap",marginBottom:"0.7rem"}}>
             {[20,25,30,35,40,50].map(p=>(
               <button key={p} onClick={()=>setMarginPct(String(p))}
-                style={{background:marginPct===String(p)?"rgba(245,158,11,0.2)":"rgba(0,0,0,0.03)",border:`1px solid ${marginPct===String(p)?"rgba(245,158,11,0.5)":"rgba(0,0,0,0.07)"}`,color:marginPct===String(p)?ORANGE:GRAY,padding:"0.15rem 0.5rem",cursor:"pointer",fontSize:"0.73rem",borderRadius:3}}>
+                style={{background:marginPct===String(p)?"rgba(245,158,11,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${marginPct===String(p)?"rgba(245,158,11,0.5)":"rgba(255,255,255,0.08)"}`,color:marginPct===String(p)?ORANGE:GRAY,padding:"0.15rem 0.5rem",cursor:"pointer",fontSize:"0.73rem",borderRadius:3}}>
                 {p}%
               </button>
             ))}
@@ -2874,12 +2826,12 @@ function CalculatriceAffaires() {
           {mCost>0 && mPct>0 && mPct<100 && (
             <div style={{display:"flex",flexDirection:"column",gap:"0.35rem"}}>
               {[
-                {lbl:"Coût d'achat",        val:mCost,    color:"#374151"},
+                {lbl:"Coût d'achat",        val:mCost,    color:"#c8c8dc"},
                 {lbl:"Prix de vente HT",    val:mSell,    color:GREEN,    bold:false},
                 {lbl:"Profit brut",         val:mProfit,  color:"#34d399"},
                 {lbl:"Prix de vente TTC",   val:mSellTTC, color:ORANGE,   bold:true},
               ].map(row=>(
-                <div key={row.lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.35rem 0.7rem",borderRadius:4,background:row.bold?"rgba(245,158,11,0.08)":"rgba(0,0,0,0.02)",border:row.bold?"1px solid rgba(245,158,11,0.2)":"1px solid transparent"}}>
+                <div key={row.lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.35rem 0.7rem",borderRadius:4,background:row.bold?"rgba(245,158,11,0.08)":"rgba(255,255,255,0.02)",border:row.bold?"1px solid rgba(245,158,11,0.2)":"1px solid transparent"}}>
                   <span style={{fontSize:"0.8rem",color:GRAY,fontWeight:row.bold?700:400}}>{row.lbl}</span>
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:row.bold?"1.1rem":"0.9rem",color:row.color}}>{row.val.toFixed(2)} $</span>
                 </div>
@@ -3004,7 +2956,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
     onLoad();
   };
 
-  const inputSt:React.CSSProperties = {background:"rgba(0,0,0,0.04)",border:"1px solid rgba(0,0,0,0.1)",color:"#0f172a",padding:"0.4rem 0.6rem",fontSize:"0.82rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"};
+  const inputSt:React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.4rem 0.6rem",fontSize:"0.82rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%"};
   const selSt:React.CSSProperties = {...inputSt, background:"#0e2040", cursor:"pointer"};
   const optSt:React.CSSProperties = {background:"#0e2040", color:"#fff"};
 
@@ -3037,7 +2989,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
           </button>
         )}
         <button onClick={openCreate}
-          style={{background:GREEN,color:DARK,border:"none",padding:"0.5rem 1.4rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem",marginLeft:"auto",whiteSpace:"nowrap"}}>
+          style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.4rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.95rem",marginLeft:"auto",whiteSpace:"nowrap"}}>
           + Créer une fiche appareil
         </button>
       </div>
@@ -3060,7 +3012,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
             const totalPieces = fiche.pieces.length;
             const isAddingHere = addTarget?.type_appareil===fiche.type_appareil && addTarget?.modele===(fiche.modele||"");
             return (
-              <div key={key} style={{background:"rgba(0,0,0,0.02)",border:`1px solid ${isOpen?bColor+"55":bColor+"22"}`,overflow:"hidden",transition:"border-color 0.2s",display:"flex",flexDirection:"column"}}>
+              <div key={key} style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${isOpen?bColor+"55":bColor+"22"}`,overflow:"hidden",transition:"border-color 0.2s",display:"flex",flexDirection:"column"}}>
                 {/* Card header — cliquable */}
                 <div style={{padding:"0.75rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}
                   onClick={()=>setExpandedFiche(isOpen?null:key)}>
@@ -3094,7 +3046,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                 {isOpen && (
                   <div style={{borderTop:`1px solid ${bColor}22`,flex:1}}>
                     {fiche.pieces.map((p:any)=>(
-                      <div key={p.id} style={{borderBottom:"1px solid rgba(0,0,0,0.02)"}}>
+                      <div key={p.id} style={{borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
                         {editingPieceId===p.id ? (
                           /* ── Formulaire d'édition inline ── */
                           <div style={{padding:"0.5rem 0.8rem",background:"rgba(109,212,0,0.04)"}}>
@@ -3111,9 +3063,9 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                                 style={{...inputSt,flex:1,fontSize:"0.78rem",padding:"0.3rem 0.5rem"}}/>
                             </div>
                             <div style={{display:"flex",gap:"0.4rem"}}>
-                              <button onClick={()=>setEditingPieceId(null)} style={{flex:1,background:"transparent",border:"1px solid rgba(0,0,0,0.09)",color:GRAY,padding:"0.28rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.75rem"}}>ANNULER</button>
+                              <button onClick={()=>setEditingPieceId(null)} style={{flex:1,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:GRAY,padding:"0.28rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.75rem"}}>ANNULER</button>
                               <button onClick={handleEditPiece} disabled={editingSaving||!editingPieceForm.type_piece}
-                                style={{flex:2,background:GREEN,color:DARK,border:"none",padding:"0.28rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.75rem",opacity:editingSaving?0.6:1}}>
+                                style={{flex:2,background:GREEN,color:NAVY,border:"none",padding:"0.28rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.75rem",opacity:editingSaving?0.6:1}}>
                                 {editingSaving?"...":"✓ SAUVEGARDER"}
                               </button>
                             </div>
@@ -3121,7 +3073,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                         ) : (
                           /* ── Ligne normale + boutons discrets ── */
                           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0.35rem 1rem",gap:"0.4rem"}}>
-                            <span style={{fontSize:"0.8rem",color:"#374151",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.type_piece}</span>
+                            <span style={{fontSize:"0.8rem",color:"#c8c8dc",flex:1,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.type_piece}</span>
                             <div style={{display:"flex",alignItems:"center",gap:"0.4rem",flexShrink:0}}>
                               <span style={{fontSize:"0.75rem",color:GREEN,fontWeight:600}}>{p.cout_fournisseur>0?`${p.cout_fournisseur}$`:"—"}</span>
                               {p.cout_vente!=null && <span style={{fontSize:"0.72rem",color:BLUE,fontWeight:600}}>{p.cout_vente}$</span>}
@@ -3144,14 +3096,14 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                     ))}
 
                     {/* ── Note de la fiche ── */}
-                    <div style={{padding:"0.55rem 1rem",borderTop:"1px solid rgba(0,0,0,0.04)",background:"rgba(0,0,0,0.02)"}}>
+                    <div style={{padding:"0.55rem 1rem",borderTop:"1px solid rgba(255,255,255,0.05)",background:"rgba(255,255,255,0.015)"}}>
                       <div style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY_DIM,textTransform:"uppercase",marginBottom:"0.3rem"}}>📝 Note</div>
                       <textarea
                         value={ficheNotes[key]||""}
                         onChange={e=>saveNote(key,e.target.value)}
                         placeholder="Ajouter une note sur cet appareil…"
                         rows={2}
-                        style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid rgba(0,0,0,0.05)",color:"#475569",fontSize:"0.76rem",fontFamily:"'DM Sans',sans-serif",resize:"none",outline:"none",padding:"0.2rem 0",lineHeight:1.5,boxSizing:"border-box"}}
+                        style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid rgba(255,255,255,0.08)",color:"#b0b8cc",fontSize:"0.76rem",fontFamily:"'DM Sans',sans-serif",resize:"none",outline:"none",padding:"0.2rem 0",lineHeight:1.5,boxSizing:"border-box"}}
                       />
                     </div>
 
@@ -3174,15 +3126,15 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                             style={{...inputSt,flex:1,fontSize:"0.78rem",padding:"0.35rem 0.5rem"}}/>
                         </div>
                         <div style={{display:"flex",gap:"0.4rem"}}>
-                          <button onClick={()=>setAddTarget(null)} style={{flex:1,background:"transparent",border:"1px solid rgba(0,0,0,0.09)",color:GRAY,padding:"0.3rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.78rem"}}>ANNULER</button>
+                          <button onClick={()=>setAddTarget(null)} style={{flex:1,background:"transparent",border:"1px solid rgba(255,255,255,0.1)",color:GRAY,padding:"0.3rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.78rem"}}>ANNULER</button>
                           <button onClick={handleAddPiece} disabled={addSaving||!addForm.type_piece}
-                            style={{flex:2,background:GREEN,color:DARK,border:"none",padding:"0.3rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.78rem",opacity:addSaving?0.6:1}}>
+                            style={{flex:2,background:GREEN,color:NAVY,border:"none",padding:"0.3rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.78rem",opacity:addSaving?0.6:1}}>
                             {addSaving?"...":"✓ AJOUTER"}
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div style={{padding:"0.5rem 1rem",borderTop:"1px solid rgba(0,0,0,0.03)"}}>
+                      <div style={{padding:"0.5rem 1rem",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
                         <button
                           onClick={e=>{e.stopPropagation();setAddTarget({type_appareil:fiche.type_appareil,modele:fiche.modele||""});setAddForm({type_piece:"",cout_fournisseur:"",cout_vente:""}); }}
                           style={{width:"100%",background:"rgba(109,212,0,0.07)",border:"1px dashed rgba(109,212,0,0.3)",color:GREEN,padding:"0.35rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.8rem",letterSpacing:"0.05em"}}>
@@ -3204,7 +3156,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
           <div onClick={e=>e.stopPropagation()} style={{background:NAVY_MID,border:"1px solid rgba(109,212,0,0.25)",width:520,maxWidth:"96vw",height:"min(680px, 90vh)",display:"flex",flexDirection:"column",animation:"adminFadeIn 0.2s ease both"}}>
 
             {/* ── En-tête + champs marque/modèle (fixe) ── */}
-            <div style={{padding:"1.25rem 1.5rem 1rem",borderBottom:"1px solid rgba(0,0,0,0.06)",flexShrink:0}}>
+            <div style={{padding:"1.25rem 1.5rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.07)",flexShrink:0}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
                 <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:GREEN,letterSpacing:"0.06em",textTransform:"uppercase"}}>Créer une fiche appareil</span>
                 <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
@@ -3231,9 +3183,9 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                 <div style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.5rem"}}>
                   Pièces suggérées — cochez et entrez les coûts d'achat
                 </div>
-                <div style={{border:"1px solid rgba(0,0,0,0.07)",marginBottom:"1rem"}}>
+                <div style={{border:"1px solid rgba(255,255,255,0.08)",marginBottom:"1rem"}}>
                   {(PIECE_TEMPLATES[brand]||[]).map((piece,i)=>(
-                    <div key={piece} style={{display:"flex",alignItems:"center",gap:"0.8rem",padding:"0.5rem 0.8rem",borderBottom:i<(PIECE_TEMPLATES[brand]||[]).length-1?"1px solid rgba(0,0,0,0.04)":"none",background:checkedPieces[piece]?"rgba(109,212,0,0.04)":"transparent"}}>
+                    <div key={piece} style={{display:"flex",alignItems:"center",gap:"0.8rem",padding:"0.5rem 0.8rem",borderBottom:i<(PIECE_TEMPLATES[brand]||[]).length-1?"1px solid rgba(255,255,255,0.05)":"none",background:checkedPieces[piece]?"rgba(109,212,0,0.04)":"transparent"}}>
                       <input type="checkbox" checked={!!checkedPieces[piece]} onChange={e=>setCheckedPieces(p=>({...p,[piece]:e.target.checked}))} style={{accentColor:GREEN,flexShrink:0,width:14,height:14}}/>
                       <span style={{flex:1,fontSize:"0.83rem",color:checkedPieces[piece]?"#fff":"#4a6080"}}>{piece}</span>
                       <input type="number" placeholder="$ achat" value={costs[piece]||""} onChange={e=>setCosts(p=>({...p,[piece]:e.target.value}))}
@@ -3257,14 +3209,14 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
             </div>
 
             {/* ── Footer collé en bas (compteur + boutons) ── */}
-            <div style={{padding:"0.9rem 1.5rem",borderTop:"1px solid rgba(0,0,0,0.06)",background:NAVY_MID,flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{padding:"0.9rem 1.5rem",borderTop:"1px solid rgba(255,255,255,0.07)",background:NAVY_MID,flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <span style={{fontSize:"0.78rem",color:GRAY}}>
                 {Object.values(checkedPieces).filter(Boolean).length + customPieces.split("\n").filter(s=>s.trim()).length} pièce(s) à créer
               </span>
               <div style={{display:"flex",gap:"0.8rem"}}>
-                <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"1px solid rgba(0,0,0,0.1)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
+                <button onClick={()=>setShowCreate(false)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
                 <button onClick={handleCreate} disabled={creating||!brand||!model}
-                  style={{background:GREEN,color:DARK,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:creating?0.6:1}}>
+                  style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:creating?0.6:1}}>
                   {creating?"CRÉATION...":"CRÉER LA FICHE"}
                 </button>
               </div>
@@ -3283,7 +3235,7 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, 
   onSelect:(p:any)=>void; selected:any|null;
   onDemande:(p:any,e:React.MouseEvent)=>void;
 }) {
-  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(0,0,0,0.03)",fontSize:"0.82rem",color:"#a8b8d0"};
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:"#a8b8d0"};
   const daysSince = (d:string) => { const ms=Date.now()-new Date(d).getTime(); return Math.floor(ms/86400000); };
   const accentColor = isDetachee ? ORANGE : GREEN;
   const cols = isDetachee
@@ -3411,7 +3363,7 @@ function CataloguePieces() {
   };
 
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
-  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(0,0,0,0.04)",border:"1px solid rgba(109,212,0,0.25)",color:"#0f172a",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
   const fmtDate = (d:string) => new Date(d).toLocaleDateString("fr-CA",{year:"numeric",month:"short",day:"numeric"});
 
   return (
@@ -3419,7 +3371,7 @@ function CataloguePieces() {
       <div style={{flex:1,minWidth:0}}>
 
         {/* ── Section tabs ── */}
-        <div style={{display:"flex",gap:0,marginBottom:"1.5rem",border:"1px solid rgba(0,0,0,0.07)",overflow:"hidden"}}>
+        <div style={{display:"flex",gap:0,marginBottom:"1.5rem",border:"1px solid rgba(255,255,255,0.08)",overflow:"hidden"}}>
           {([
             {id:"service"  as const, icon:"🔧", label:"Pièces de service",  count:serviceList.length,  color:GREEN,        bg:"rgba(109,212,0,0.12)"},
             {id:"detachee" as const, icon:"📦", label:"Pièces détachées",   count:detacheeList.length, color:ORANGE,       bg:"rgba(245,158,11,0.12)"},
@@ -3437,7 +3389,7 @@ function CataloguePieces() {
                 }}>
                 <span>{tab.icon}</span>
                 <span style={{textTransform:"uppercase"}}>{tab.label}</span>
-                <span style={{background:isOn?tab.color:"rgba(0,0,0,0.07)",color:isOn?NAVY:"#fff",
+                <span style={{background:isOn?tab.color:"rgba(255,255,255,0.08)",color:isOn?NAVY:"#fff",
                   fontSize:"0.72rem",fontWeight:800,padding:"0.1rem 0.45rem",minWidth:20,textAlign:"center"}}>
                   {tab.count}
                 </span>
@@ -3472,7 +3424,7 @@ function CataloguePieces() {
 
         {/* ── Add form ── */}
         {showAdd && (
-          <div style={{background:"rgba(0,0,0,0.02)",border:`1px solid ${accentColor}33`,padding:"1.2rem",marginBottom:"1.5rem"}}>
+          <div style={{background:"rgba(255,255,255,0.03)",border:`1px solid ${accentColor}33`,padding:"1.2rem",marginBottom:"1.5rem"}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
               <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
               <div><label style={labelSt}>Modèle</label><input value={form.modele} onChange={e=>setForm(p=>({...p,modele:e.target.value}))} placeholder="Max, Plus..." style={inputSt}/></div>
@@ -3488,7 +3440,7 @@ function CataloguePieces() {
               <div><label style={labelSt}>Fournisseur</label><input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
               <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
             </div>
-            <button onClick={handleAdd} style={{background:accentColor,color:DARK,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+            <button onClick={handleAdd} style={{background:accentColor,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
           </div>
         )}
 
@@ -3504,7 +3456,7 @@ function CataloguePieces() {
 
       {/* ── Detail drawer ── */}
       {!isFiches && detail && !editId && (
-        <div style={{width:270,flexShrink:0,background:"rgba(0,0,0,0.02)",border:`1px solid ${accentColor}33`,padding:"1.2rem",animation:"adminFadeIn 0.2s ease both"}}>
+        <div style={{width:270,flexShrink:0,background:"rgba(255,255,255,0.03)",border:`1px solid ${accentColor}33`,padding:"1.2rem",animation:"adminFadeIn 0.2s ease both"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
             <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1rem",color:accentColor,letterSpacing:"0.05em",textTransform:"uppercase"}}>Détails</span>
             <button onClick={()=>setDetail(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.1rem"}}>✕</button>
@@ -3516,7 +3468,7 @@ function CataloguePieces() {
               <div style={{fontSize:"1.6rem",fontWeight:900,color:BLUE,fontFamily:"'Barlow Condensed',sans-serif",lineHeight:1}}>{detail.nb_demandes||0}<span style={{fontSize:"0.8rem",fontWeight:400,color:GRAY,marginLeft:"0.3rem"}}>demandes</span></div>
             </div>
             <button onClick={e=>openDemande(detail,e as any)}
-              style={{background:BLUE,color:DARK,border:"none",padding:"0.4rem 0.8rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem"}}>
+              style={{background:BLUE,color:NAVY,border:"none",padding:"0.4rem 0.8rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem"}}>
               + Enregistrer
             </button>
           </div>
@@ -3536,7 +3488,7 @@ function CataloguePieces() {
               <div style={{fontSize:"0.87rem",color:color||"#fff",fontWeight:color?700:400,wordBreak:"break-word"}}>{val}</div>
             </div>
           ))}
-          <button onClick={e=>openEdit(detail,e as any)} style={{width:"100%",marginTop:"0.8rem",background:accentColor,color:DARK,border:"none",padding:"0.45rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.85rem"}}>✏️ MODIFIER</button>
+          <button onClick={e=>openEdit(detail,e as any)} style={{width:"100%",marginTop:"0.8rem",background:accentColor,color:NAVY,border:"none",padding:"0.45rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.85rem"}}>✏️ MODIFIER</button>
         </div>
       )}
 
@@ -3549,7 +3501,7 @@ function CataloguePieces() {
               <button onClick={()=>setDemandeTarget(null)} style={{background:"transparent",border:"none",color:GRAY,cursor:"pointer",fontSize:"1.2rem"}}>✕</button>
             </div>
             {/* Info pièce */}
-            <div style={{background:"rgba(0,0,0,0.03)",padding:"0.7rem 0.9rem",marginBottom:"1.2rem"}}>
+            <div style={{background:"rgba(255,255,255,0.04)",padding:"0.7rem 0.9rem",marginBottom:"1.2rem"}}>
               <div style={{fontSize:"0.78rem",color:"#fff",fontWeight:600}}>{demandeTarget.type_appareil} {demandeTarget.modele||""}</div>
               <div style={{fontSize:"0.75rem",color:GRAY}}>{demandeTarget.type_piece}</div>
               <div style={{fontSize:"0.75rem",color:BLUE,marginTop:"0.3rem",fontWeight:600}}>Demandes actuelles : {demandeTarget.nb_demandes||0}×</div>
@@ -3559,17 +3511,17 @@ function CataloguePieces() {
               <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.4rem"}}>Nombre de fois demandée</label>
               <div style={{display:"flex",gap:"0.5rem",alignItems:"center"}}>
                 <button onClick={()=>setDemandeQty(q=>String(Math.max(1,parseInt(q)||1)-1))}
-                  style={{background:"rgba(0,0,0,0.05)",border:"1px solid rgba(0,0,0,0.1)",color:"#fff",width:36,height:36,cursor:"pointer",fontSize:"1.1rem",fontWeight:700}}>−</button>
+                  style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",width:36,height:36,cursor:"pointer",fontSize:"1.1rem",fontWeight:700}}>−</button>
                 <input type="number" min="1" value={demandeQty} onChange={e=>setDemandeQty(e.target.value)}
                   style={{flex:1,background:"rgba(56,189,248,0.08)",border:"1px solid rgba(56,189,248,0.35)",color:"#fff",padding:"0.5rem",fontSize:"1.1rem",fontWeight:700,textAlign:"center",outline:"none"}}/>
                 <button onClick={()=>setDemandeQty(q=>String((parseInt(q)||1)+1))}
-                  style={{background:"rgba(0,0,0,0.05)",border:"1px solid rgba(0,0,0,0.1)",color:"#fff",width:36,height:36,cursor:"pointer",fontSize:"1.1rem",fontWeight:700}}>+</button>
+                  style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",width:36,height:36,cursor:"pointer",fontSize:"1.1rem",fontWeight:700}}>+</button>
               </div>
             </div>
             <div style={{display:"flex",gap:"0.8rem",justifyContent:"flex-end"}}>
-              <button onClick={()=>setDemandeTarget(null)} style={{background:"transparent",border:"1px solid rgba(0,0,0,0.1)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
+              <button onClick={()=>setDemandeTarget(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
               <button onClick={handleSaveDemande} disabled={demandeLoading}
-                style={{background:BLUE,color:DARK,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:demandeLoading?0.6:1}}>
+                style={{background:BLUE,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:demandeLoading?0.6:1}}>
                 {demandeLoading?"ENREGISTREMENT...":"CONFIRMER"}
               </button>
             </div>
@@ -3599,12 +3551,12 @@ function CataloguePieces() {
               </div>
               <div><label style={labelSt}>Fournisseur</label><input value={editForm.fournisseur} onChange={e=>setEditForm(p=>({...p,fournisseur:e.target.value}))} style={inputSt}/></div>
               <div style={{gridColumn:"1/-1"}}><label style={labelSt}>Notes</label><input value={editForm.notes} onChange={e=>setEditForm(p=>({...p,notes:e.target.value}))} placeholder="OLED, Compatible..." style={inputSt}/></div>
-              <div style={{gridColumn:"1/-1",borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:"0.8rem"}}>
+              <div style={{gridColumn:"1/-1",borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:"0.8rem"}}>
                 <div style={{fontSize:"0.7rem",color:GRAY,marginBottom:"0.4rem",textTransform:"uppercase",letterSpacing:"0.08em"}}>Déplacer vers</div>
                 <div style={{display:"flex",gap:"0.5rem"}}>
                   {[{val:false,label:"🔧 Pièce de service",color:GREEN},{val:true,label:"📦 Pièce détachée",color:ORANGE}].map(opt=>(
                     <button key={String(opt.val)} onClick={()=>setEditForm(p=>({...p,piece_detachee:opt.val}))}
-                      style={{flex:1,padding:"0.4rem",border:`1px solid ${editForm.piece_detachee===opt.val?opt.color:"rgba(0,0,0,0.09)"}`,
+                      style={{flex:1,padding:"0.4rem",border:`1px solid ${editForm.piece_detachee===opt.val?opt.color:"rgba(255,255,255,0.1)"}`,
                         background:editForm.piece_detachee===opt.val?`${opt.color}18`:"transparent",
                         color:editForm.piece_detachee===opt.val?opt.color:GRAY,
                         cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.82rem"}}>
@@ -3615,8 +3567,8 @@ function CataloguePieces() {
               </div>
             </div>
             <div style={{display:"flex",gap:"0.8rem",justifyContent:"flex-end"}}>
-              <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"1px solid rgba(0,0,0,0.1)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
-              <button onClick={handleSaveEdit} disabled={saving} style={{background:editForm.piece_detachee?ORANGE:GREEN,color:DARK,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:saving?0.6:1}}>
+              <button onClick={()=>setEditId(null)} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.12)",color:GRAY,padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>ANNULER</button>
+              <button onClick={handleSaveEdit} disabled={saving} style={{background:editForm.piece_detachee?ORANGE:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,opacity:saving?0.6:1}}>
                 {saving?"ENREGISTREMENT...":"SAUVEGARDER"}
               </button>
             </div>
@@ -3651,19 +3603,19 @@ function PrixConcurrents() {
   const handleDelete = async (id:number) => { if(confirm("Supprimer?")) { await prixApi.deleteConcurrent(id); load(); } };
 
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
-  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(0,0,0,0.04)",border:"1px solid rgba(109,212,0,0.25)",color:"#0f172a",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
-  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(0,0,0,0.03)",fontSize:"0.82rem",color:GRAY};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
 
   return (
     <div>
       <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.2rem"}}>
-        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:DARK,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
+        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
           {showAdd?"✕ Fermer":"+ Ajouter prix concurrent"}
         </button>
       </div>
 
       {showAdd && (
-        <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.06)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
             <div><label style={labelSt}>Réparation *</label><input value={form.type_reparation} onChange={e=>setForm(p=>({...p,type_reparation:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
@@ -3674,7 +3626,7 @@ function PrixConcurrents() {
             <div><label style={labelSt}>Fix Moi ($)</label><input type="number" value={form.prix_fix_moi} onChange={e=>setForm(p=>({...p,prix_fix_moi:e.target.value}))} style={inputSt}/></div>
             <div><label style={labelSt}>Mobile Klinik ($)</label><input type="number" value={form.prix_mobile_klinik} onChange={e=>setForm(p=>({...p,prix_mobile_klinik:e.target.value}))} style={inputSt}/></div>
           </div>
-          <button onClick={handleAdd} style={{background:GREEN,color:DARK,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+          <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
         </div>
       )}
 
@@ -3724,26 +3676,26 @@ function ValeurAppareils() {
   const handleDelete = async (id:number) => { if(confirm("Supprimer?")) { await prixApi.deleteAppareil(id); load(); } };
 
   const labelSt:React.CSSProperties = {display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.08em",color:GRAY,textTransform:"uppercase",marginBottom:"0.3rem"};
-  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(0,0,0,0.04)",border:"1px solid rgba(109,212,0,0.25)",color:"#0f172a",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
-  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(0,0,0,0.03)",fontSize:"0.82rem",color:GRAY};
+  const inputSt:React.CSSProperties = {width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(109,212,0,0.2)",color:"#fff",padding:"0.55rem",fontSize:"0.85rem",fontFamily:"'DM Sans',sans-serif",outline:"none"};
+  const tdSt:React.CSSProperties = {padding:"0.6rem 0.8rem",borderBottom:"1px solid rgba(255,255,255,0.04)",fontSize:"0.82rem",color:GRAY};
 
   return (
     <div>
       <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"1.2rem"}}>
-        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:DARK,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
+        <button onClick={()=>setShowAdd(!showAdd)} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 1.2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.9rem"}}>
           {showAdd?"✕ Fermer":"+ Ajouter un appareil"}
         </button>
       </div>
 
       {showAdd && (
-        <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.06)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+        <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro Max" style={inputSt}/></div>
             <div><label style={labelSt}>Valeur ($) *</label><input type="number" value={form.valeur_marche} onChange={e=>setForm(p=>({...p,valeur_marche:e.target.value}))} placeholder="650" style={inputSt}/></div>
             <div><label style={labelSt}>Année</label><input type="number" value={form.annee} onChange={e=>setForm(p=>({...p,annee:e.target.value}))} placeholder="2023" style={inputSt}/></div>
             <div><label style={labelSt}>Notes</label><input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="128GB, usagé..." style={inputSt}/></div>
           </div>
-          <button onClick={handleAdd} style={{background:GREEN,color:DARK,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
+          <button onClick={handleAdd} style={{background:GREEN,color:NAVY,border:"none",padding:"0.5rem 2rem",cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700}}>AJOUTER</button>
         </div>
       )}
 
@@ -3796,7 +3748,7 @@ function Clients() {
         <div className="admin-content-pad" style={{ padding:"1.5rem 2rem" }}>
           <input value={search} onChange={e=>setSearch(e.target.value)}
             placeholder="🔍  Rechercher un client..."
-            style={{ width:"100%", background:"rgba(0,0,0,0.04)", border:"1px solid rgba(109,212,0,0.2)",
+            style={{ width:"100%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(109,212,0,0.2)",
               color:"#fff", padding:"0.8rem 1rem", fontSize:"0.9rem", fontFamily:"'DM Sans',sans-serif",
               marginBottom:"1.2rem", outline:"none" }}/>
           {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
@@ -3849,7 +3801,7 @@ function Clients() {
           </div>
           {[["📞 Téléphone",selected.telephone],["📅 Inscrit le",new Date(selected.created_at).toLocaleDateString("fr-CA")]].map(([l,v])=>(
             <div key={l as string} style={{ display:"flex", justifyContent:"space-between", padding:"0.6rem 0",
-              borderBottom:"1px solid rgba(0,0,0,0.03)", fontSize:"0.85rem" }}>
+              borderBottom:"1px solid rgba(255,255,255,0.04)", fontSize:"0.85rem" }}>
               <span style={{color:GRAY}}>{l}</span>
               <span style={{fontWeight:500}}>{v}</span>
             </div>
@@ -3965,7 +3917,7 @@ function Messages() {
             <button onClick={() => { setShowArchived(p=>!p); setSelected(null); }} style={{
               background: showArchived ? "rgba(109,212,0,0.1)" : "transparent",
               color: showArchived ? GREEN : GRAY,
-              border: `1px solid ${showArchived ? "rgba(109,212,0,0.3)" : "rgba(0,0,0,0.09)"}`,
+              border: `1px solid ${showArchived ? "rgba(109,212,0,0.3)" : "rgba(255,255,255,0.1)"}`,
               padding:"0.4rem 0.8rem", cursor:"pointer", fontSize:"0.75rem",
               fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap", borderRadius:2,
             }}>
@@ -3977,7 +3929,7 @@ function Messages() {
         <div style={{ overflowY:"auto", flex:1 }}>
           {visibleMsgs.map((m:any)=>(
             <div key={m.id} onClick={()=>{ setSelected(m); if(!m.lu) markLu(m.id); }}
-              style={{ padding:"1rem 1.2rem", borderBottom:"1px solid rgba(0,0,0,0.03)",
+              style={{ padding:"1rem 1.2rem", borderBottom:"1px solid rgba(255,255,255,0.04)",
                 cursor:"pointer", background:selected?.id===m.id?"rgba(109,212,0,0.06)":m.lu?"transparent":"rgba(109,212,0,0.03)",
                 borderLeft:`3px solid ${selected?.id===m.id?GREEN:!m.lu?GREEN:"transparent"}`,
                 opacity: m.archived ? 0.65 : 1,
@@ -3989,7 +3941,7 @@ function Messages() {
                 <div style={{ display:"flex", gap:"0.3rem", alignItems:"center" }}>
                   {m.archived === 1
                     ? <>
-                        <span style={{ fontSize:"0.65rem", background:"rgba(0,0,0,0.05)", color:GRAY_DIM, padding:"1px 6px", borderRadius:2 }}>Archivé</span>
+                        <span style={{ fontSize:"0.65rem", background:"rgba(255,255,255,0.06)", color:GRAY_DIM, padding:"1px 6px", borderRadius:2 }}>Archivé</span>
                         <button
                           onClick={e => { e.stopPropagation(); deleteMsg(m); }}
                           title="Supprimer définitivement"
@@ -4060,9 +4012,9 @@ function Messages() {
                     </span>
                     <div style={{ marginLeft:"auto", display:"flex", gap:"0.5rem" }}>
                       <button onClick={() => toggleArchive(selected)} style={{
-                        background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(0,0,0,0.04)",
+                        background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(255,255,255,0.05)",
                         color: selected.archived ? GREEN : GRAY,
-                        border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(0,0,0,0.09)"}`,
+                        border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(255,255,255,0.1)"}`,
                         padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
                         fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
                       }}>
@@ -4096,9 +4048,9 @@ function Messages() {
                     </span>
                     <div style={{ marginLeft:"auto", display:"flex", gap:"0.5rem" }}>
                     <button onClick={() => toggleArchive(selected)} style={{
-                      background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(0,0,0,0.04)",
+                      background: selected.archived ? "rgba(109,212,0,0.08)" : "rgba(255,255,255,0.05)",
                       color: selected.archived ? GREEN : GRAY,
-                      border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(0,0,0,0.09)"}`,
+                      border: `1px solid ${selected.archived ? "rgba(109,212,0,0.25)" : "rgba(255,255,255,0.1)"}`,
                       padding:"0.3rem 0.9rem", cursor:"pointer", fontSize:"0.78rem",
                       fontFamily:"'DM Sans',sans-serif", borderRadius:2, whiteSpace:"nowrap",
                     }}>
@@ -4154,7 +4106,7 @@ function Messages() {
                       <button
                         onClick={() => markRappele(selected)}
                         style={{
-                          background:GREEN, color:DARK,
+                          background:GREEN, color:NAVY,
                           fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700,
                           fontSize:"0.95rem", letterSpacing:"0.08em",
                           padding:"0.7rem 2rem", border:"none", cursor:"pointer",
@@ -4174,7 +4126,7 @@ function Messages() {
                     <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
                       Message reçu · {new Date(selected.created_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
                     </div>
-                    <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", padding:"1.5rem",
+                    <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem",
                       fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640 }}>
                       {selected.message}
                     </div>
@@ -4287,7 +4239,7 @@ function Decharges() {
         {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
         <>
         {/* Desktop table */}
-        <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", overflowX:"auto" }}>
+        <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
           <table>
             <thead>
               <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -4299,7 +4251,7 @@ function Decharges() {
             <tbody>
               {decharges.map((d:any)=>(
                 <tr key={d.id}
-                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(0,0,0,0.02)")}
+                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
                   onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
                   <td style={{...tdStyle,fontWeight:500}}>{d.nom}</td>
                   <td style={{...tdStyle,color:GRAY}}>{d.telephone}</td>
@@ -4336,7 +4288,7 @@ function Decharges() {
         {/* Mobile cards */}
         <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
           {decharges.map((d:any)=>(
-            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", borderRadius:14, padding:"1rem" }}>
+            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.4rem" }}>
                 <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{d.nom}</span>
                 <Badge statut={d.statut}/>
@@ -4365,7 +4317,7 @@ function Decharges() {
             ["✅","Traitées", decharges.filter((d:any)=>d.statut==="traitee").length, BLUE],
             ["⏳","En attente", decharges.filter((d:any)=>d.statut==="en_attente").length, ORANGE],
           ].map(([icon,label,val,color])=>(
-            <div key={label as string} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", padding:"1.2rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+            <div key={label as string} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.2rem", display:"flex", alignItems:"center", gap:"1rem" }}>
               <span style={{fontSize:"1.8rem"}}>{icon}</span>
               <div>
                 <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2rem", fontWeight:900, color:color as string, lineHeight:1 }}>{val}</div>
