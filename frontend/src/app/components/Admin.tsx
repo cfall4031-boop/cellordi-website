@@ -2131,13 +2131,14 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
 
 // ── CALCULATEUR DE PRIX ──────────────────────────────────────────
 function Calculateur() {
-  const [subTab, setSubTab] = useState<"calculer"|"catalogue"|"concurrents"|"appareils"|"convertisseur">("calculer");
+  const [subTab, setSubTab] = useState<"calculer"|"catalogue"|"concurrents"|"appareils"|"convertisseur"|"calculatrice">("calculer");
   const tabs = [
     { id:"calculer" as const, icon:"🧮", label:"Calculer" },
     { id:"catalogue" as const, icon:"📦", label:"Catalogue pièces" },
     { id:"concurrents" as const, icon:"🏪", label:"Prix concurrents" },
     { id:"appareils" as const, icon:"📱", label:"Valeur appareils" },
     { id:"convertisseur" as const, icon:"💱", label:"Convertisseur" },
+    { id:"calculatrice" as const, icon:"🏦", label:"Calculatrice" },
   ];
   return (
     <div className="admin-fade">
@@ -2159,6 +2160,7 @@ function Calculateur() {
         {subTab==="concurrents" && <PrixConcurrents/>}
         {subTab==="appareils" && <ValeurAppareils/>}
         {subTab==="convertisseur" && <Convertisseur/>}
+        {subTab==="calculatrice" && <CalculatriceAffaires/>}
       </div>
     </div>
   );
@@ -2570,6 +2572,249 @@ const DEVICE_MODELS: Record<string, string[]> = {
   ],
 };
 const BRAND_COLOR: Record<string,string> = { "Apple": "#38bdf8", "Samsung": "#6dd400" };
+
+// ── CALCULATRICE D'AFFAIRES ───────────────────────────────────────
+const TPS  = 0.05;
+const TVQ  = 0.09975;
+const BOTH = TPS + TVQ; // 0.14975
+
+function CalculatriceAffaires() {
+  const [display, setDisplay] = React.useState("0");
+  const [stored, setStored]   = React.useState<number|null>(null);
+  const [op, setOp]           = React.useState<string|null>(null);
+  const [fresh, setFresh]     = React.useState(true); // prochain chiffre repart à zéro
+  const [history, setHistory] = React.useState<string[]>([]);
+  const [taxBase, setTaxBase] = React.useState("");
+  const [taxMode, setTaxMode] = React.useState<"add"|"remove">("add");
+  const [margin, setMargin]   = React.useState("");
+  const [marginPct, setMarginPct] = React.useState("30");
+
+  const cur = parseFloat(display) || 0;
+
+  // ── Calculatrice principale ──────────────────────────────────────
+  const pressDigit = (d: string) => {
+    if (fresh) { setDisplay(d === "." ? "0." : d); setFresh(false); }
+    else {
+      if (d === "." && display.includes(".")) return;
+      setDisplay(display === "0" && d !== "." ? d : display + d);
+    }
+  };
+
+  const pressOp = (o: string) => {
+    if (stored !== null && op && !fresh) {
+      const res = calc(stored, cur, op);
+      setDisplay(fmt(res)); setStored(res);
+    } else { setStored(cur); }
+    setOp(o); setFresh(true);
+  };
+
+  const pressEqual = () => {
+    if (stored === null || !op) return;
+    const res = calc(stored, cur, op);
+    addHistory(`${fmt(stored)} ${op} ${fmt(cur)} = ${fmt(res)}`);
+    setDisplay(fmt(res)); setStored(null); setOp(null); setFresh(true);
+  };
+
+  const pressClear = () => { setDisplay("0"); setStored(null); setOp(null); setFresh(true); };
+  const pressBack  = () => {
+    if (fresh || display.length <= 1) { setDisplay("0"); setFresh(true); return; }
+    const nd = display.slice(0,-1);
+    setDisplay(nd === "-" || nd === "" ? "0" : nd);
+  };
+  const pressPlusMinus = () => setDisplay(fmt(-cur));
+  const pressPct = () => { setDisplay(fmt(cur/100)); setFresh(true); };
+
+  const calc = (a:number, b:number, o:string) => {
+    if(o==="+") return a+b; if(o==="-") return a-b;
+    if(o==="×") return a*b; if(o==="÷") return b!==0?a/b:0; return b;
+  };
+  const fmt = (n:number) => {
+    if (!isFinite(n)) return "0";
+    const s = parseFloat(n.toFixed(8)).toString();
+    return s.length > 12 ? n.toExponential(4) : s;
+  };
+  const addHistory = (line: string) => setHistory(h => [line, ...h].slice(0,8));
+
+  // Appliquer résultat de la calculatrice au champ taxe
+  const sendToTax = () => setTaxBase(fmt(cur));
+
+  // ── Taxes Québec ────────────────────────────────────────────────
+  const baseNum = parseFloat(taxBase) || 0;
+  const taxTPS  = baseNum * (taxMode==="add" ? TPS  : TPS/(1+BOTH));
+  const taxTVQ  = baseNum * (taxMode==="add" ? TVQ  : TVQ/(1+BOTH));
+  const taxTotal= baseNum * (taxMode==="add" ? BOTH : BOTH/(1+BOTH));
+  const priceTTC= taxMode==="add" ? baseNum+taxTotal : baseNum;
+  const priceHT = taxMode==="add" ? baseNum : baseNum-taxTotal;
+
+  // ── Marge bénéficiaire ──────────────────────────────────────────
+  const mCost    = parseFloat(margin) || 0;
+  const mPct     = parseFloat(marginPct) || 0;
+  const mSell    = mCost > 0 ? mCost / (1 - mPct/100) : 0;
+  const mProfit  = mSell - mCost;
+  const mSellTTC = mSell * (1 + BOTH);
+
+  // ── Styles boutons calculatrice ─────────────────────────────────
+  const btnBase: React.CSSProperties = {
+    border:"none", cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif",
+    fontWeight:700, fontSize:"1.3rem", borderRadius:4, padding:"0.7rem 0",
+    transition:"opacity 0.1s", display:"flex", alignItems:"center", justifyContent:"center",
+  };
+  const btnNum:  React.CSSProperties = {...btnBase, background:"#1a2540", color:"#fff"};
+  const btnOp:   React.CSSProperties = {...btnBase, background:"#1f3560", color:"#38bdf8"};
+  const btnGreen:React.CSSProperties = {...btnBase, background:GREEN,     color:NAVY};
+  const btnRed:  React.CSSProperties = {...btnBase, background:"rgba(255,77,77,0.15)", color:"#ff6b6b"};
+  const inpSt:   React.CSSProperties = {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",color:"#fff",padding:"0.5rem 0.7rem",fontSize:"0.9rem",fontFamily:"'DM Sans',sans-serif",outline:"none",width:"100%",borderRadius:4,boxSizing:"border-box" as const};
+
+  const Btn = ({label, style, onClick, span=1}:{label:string;style:React.CSSProperties;onClick:()=>void;span?:number}) => (
+    <button onClick={onClick} style={{...style, gridColumn:`span ${span}`}}>{label}</button>
+  );
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:"1.5rem",maxWidth:1100}}>
+
+      {/* ══ COLONNE GAUCHE — calculatrice ══ */}
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+        <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,overflow:"hidden"}}>
+          {/* Affichage */}
+          <div style={{padding:"1rem 1.2rem",background:"rgba(0,0,0,0.2)",minHeight:90}}>
+            <div style={{fontSize:"0.7rem",color:GRAY_DIM,minHeight:18}}>
+              {stored!==null&&op ? `${fmt(stored)} ${op}` : "\u00a0"}
+            </div>
+            <div style={{fontSize:"2.6rem",fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",color:"#fff",textAlign:"right",letterSpacing:"0.02em",lineHeight:1.1,wordBreak:"break-all"}}>
+              {display}
+            </div>
+          </div>
+          {/* Grille boutons */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:2,padding:2}}>
+            <Btn label="C"   style={btnRed}   onClick={pressClear}/>
+            <Btn label="+/-" style={btnNum}   onClick={pressPlusMinus}/>
+            <Btn label="%"   style={btnNum}   onClick={pressPct}/>
+            <Btn label="÷"   style={btnOp}    onClick={()=>pressOp("÷")}/>
+
+            <Btn label="7"   style={btnNum}   onClick={()=>pressDigit("7")}/>
+            <Btn label="8"   style={btnNum}   onClick={()=>pressDigit("8")}/>
+            <Btn label="9"   style={btnNum}   onClick={()=>pressDigit("9")}/>
+            <Btn label="×"   style={btnOp}    onClick={()=>pressOp("×")}/>
+
+            <Btn label="4"   style={btnNum}   onClick={()=>pressDigit("4")}/>
+            <Btn label="5"   style={btnNum}   onClick={()=>pressDigit("5")}/>
+            <Btn label="6"   style={btnNum}   onClick={()=>pressDigit("6")}/>
+            <Btn label="−"   style={btnOp}    onClick={()=>pressOp("-")}/>
+
+            <Btn label="1"   style={btnNum}   onClick={()=>pressDigit("1")}/>
+            <Btn label="2"   style={btnNum}   onClick={()=>pressDigit("2")}/>
+            <Btn label="3"   style={btnNum}   onClick={()=>pressDigit("3")}/>
+            <Btn label="+"   style={btnOp}    onClick={()=>pressOp("+")}/>
+
+            <Btn label="⌫"   style={btnNum}   onClick={pressBack}/>
+            <Btn label="0"   style={btnNum}   onClick={()=>pressDigit("0")}/>
+            <Btn label="."   style={btnNum}   onClick={()=>pressDigit(".")}/>
+            <Btn label="="   style={btnGreen} onClick={pressEqual}/>
+          </div>
+          {/* Envoyer vers taxes */}
+          <div style={{padding:"0.5rem 0.5rem 0.5rem"}}>
+            <button onClick={sendToTax} style={{...btnBase,background:"rgba(109,212,0,0.08)",color:GREEN,border:"1px dashed rgba(109,212,0,0.3)",fontSize:"0.78rem",width:"100%",padding:"0.4rem"}}>
+              → Envoyer {display} $ vers le calculateur de taxes
+            </button>
+          </div>
+        </div>
+
+        {/* Historique */}
+        {history.length>0 && (
+          <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:6,padding:"0.8rem 1rem"}}>
+            <div style={{fontSize:"0.65rem",fontWeight:700,color:GRAY_DIM,letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:"0.4rem"}}>Historique</div>
+            {history.map((h,i)=><div key={i} style={{fontSize:"0.78rem",color:i===0?"#c8c8dc":GRAY_DIM,padding:"0.15rem 0",borderBottom:i<history.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontFamily:"monospace"}}>{h}</div>)}
+          </div>
+        )}
+      </div>
+
+      {/* ══ COLONNE DROITE — taxes + marge ══ */}
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+
+        {/* Taxes Québec */}
+        <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,padding:"1.2rem"}}>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:GREEN,marginBottom:"0.2rem"}}>🏛️ Taxes Québec</div>
+          <div style={{fontSize:"0.7rem",color:GRAY_DIM,marginBottom:"0.9rem"}}>TPS 5% · TVQ 9,975% · Total 14,975%</div>
+
+          {/* Mode */}
+          <div style={{display:"flex",gap:"0.4rem",marginBottom:"0.8rem"}}>
+            {([["add","Ajouter les taxes"],["remove","Enlever les taxes"]] as const).map(([m,lbl])=>(
+              <button key={m} onClick={()=>setTaxMode(m)}
+                style={{flex:1,padding:"0.4rem",border:`1px solid ${taxMode===m?GREEN:"rgba(255,255,255,0.1)"}`,background:taxMode===m?"rgba(109,212,0,0.12)":"transparent",color:taxMode===m?GREEN:GRAY,cursor:"pointer",fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"0.8rem",borderRadius:4}}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+
+          <label style={{fontSize:"0.65rem",fontWeight:700,color:GRAY,textTransform:"uppercase",letterSpacing:"0.08em",display:"block",marginBottom:"0.3rem"}}>
+            {taxMode==="add" ? "Prix avant taxes ($)" : "Prix TTC ($)"}
+          </label>
+          <input type="number" min="0" step="0.01" value={taxBase}
+            onChange={e=>setTaxBase(e.target.value)} placeholder="0.00" style={inpSt}/>
+
+          {baseNum>0 && (
+            <div style={{marginTop:"0.9rem",display:"flex",flexDirection:"column",gap:"0.35rem"}}>
+              {[
+                {lbl: taxMode==="add"?"Prix avant taxes":"Prix HT",    val: priceHT,   color:"#c8c8dc"},
+                {lbl: "TPS (5%)",                                       val: taxTPS,    color:BLUE},
+                {lbl: "TVQ (9,975%)",                                   val: taxTVQ,    color:"#a78bfa"},
+                {lbl: "Total des taxes",                                val: taxTotal,  color:ORANGE},
+                {lbl: taxMode==="add"?"PRIX TTC":"PRIX HT",            val: taxMode==="add"?priceTTC:priceHT, color:GREEN, bold:true},
+              ].map(row=>(
+                <div key={row.lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.35rem 0.7rem",borderRadius:4,background:row.bold?"rgba(109,212,0,0.08)":"rgba(255,255,255,0.02)",border:row.bold?`1px solid rgba(109,212,0,0.2)`:"1px solid transparent"}}>
+                  <span style={{fontSize:"0.8rem",color:GRAY,fontWeight:row.bold?700:400}}>{row.lbl}</span>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:row.bold?"1.15rem":"0.9rem",color:row.color}}>{row.val.toFixed(2)} $</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Marge bénéficiaire */}
+        <div style={{background:NAVY_MID,border:"1px solid rgba(255,255,255,0.07)",borderRadius:8,padding:"1.2rem"}}>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.1rem",color:ORANGE,marginBottom:"0.8rem"}}>📈 Marge bénéficiaire</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.5rem",marginBottom:"0.6rem"}}>
+            <div>
+              <label style={{fontSize:"0.65rem",fontWeight:700,color:GRAY,textTransform:"uppercase",letterSpacing:"0.08em",display:"block",marginBottom:"0.3rem"}}>Coût d'achat ($)</label>
+              <input type="number" min="0" step="0.01" value={margin}
+                onChange={e=>setMargin(e.target.value)} placeholder="0.00" style={inpSt}/>
+            </div>
+            <div>
+              <label style={{fontSize:"0.65rem",fontWeight:700,color:GRAY,textTransform:"uppercase",letterSpacing:"0.08em",display:"block",marginBottom:"0.3rem"}}>Marge visée (%)</label>
+              <input type="number" min="0" max="99" step="1" value={marginPct}
+                onChange={e=>setMarginPct(e.target.value)} placeholder="30" style={inpSt}/>
+            </div>
+          </div>
+          {/* Raccourcis marge */}
+          <div style={{display:"flex",gap:"0.3rem",flexWrap:"wrap",marginBottom:"0.7rem"}}>
+            {[20,25,30,35,40,50].map(p=>(
+              <button key={p} onClick={()=>setMarginPct(String(p))}
+                style={{background:marginPct===String(p)?"rgba(245,158,11,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${marginPct===String(p)?"rgba(245,158,11,0.5)":"rgba(255,255,255,0.08)"}`,color:marginPct===String(p)?ORANGE:GRAY,padding:"0.15rem 0.5rem",cursor:"pointer",fontSize:"0.73rem",borderRadius:3}}>
+                {p}%
+              </button>
+            ))}
+          </div>
+
+          {mCost>0 && mPct>0 && mPct<100 && (
+            <div style={{display:"flex",flexDirection:"column",gap:"0.35rem"}}>
+              {[
+                {lbl:"Coût d'achat",        val:mCost,    color:"#c8c8dc"},
+                {lbl:"Prix de vente HT",    val:mSell,    color:GREEN,    bold:false},
+                {lbl:"Profit brut",         val:mProfit,  color:"#34d399"},
+                {lbl:"Prix de vente TTC",   val:mSellTTC, color:ORANGE,   bold:true},
+              ].map(row=>(
+                <div key={row.lbl} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0.35rem 0.7rem",borderRadius:4,background:row.bold?"rgba(245,158,11,0.08)":"rgba(255,255,255,0.02)",border:row.bold?"1px solid rgba(245,158,11,0.2)":"1px solid transparent"}}>
+                  <span style={{fontSize:"0.8rem",color:GRAY,fontWeight:row.bold?700:400}}>{row.lbl}</span>
+                  <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:row.bold?"1.1rem":"0.9rem",color:row.color}}>{row.val.toFixed(2)} $</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Composant Fiches Appareils ───────────────────────────────────────────────
 function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }) {
