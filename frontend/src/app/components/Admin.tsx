@@ -8,7 +8,7 @@ import {
 const MobileCtx = React.createContext<{ isMobile: boolean; openSidebar: () => void }>({ isMobile: false, openSidebar: () => {} });
 
 // ── TOKENS ────────────────────────────────────────────────────
-const NAVY       = "#f5f7fa";   // page background (light)
+const NAVY       = "#e8edf5";   // page background (light)
 const NAVY_MID   = "#ffffff";   // card / surface (white)
 const DARK       = "#0b1c35";   // old navy — sidebar bg + button text on green
 const SIDEBAR_BG = "#0e2040";   // sidebar / bottom-nav background
@@ -49,12 +49,28 @@ function Badge({ statut }: { statut: string }) {
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=DM+Sans:wght@300;400;500&display=swap');
   .admin-wrap *, .admin-wrap *::before, .admin-wrap *::after { box-sizing: border-box; }
-  .admin-wrap { font-family: 'DM Sans', sans-serif; background: ${NAVY}; color: #0f172a; }
-  .admin-wrap main { color: #0f172a; }
-  .admin-wrap main input, .admin-wrap main textarea, .admin-wrap main select { color: #0f172a !important; }
+  .admin-wrap { font-family: 'DM Sans', sans-serif; background: ${NAVY}; color: #111827; }
+  .admin-wrap main { color: #111827; background: ${NAVY}; }
+  .admin-wrap main input, .admin-wrap main textarea, .admin-wrap main select { color: #111827 !important; }
+  /* ── Carte blanche standard ── */
+  .admin-card { background:#fff; border-radius:12px; box-shadow:0 1px 8px rgba(0,0,0,0.07); border:1px solid rgba(0,0,0,0.05); }
+  /* ── Typographie ── */
+  .admin-wrap h1, .admin-wrap h2, .admin-wrap h3 { color: #111827; letter-spacing:-0.01em; }
+  .admin-wrap p { color: #6b7280; }
+  /* ── Inputs globaux ── */
+  .admin-wrap input, .admin-wrap textarea, .admin-wrap select {
+    background: #fff !important; color: #111827 !important;
+    border: 1px solid #d1d5db !important; border-radius: 8px !important;
+  }
+  .admin-wrap input:focus, .admin-wrap textarea:focus, .admin-wrap select:focus {
+    outline: none !important; border-color: ${GREEN} !important;
+    box-shadow: 0 0 0 3px rgba(109,212,0,0.12) !important;
+  }
+  .admin-wrap input::placeholder, .admin-wrap textarea::placeholder { color: #9ca3af !important; }
+  /* ── Scrollbar ── */
   .admin-wrap ::-webkit-scrollbar { width: 5px; }
   .admin-wrap ::-webkit-scrollbar-track { background: ${NAVY}; }
-  .admin-wrap ::-webkit-scrollbar-thumb { background: ${GREEN}; }
+  .admin-wrap ::-webkit-scrollbar-thumb { background: ${GREEN}; border-radius:3px; }
   .admin-wrap table { border-collapse: collapse; width: 100%; }
   @keyframes adminFadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
   .admin-fade { animation: adminFadeIn 0.35s ease both; }
@@ -62,6 +78,9 @@ const globalStyles = `
   .admin-wrap input:focus, .admin-wrap textarea:focus { outline: none; border-color: ${GREEN} !important; }
 
   /* ── MOBILE RESPONSIVE ──────────────────────────────────── */
+  @media (max-width: 900px) {
+    .admin-grid-greeting { grid-template-columns: 1fr !important; }
+  }
   @media (max-width: 768px) {
     .admin-wrap table { font-size: 0.8rem; }
     .admin-wrap th, .admin-wrap td { padding: 0.5rem 0.6rem !important; font-size: 0.78rem !important; }
@@ -435,21 +454,21 @@ function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
   const { isMobile, openSidebar } = React.useContext(MobileCtx);
   const now = new Date().toLocaleDateString("fr-CA", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
   return (
-    <div style={{ padding: isMobile ? "0.85rem 0.6rem" : "1.2rem 2rem", borderBottom:"1px solid rgba(0,0,0,0.07)",
-      display:"flex", alignItems:"center", justifyContent:"space-between", gap:"0.75rem",
-      background:NAVY_MID, boxShadow:"0 1px 4px rgba(0,0,0,0.05)" }}>
+    <div style={{ padding: isMobile ? "1rem 0.8rem" : "1.4rem 2rem 1rem",
+      display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:"0.75rem",
+      background:"transparent" }}>
       <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
         {isMobile && (
           <button onClick={openSidebar} style={{
-            background:"none", border:"none", color:DARK, fontSize:"1.5rem", cursor:"pointer", padding:"0.2rem"
+            background:"none", border:"none", color:"#374151", fontSize:"1.5rem", cursor:"pointer", padding:"0.2rem"
           }}>☰</button>
         )}
         <div>
-          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: isMobile ? "1.2rem" : "1.6rem", fontWeight:900, margin:0 }}>{title}</h1>
-          {subtitle && <p style={{ fontSize:"0.82rem", color:GRAY, marginTop:"0.1rem", margin:0 }}>{subtitle}</p>}
+          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize: isMobile ? "1.4rem" : "2rem", fontWeight:900, margin:0, color:"#111827", letterSpacing:"-0.01em", lineHeight:1 }}>{title}</h1>
+          {subtitle && <p style={{ fontSize:"0.8rem", color:"#6b7280", marginTop:"0.25rem", margin:"0.25rem 0 0", fontWeight:400 }}>{subtitle}</p>}
         </div>
       </div>
-      {!isMobile && <div style={{ fontSize:"0.82rem", color:GRAY_DIM }}>{now}</div>}
+      {!isMobile && <div style={{ fontSize:"0.78rem", color:"#9ca3af", background:"#fff", padding:"0.35rem 0.85rem", borderRadius:20, border:"1px solid rgba(0,0,0,0.07)", fontWeight:500 }}>{now}</div>}
     </div>
   );
 }
@@ -508,51 +527,68 @@ function Overview() {
     <div className="admin-fade">
       <Topbar title="Vue d'ensemble" subtitle="Tableau de bord — Réparation CeLL&Ordi"/>
       <div className="admin-content-pad" style={{ padding:"2rem" }}>
-        {/* ── Greeting ── */}
-        <div style={{marginBottom:"1.75rem",padding:"1.2rem 1.6rem",background:NAVY_MID,borderRadius:10,border:"1px solid rgba(0,0,0,0.07)",borderLeft:`4px solid ${GREEN}`,boxShadow:"0 2px 10px rgba(0,0,0,0.05)",display:"flex",alignItems:"center",gap:"1rem"}}>
-          <span style={{fontSize:"1.7rem"}}>👋</span>
-          <div>
-            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.35rem",color:DARK,letterSpacing:"0.02em"}}>{getGreeting()}</div>
-            <div style={{fontSize:"0.78rem",color:GRAY,marginTop:"0.1rem"}}>Bienvenue dans votre tableau de bord. Voici un aperçu de la journée.</div>
+        {/* ── Greeting + featured card ── */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:"1.25rem",marginBottom:"1.75rem",alignItems:"stretch"}} className="admin-grid-greeting">
+          {/* Gradient feature card */}
+          <div style={{background:`linear-gradient(135deg, #3aad00 0%, ${GREEN} 100%)`,borderRadius:14,padding:"1.5rem 2rem",boxShadow:"0 4px 20px rgba(109,212,0,0.28)",display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:110}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div>
+                <div style={{fontSize:"0.75rem",fontWeight:600,color:"rgba(255,255,255,0.75)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:"0.3rem"}}>RDV aujourd'hui</div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:"3rem",color:"#fff",lineHeight:0.9}}>{rdvsAujourdhui.length}</div>
+              </div>
+              <div style={{background:"rgba(255,255,255,0.2)",borderRadius:10,width:44,height:44,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.4rem"}}>📅</div>
+            </div>
+            <div style={{fontSize:"0.78rem",color:"rgba(255,255,255,0.75)",marginTop:"0.8rem"}}>Réservations confirmées ce jour</div>
+          </div>
+          {/* Greeting card */}
+          <div style={{background:"#fff",borderRadius:14,padding:"1.2rem 1.6rem",boxShadow:"0 1px 8px rgba(0,0,0,0.07)",border:"1px solid rgba(0,0,0,0.05)",display:"flex",alignItems:"center",gap:"1rem",minWidth:320}}>
+            <span style={{fontSize:"2rem"}}>👋</span>
+            <div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.25rem",color:"#111827",letterSpacing:"0.01em"}}>{getGreeting()}</div>
+              <div style={{fontSize:"0.76rem",color:"#6b7280",marginTop:"0.2rem",maxWidth:260}}>Voici un aperçu de votre journée.</div>
+            </div>
           </div>
         </div>
-        <div className="admin-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
-          {statCards.map((s,i) => (
-            <div key={i} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.07)",
-              borderTop:`3px solid ${s.color}`, padding:"1.4rem", borderRadius:8, boxShadow:"0 2px 8px rgba(0,0,0,0.05)" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"0.8rem" }}>
-                <span style={{fontSize:"1.6rem"}}>{s.icon}</span>
+        <div className="admin-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"1rem", marginBottom:"2rem" }}>
+          {statCards.slice(1).map((s,i) => (
+            <div key={i} style={{ background:"#fff", border:"1px solid rgba(0,0,0,0.05)",
+              padding:"1.4rem 1.6rem", borderRadius:12, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.9rem" }}>
+                <div style={{fontSize:"0.75rem",fontWeight:600,color:"#6b7280",textTransform:"uppercase",letterSpacing:"0.08em"}}>{s.label}</div>
+                <div style={{background:`${s.color}18`,borderRadius:8,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.1rem"}}>{s.icon}</div>
               </div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2.5rem", fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
-              <div style={{ fontSize:"0.8rem", color:GRAY, marginTop:"0.3rem" }}>{s.label}</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2.4rem", fontWeight:900, color:"#111827", lineHeight:1 }}>{s.value}</div>
+              <div style={{display:"flex",alignItems:"center",gap:"0.4rem",marginTop:"0.5rem"}}>
+                <span style={{fontSize:"0.72rem",color:s.color,fontWeight:600,background:`${s.color}15`,padding:"0.1rem 0.45rem",borderRadius:20}}>↑ actif</span>
+              </div>
             </div>
           ))}
         </div>
 
         <div className="admin-grid-2" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"1.5rem" }}>
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.07)", padding:"1.5rem", borderRadius:8, boxShadow:"0 2px 8px rgba(0,0,0,0.05)" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700, marginBottom:"1rem", color:DARK }}>
-              RDV Aujourd'hui ({rdvsAujourdhui.length})
+          <div style={{ background:"#fff", border:"1px solid rgba(0,0,0,0.05)", padding:"1.5rem 1.75rem", borderRadius:14, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.15rem", fontWeight:700, marginBottom:"1rem", color:"#111827", letterSpacing:"0.01em" }}>
+              RDV Aujourd'hui <span style={{color:GREEN,fontSize:"0.95rem"}}>({rdvsAujourdhui.length})</span>
             </div>
-            {rdvsAujourdhui.length === 0 && <div style={{color:GRAY_DIM, fontSize:"0.85rem"}}>Aucun RDV aujourd'hui</div>}
+            {rdvsAujourdhui.length === 0 && <div style={{color:"#9ca3af", fontSize:"0.85rem"}}>Aucun RDV aujourd'hui</div>}
             {rdvsAujourdhui.map((r:any) => (
               <div key={r.id} style={{ display:"flex", alignItems:"center", gap:"0.8rem",
-                padding:"0.7rem 0", borderBottom:"1px solid rgba(0,0,0,0.04)" }}>
-                <div style={{ background:GREEN_DIM, color:GREEN, fontFamily:"'Barlow Condensed',sans-serif",
-                  fontWeight:700, fontSize:"0.85rem", padding:"0.3rem 0.6rem", minWidth:52, textAlign:"center" }}>
+                padding:"0.65rem 0", borderBottom:"1px solid rgba(0,0,0,0.05)" }}>
+                <div style={{ background:"rgba(109,212,0,0.1)", color:GREEN, fontFamily:"'Barlow Condensed',sans-serif",
+                  fontWeight:700, fontSize:"0.85rem", padding:"0.3rem 0.6rem", minWidth:52, textAlign:"center", borderRadius:6 }}>
                   {r.heure || "--:--"}
                 </div>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontSize:"0.9rem", fontWeight:500 }}>{r.prenom} {r.nom}</div>
-                  <div style={{ fontSize:"0.75rem", color:GRAY }}>{r.type_appareil}</div>
+                  <div style={{ fontSize:"0.9rem", fontWeight:500, color:"#111827" }}>{r.prenom} {r.nom}</div>
+                  <div style={{ fontSize:"0.75rem", color:"#6b7280" }}>{r.type_appareil}</div>
                 </div>
                 <Badge statut={r.statut}/>
               </div>
             ))}
           </div>
 
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.07)", padding:"1.5rem", borderRadius:8, boxShadow:"0 2px 8px rgba(0,0,0,0.05)" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.1rem", fontWeight:700, marginBottom:"1rem", color:DARK }}>
+          <div style={{ background:"#fff", border:"1px solid rgba(0,0,0,0.05)", padding:"1.5rem 1.75rem", borderRadius:14, boxShadow:"0 1px 8px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"1.15rem", fontWeight:700, marginBottom:"1rem", color:"#111827", letterSpacing:"0.01em" }}>
               Tickets Récents
             </div>
             {ticketsRecents.map((t:any) => (
@@ -1367,7 +1403,7 @@ function Rendez_vous() {
             </p>
 
             {/* ── ÉTAPE 1 : Date + Créneau ── */}
-            <div style={{ background:"rgba(109,212,0,0.04)", border:"1px solid rgba(109,212,0,0.15)", padding:"1.2rem", marginBottom:"1.2rem" }}>
+            <div style={{ background:"rgba(109,212,0,0.04)", border:"1px solid rgba(0,0,0,0.06)", padding:"1.2rem", marginBottom:"1.2rem" }}>
               <p style={{ color:GREEN, fontSize:"0.75rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"1rem", fontFamily:"'DM Sans',sans-serif" }}>
                 📅 Étape 1 — Date &amp; Créneau
               </p>
@@ -1438,7 +1474,7 @@ function Rendez_vous() {
                     <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>{label}</label>
                     <input value={(newRdv as any)[name as string]} onChange={e=>setNewRdv(p=>({...p,[name as string]:e.target.value}))}
                       type={type as string} placeholder={ph as string}
-                      style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(109,212,0,0.15)",
+                      style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.06)",
                         color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
                   </div>
                 ))}
@@ -1447,7 +1483,7 @@ function Rendez_vous() {
                 <div>
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Service</label>
                   <select value={newRdv.service} onChange={e=>setNewRdv(p=>({...p,service:e.target.value}))}
-                    style={{ width:"100%", background:NAVY, border:"1px solid rgba(109,212,0,0.15)", color:"#fff",
+                    style={{ width:"100%", background:NAVY, border:"1px solid rgba(0,0,0,0.06)", color:"#fff",
                       padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", outline:"none" }}>
                     {SERVICES.map(s=><option key={s} value={s} style={{background:NAVY}}>{s}</option>)}
                   </select>
@@ -1456,7 +1492,7 @@ function Rendez_vous() {
                   <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Appareil / Modèle</label>
                   <input value={newRdv.appareil} onChange={e=>setNewRdv(p=>({...p,appareil:e.target.value}))}
                     placeholder="iPhone 13, Dell XPS 15…"
-                    style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(109,212,0,0.15)",
+                    style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.06)",
                       color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" as const, outline:"none" }} />
                 </div>
               </div>
@@ -1464,7 +1500,7 @@ function Rendez_vous() {
                 <label style={{ display:"block", color:GRAY, fontSize:"0.78rem", marginBottom:"0.25rem", fontFamily:"'DM Sans',sans-serif" }}>Description / Problème</label>
                 <textarea value={newRdv.description} onChange={e=>setNewRdv(p=>({...p,description:e.target.value}))}
                   rows={3} placeholder="Décrire le problème…"
-                  style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(109,212,0,0.15)",
+                  style={{ width:"100%", background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.06)",
                     color:"#fff", padding:"0.5rem 0.75rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif", resize:"vertical" as const, boxSizing:"border-box" as const, outline:"none" }} />
               </div>
             </div>
@@ -1557,7 +1593,7 @@ function Rendez_vous() {
         <div style={{ display:"grid", gridTemplateColumns:"260px 1fr", gap:"1.5rem", alignItems:"start" }} className="cal-grid admin-cal-grid">
 
           {/* Calendrier */}
-          <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1rem", flexShrink:0, borderRadius:16 }}>
+          <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", padding:"1rem", flexShrink:0, borderRadius:16 }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"0.75rem" }}>
               <button onClick={prevMonth} style={{ background:"transparent", border:"none", color:GRAY, cursor:"pointer", fontSize:"1rem", padding:"0.2rem 0.5rem" }}>◀</button>
               <span style={{ color:"#fff", fontWeight:700, fontSize:"0.88rem", fontFamily:"'DM Sans',sans-serif" }}>
@@ -1638,7 +1674,7 @@ function Rendez_vous() {
             {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
             <>
             {/* Desktop table */}
-            <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+            <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", overflowX:"auto" }}>
               <table>
                 <thead>
                   <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -1694,7 +1730,7 @@ function Rendez_vous() {
             {/* Mobile cards */}
             <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
               {filtered.map((r:any)=>(
-                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem" }}>
+                <div key={r.id} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", borderRadius:14, padding:"1rem" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.5rem" }}>
                     <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{r.prenom} {r.nom}</span>
                     {r.telephone && <a href={`tel:${r.telephone}`} style={{ color:GREEN, fontSize:"1.1rem", textDecoration:"none" }}>📞</a>}
@@ -1884,7 +1920,7 @@ function Tickets() {
           {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
           <>
           {/* Desktop table */}
-          <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+          <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", overflowX:"auto" }}>
             <table>
               <thead>
                 <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -1961,7 +1997,7 @@ function Tickets() {
           <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
             {filtered.map((t:any)=>(
               <div key={t.id} onClick={()=>setSelected(t)}
-                style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem", cursor:"pointer" }}>
+                style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", borderRadius:14, padding:"1rem", cursor:"pointer" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.3rem" }}>
                   <span style={{fontFamily:"'Barlow Condensed',sans-serif",color:GREEN,fontWeight:700,fontSize:"0.85rem"}}>{t.numero}</span>
                   <Badge statut={t.statut}/>
@@ -2284,7 +2320,7 @@ function Convertisseur() {
   return (
     <div style={{maxWidth:900}}>
       {/* ── Bandeau taux ── */}
-      <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1.5rem",padding:"0.75rem 1rem",background:"rgba(109,212,0,0.06)",border:"1px solid rgba(109,212,0,0.15)",borderRadius:6}}>
+      <div style={{display:"flex",alignItems:"center",gap:"1rem",marginBottom:"1.5rem",padding:"0.75rem 1rem",background:"rgba(109,212,0,0.06)",border:"1px solid rgba(0,0,0,0.06)",borderRadius:6}}>
         <span style={{fontSize:"0.8rem",color:GRAY,flex:1}}>
           {status==="loading" && "⏳ Chargement des taux…"}
           {status==="approx" && "⚠️ Taux approximatifs (vérifiez votre connexion)"}
@@ -2714,7 +2750,7 @@ function CalculatriceAffaires() {
 
       {/* ══ COLONNE GAUCHE — calculatrice ══ */}
       <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
-        <div style={{background:SIDEBAR_BG,border:"1px solid rgba(109,212,0,0.15)",borderRadius:8,overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.12)"}}>
+        <div style={{background:SIDEBAR_BG,border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.12)"}}>
           {/* Affichage */}
           <div style={{padding:"1rem 1.2rem",background:"rgba(0,0,0,0.35)",minHeight:90}}>
             <div style={{fontSize:"0.7rem",color:"#6a8aaa",minHeight:18}}>
@@ -2761,7 +2797,7 @@ function CalculatriceAffaires() {
 
         {/* Historique */}
         {history.length>0 && (
-          <div style={{background:SIDEBAR_BG,border:"1px solid rgba(109,212,0,0.12)",borderRadius:6,padding:"0.8rem 1rem"}}>
+          <div style={{background:SIDEBAR_BG,border:"1px solid rgba(0,0,0,0.06)",borderRadius:6,padding:"0.8rem 1rem"}}>
             <div style={{fontSize:"0.65rem",fontWeight:700,color:"#6a8aaa",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:"0.4rem"}}>Historique</div>
             {history.map((h,i)=><div key={i} style={{fontSize:"0.78rem",color:i===0?"#c8c8dc":"#4a6080",padding:"0.15rem 0",borderBottom:i<history.length-1?"1px solid rgba(255,255,255,0.04)":"none",fontFamily:"monospace"}}>{h}</div>)}
           </div>
@@ -3115,7 +3151,7 @@ function FichesAppareils({ pieces, onLoad }: { pieces: any[]; onLoad: ()=>void }
                         onChange={e=>saveNote(key,e.target.value)}
                         placeholder="Ajouter une note sur cet appareil…"
                         rows={2}
-                        style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid rgba(0,0,0,0.07)",color:"#475569",fontSize:"0.76rem",fontFamily:"'DM Sans',sans-serif",resize:"none",outline:"none",padding:"0.2rem 0",lineHeight:1.5,boxSizing:"border-box"}}
+                        style={{width:"100%",background:"transparent",border:"none",borderBottom:"1px solid rgba(0,0,0,0.05)",color:"#475569",fontSize:"0.76rem",fontFamily:"'DM Sans',sans-serif",resize:"none",outline:"none",padding:"0.2rem 0",lineHeight:1.5,boxSizing:"border-box"}}
                       />
                     </div>
 
@@ -3627,7 +3663,7 @@ function PrixConcurrents() {
       </div>
 
       {showAdd && (
-        <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+        <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.06)",padding:"1.2rem",marginBottom:"1.5rem"}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro" style={inputSt}/></div>
             <div><label style={labelSt}>Réparation *</label><input value={form.type_reparation} onChange={e=>setForm(p=>({...p,type_reparation:e.target.value}))} placeholder="Écran, Batterie..." style={inputSt}/></div>
@@ -3700,7 +3736,7 @@ function ValeurAppareils() {
       </div>
 
       {showAdd && (
-        <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(109,212,0,0.15)",padding:"1.2rem",marginBottom:"1.5rem"}}>
+        <div style={{background:"rgba(0,0,0,0.02)",border:"1px solid rgba(0,0,0,0.06)",padding:"1.2rem",marginBottom:"1.5rem"}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"0.8rem",marginBottom:"0.8rem"}}>
             <div><label style={labelSt}>Appareil *</label><input value={form.type_appareil} onChange={e=>setForm(p=>({...p,type_appareil:e.target.value}))} placeholder="iPhone 15 Pro Max" style={inputSt}/></div>
             <div><label style={labelSt}>Valeur ($) *</label><input type="number" value={form.valeur_marche} onChange={e=>setForm(p=>({...p,valeur_marche:e.target.value}))} placeholder="650" style={inputSt}/></div>
@@ -4138,7 +4174,7 @@ function Messages() {
                     <div style={{ fontSize:"0.72rem", color:GRAY_DIM, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.6rem" }}>
                       Message reçu · {new Date(selected.created_at).toLocaleDateString("fr-CA", { day:"numeric", month:"long", year:"numeric" })}
                     </div>
-                    <div style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.5rem",
+                    <div style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", padding:"1.5rem",
                       fontSize:"0.92rem", lineHeight:1.7, whiteSpace:"pre-wrap", maxWidth:640 }}>
                       {selected.message}
                     </div>
@@ -4251,7 +4287,7 @@ function Decharges() {
         {loading ? <div style={{color:GRAY,textAlign:"center",padding:"2rem"}}>Chargement...</div> : (
         <>
         {/* Desktop table */}
-        <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", overflowX:"auto" }}>
+        <div className="admin-mobile-hide-table" style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", overflowX:"auto" }}>
           <table>
             <thead>
               <tr style={{ background:"rgba(109,212,0,0.04)" }}>
@@ -4300,7 +4336,7 @@ function Decharges() {
         {/* Mobile cards */}
         <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
           {decharges.map((d:any)=>(
-            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem" }}>
+            <div key={d.id} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", borderRadius:14, padding:"1rem" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.4rem" }}>
                 <span style={{ fontWeight:600, fontSize:"0.95rem" }}>{d.nom}</span>
                 <Badge statut={d.statut}/>
@@ -4329,7 +4365,7 @@ function Decharges() {
             ["✅","Traitées", decharges.filter((d:any)=>d.statut==="traitee").length, BLUE],
             ["⏳","En attente", decharges.filter((d:any)=>d.statut==="en_attente").length, ORANGE],
           ].map(([icon,label,val,color])=>(
-            <div key={label as string} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", padding:"1.2rem", display:"flex", alignItems:"center", gap:"1rem" }}>
+            <div key={label as string} style={{ background:NAVY_MID, border:"1px solid rgba(0,0,0,0.06)", padding:"1.2rem", display:"flex", alignItems:"center", gap:"1rem" }}>
               <span style={{fontSize:"1.8rem"}}>{icon}</span>
               <div>
                 <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2rem", fontWeight:900, color:color as string, lineHeight:1 }}>{val}</div>
