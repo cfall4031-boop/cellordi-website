@@ -2206,11 +2206,19 @@ function Convertisseur() {
 
   React.useEffect(() => { doFetch(); }, [doFetch]);
 
+  // Direction de conversion (true = devise→CAD, false = CAD→devise)
+  const [usdDir, setUsdDir] = React.useState(true);  // true: USD→CAD, false: CAD→USD
+  const [cnyDir, setCnyDir] = React.useState(true);  // true: CNY→CAD, false: CAD→CNY
+
   // Résultats (rates jamais null → aucun risque)
   const usdNum = parseFloat(usdAmt);
   const cnyNum = parseFloat(cnyAmt);
-  const usdVal = usdAmt && !isNaN(usdNum) ? usdNum * rates.usdCad : null;
-  const cnyVal = cnyAmt && !isNaN(cnyNum) ? cnyNum * rates.cnyCad : null;
+  const usdVal = usdAmt && !isNaN(usdNum)
+    ? (usdDir ? usdNum * rates.usdCad : usdNum / rates.usdCad)
+    : null;
+  const cnyVal = cnyAmt && !isNaN(cnyNum)
+    ? (cnyDir ? cnyNum * rates.cnyCad : cnyNum / rates.cnyCad)
+    : null;
 
   // Facture multi-articles
   const multiResults: Array<{label:string;usd:number;cad:number}> = React.useMemo(() => {
@@ -2256,14 +2264,29 @@ function Convertisseur() {
       {/* ── 2 cartes convertisseur ── */}
       <div style={{display:"flex",gap:"1rem",flexWrap:"wrap",marginBottom:"1.5rem"}}>
 
-        {/* USD → CAD */}
+        {/* USD ⇄ CAD */}
         <div style={cardSt}>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:"#fff",marginBottom:"1rem"}}>🇺🇸 USD → CAD</div>
-          <label style={labelSt}>Montant USD ($)</label>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1rem"}}>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:"#fff"}}>
+              🇺🇸 {usdDir ? "USD → CAD" : "CAD → USD"}
+            </span>
+            <button onClick={()=>{setUsdDir(d=>!d);setUsdAmt("");}}
+              title="Inverser la conversion"
+              style={{background:"rgba(109,212,0,0.1)",border:"1px solid rgba(109,212,0,0.35)",color:GREEN,padding:"0.25rem 0.65rem",cursor:"pointer",borderRadius:4,fontSize:"1rem",fontWeight:700,lineHeight:1}}>
+              ⇄
+            </button>
+          </div>
+          <label style={labelSt}>Montant {usdDir ? "USD ($)" : "CAD ($)"}</label>
           <input type="number" min="0" step="0.01" value={usdAmt} onChange={e=>setUsdAmt(e.target.value)} placeholder="0.00" style={inSt}/>
           <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
             {usdVal!=null
-              ? <div><span style={bigSt}>{usdVal.toFixed(2)}</span><span style={{color:GRAY,marginLeft:"0.4rem"}}>$ CAD</span><div style={{fontSize:"0.7rem",color:GRAY_DIM,marginTop:"0.15rem"}}>taux : {rates.usdCad.toFixed(4)}</div></div>
+              ? <div>
+                  <span style={bigSt}>{usdVal.toFixed(2)}</span>
+                  <span style={{color:GRAY,marginLeft:"0.4rem"}}>$ {usdDir?"CAD":"USD"}</span>
+                  <div style={{fontSize:"0.7rem",color:GRAY_DIM,marginTop:"0.15rem"}}>
+                    taux : 1 {usdDir?"USD":"CAD"} = {(usdDir?rates.usdCad:1/rates.usdCad).toFixed(4)} {usdDir?"CAD":"USD"}
+                  </div>
+                </div>
               : <span style={{color:GRAY_DIM,fontSize:"0.85rem"}}>Entrez un montant</span>}
           </div>
           <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.7rem"}}>
@@ -2276,21 +2299,36 @@ function Convertisseur() {
           </div>
         </div>
 
-        {/* CNY → CAD */}
+        {/* CNY ⇄ CAD */}
         <div style={cardSt}>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:"#fff",marginBottom:"1rem"}}>🇨🇳 CNY → CAD <span style={{fontSize:"0.7rem",color:GRAY,fontWeight:400}}>(Yuan)</span></div>
-          <label style={labelSt}>Montant CNY (¥)</label>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"1rem"}}>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:700,fontSize:"1.15rem",color:"#fff"}}>
+              🇨🇳 {cnyDir ? "CNY → CAD" : "CAD → CNY"} <span style={{fontSize:"0.7rem",color:GRAY,fontWeight:400}}>(Yuan)</span>
+            </span>
+            <button onClick={()=>{setCnyDir(d=>!d);setCnyAmt("");}}
+              title="Inverser la conversion"
+              style={{background:"rgba(109,212,0,0.1)",border:"1px solid rgba(109,212,0,0.35)",color:GREEN,padding:"0.25rem 0.65rem",cursor:"pointer",borderRadius:4,fontSize:"1rem",fontWeight:700,lineHeight:1}}>
+              ⇄
+            </button>
+          </div>
+          <label style={labelSt}>Montant {cnyDir ? "CNY (¥)" : "CAD ($)"}</label>
           <input type="number" min="0" step="0.01" value={cnyAmt} onChange={e=>setCnyAmt(e.target.value)} placeholder="0.00" style={inSt}/>
           <div style={{marginTop:"1rem",padding:"0.8rem",background:"rgba(255,255,255,0.03)",borderRadius:4,minHeight:56,display:"flex",alignItems:"center"}}>
             {cnyVal!=null
-              ? <div><span style={bigSt}>{cnyVal.toFixed(2)}</span><span style={{color:GRAY,marginLeft:"0.4rem"}}>$ CAD</span><div style={{fontSize:"0.7rem",color:GRAY_DIM,marginTop:"0.15rem"}}>taux : {rates.cnyCad.toFixed(4)}</div></div>
+              ? <div>
+                  <span style={bigSt}>{cnyVal.toFixed(2)}</span>
+                  <span style={{color:GRAY,marginLeft:"0.4rem"}}>{cnyDir?"$ CAD":"¥ CNY"}</span>
+                  <div style={{fontSize:"0.7rem",color:GRAY_DIM,marginTop:"0.15rem"}}>
+                    taux : 1 {cnyDir?"CNY":"CAD"} = {(cnyDir?rates.cnyCad:1/rates.cnyCad).toFixed(4)} {cnyDir?"CAD":"CNY"}
+                  </div>
+                </div>
               : <span style={{color:GRAY_DIM,fontSize:"0.85rem"}}>Entrez un montant</span>}
           </div>
           <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap",marginTop:"0.7rem"}}>
-            {[50,100,200,500,1000,2000].map(v=>(
+            {(cnyDir?[50,100,200,500,1000,2000]:[20,50,100,200,500,1000]).map(v=>(
               <button key={v} onClick={()=>setCnyAmt(String(v))}
                 style={{background:cnyAmt===String(v)?"rgba(109,212,0,0.2)":"rgba(255,255,255,0.04)",border:`1px solid ${cnyAmt===String(v)?"rgba(109,212,0,0.4)":"rgba(255,255,255,0.08)"}`,color:cnyAmt===String(v)?GREEN:GRAY,padding:"0.2rem 0.5rem",cursor:"pointer",fontSize:"0.75rem",borderRadius:3}}>
-                ¥{v}
+                {cnyDir?"¥":"$"}{v}
               </button>
             ))}
           </div>
