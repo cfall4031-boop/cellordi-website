@@ -3273,7 +3273,7 @@ function PieceTable({ pieces, isDetachee, onEdit, onDelete, onSelect, selected, 
 
 function CataloguePieces() {
   const [pieces, setPieces] = useState<any[]>([]);
-  const [section, setSection] = useState<"service"|"detachee"|"fiches">("service");
+  const [section, setSection] = useState<"service"|"fiches">("service");
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState<typeof BLANK_PIECE>({...BLANK_PIECE});
@@ -3373,9 +3373,8 @@ function CataloguePieces() {
         {/* ── Section tabs ── */}
         <div style={{display:"flex",gap:0,marginBottom:"1.5rem",border:"1px solid rgba(255,255,255,0.08)",overflow:"hidden"}}>
           {([
-            {id:"service"  as const, icon:"🔧", label:"Pièces de service",  count:serviceList.length,  color:GREEN,        bg:"rgba(109,212,0,0.12)"},
-            {id:"detachee" as const, icon:"📦", label:"Pièces détachées",   count:detacheeList.length, color:ORANGE,       bg:"rgba(245,158,11,0.12)"},
-            {id:"fiches"   as const, icon:"📋", label:"Fiches appareils",   count:fichesCount,         color:"#c084fc",    bg:"rgba(192,132,252,0.12)"},
+            {id:"service"  as const, icon:"🔧", label:"Pièces de service",  count:serviceList.length,  color:GREEN,     bg:"rgba(109,212,0,0.12)"},
+            {id:"fiches"   as const, icon:"📋", label:"Fiches appareils",   count:fichesCount,         color:"#c084fc", bg:"rgba(192,132,252,0.12)"},
           ]).map(tab=>{
             const isOn = section===tab.id;
             return (
