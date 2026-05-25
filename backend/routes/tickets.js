@@ -18,10 +18,10 @@ router.get("/suivi/:numero", (req, res) => {
     recu:        { label: "Reçu",       index: 0 },
     diagnostic:  { label: "Diagnostic", index: 1 },
     en_cours:    { label: "En cours",   index: 2 },
-    en_suspend:  { label: "En suspend", index: 2 },
-    termine:     { label: "Terminé",    index: 3 },
-    pret:        { label: "Prêt",       index: 4 },
-    livre:       { label: "Livré",      index: 5 },
+    en_suspend:  { label: "En suspend", index: 3 },
+    termine:     { label: "Terminé",    index: 4 },
+    pret:        { label: "Prêt",       index: 5 },
+    livre:       { label: "Livré",      index: 6 },
   };
 
   // Fetch tracking updates for this ticket
