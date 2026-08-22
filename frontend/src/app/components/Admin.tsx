@@ -103,6 +103,21 @@ const tdStyle: React.CSSProperties = {
   borderBottom:"1px solid rgba(255,255,255,0.04)", verticalAlign:"middle"
 };
 
+function fmtDateGroupe(dateStr: string): string {
+  if (!dateStr) return "Date inconnue";
+  const d = new Date(dateStr);
+  const todayStr = new Date().toLocaleDateString("fr-CA");
+  const yestStr  = new Date(Date.now() - 86400000).toLocaleDateString("fr-CA");
+  const dStr     = d.toLocaleDateString("fr-CA");
+  if (dStr === todayStr) return "Aujourd'hui";
+  if (dStr === yestStr)  return "Hier";
+  return d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+}
+function fmtHeure(dateStr: string): string {
+  if (!dateStr) return "--:--";
+  return new Date(dateStr).toLocaleTimeString("fr-CA", { hour:"2-digit", minute:"2-digit", hour12:false });
+}
+
 const inpStyle: React.CSSProperties = {
   width:"100%", background:"rgba(255,255,255,0.05)",
   border:"1px solid rgba(109,212,0,0.2)", color:"#fff",
@@ -1816,6 +1831,10 @@ function Tickets() {
     )
     .filter((t:any) => showArchived || t.statut !== "livre");
 
+  const sortedFiltered = [...filtered].sort((a:any, b:any) =>
+    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+  );
+
   const changeStatut = async (id: number, statut: string) => {
     try {
       await ticketsApi.update(id, { statut });
@@ -1897,23 +1916,45 @@ function Tickets() {
             <table>
               <thead>
                 <tr style={{ background:"rgba(109,212,0,0.04)" }}>
-                  {["Numéro","Client","Appareil","Problème","Statut","Coût","Action"].map(h=>(
+                  {["Numéro","Heure","Client","Appareil","Problème","Statut","Coût","Action"].map(h=>(
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t:any)=>(
-                  <tr key={t.id} style={{ cursor:"pointer" }}
-                    onClick={()=>setSelected(t)}
-                    onMouseEnter={e=>(e.currentTarget.style.background="rgba(109,212,0,0.04)")}
-                    onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
-                    <td style={tdStyle}>
-                      <span style={{fontFamily:"'Barlow Condensed',sans-serif",color:GREEN,fontWeight:700,fontSize:"0.82rem"}}>
-                        {t.numero}
-                      </span>
-                    </td>
-                    <td style={{...tdStyle,fontWeight:500}}>{t.prenom} {t.nom}</td>
+                {(()=>{
+                  const rows: React.ReactNode[] = [];
+                  let lastDate = "";
+                  sortedFiltered.forEach((t:any)=>{
+                    const dateKey = t.created_at ? new Date(t.created_at).toLocaleDateString("fr-CA") : "inconnue";
+                    if (dateKey !== lastDate) {
+                      lastDate = dateKey;
+                      rows.push(
+                        <tr key={`grp-${dateKey}`}>
+                          <td colSpan={8} style={{ padding:"0.4rem 1rem 0.35rem", background:"rgba(109,212,0,0.06)",
+                            borderBottom:"1px solid rgba(109,212,0,0.12)", borderTop:"1px solid rgba(109,212,0,0.08)" }}>
+                            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700,
+                              fontSize:"0.72rem", letterSpacing:"0.12em", color:GREEN, textTransform:"uppercase" }}>
+                              📅 {fmtDateGroupe(t.created_at)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    }
+                    rows.push(
+                      <tr key={t.id} style={{ cursor:"pointer" }}
+                        onClick={()=>setSelected(t)}
+                        onMouseEnter={e=>(e.currentTarget.style.background="rgba(109,212,0,0.04)")}
+                        onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+                        <td style={tdStyle}>
+                          <span style={{fontFamily:"'Barlow Condensed',sans-serif",color:GREEN,fontWeight:700,fontSize:"0.82rem"}}>
+                            {t.numero}
+                          </span>
+                        </td>
+                        <td style={{...tdStyle,fontSize:"0.78rem",color:GRAY,whiteSpace:"nowrap"}}>
+                          {fmtHeure(t.created_at)}
+                        </td>
+                        <td style={{...tdStyle,fontWeight:500}}>{t.prenom} {t.nom}</td>
                     <td style={{...tdStyle,color:GRAY}}>{t.type_appareil}</td>
                     <td style={{...tdStyle,color:GRAY,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.probleme}</td>
                     <td style={tdStyle}>
@@ -1960,15 +2001,18 @@ function Tickets() {
                         )}
                       </div>
                     </td>
-                  </tr>
-                ))}
+                      </tr>
+                    );
+                  });
+                  return rows;
+                })()}
               </tbody>
             </table>
-            {filtered.length === 0 && <div style={{textAlign:"center",padding:"3rem",color:GRAY}}>Aucun ticket trouvé.</div>}
+            {sortedFiltered.length === 0 && <div style={{textAlign:"center",padding:"3rem",color:GRAY}}>Aucun ticket trouvé.</div>}
           </div>
           {/* Mobile cards */}
           <div className="admin-mobile-cards" style={{ display:"none", flexDirection:"column", gap:"0.6rem" }}>
-            {filtered.map((t:any)=>(
+            {sortedFiltered.map((t:any)=>(
               <div key={t.id} onClick={()=>setSelected(t)}
                 style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)", borderRadius:14, padding:"1rem", cursor:"pointer" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"0.3rem" }}>
@@ -1976,6 +2020,9 @@ function Tickets() {
                   <Badge statut={t.statut}/>
                 </div>
                 <div style={{ fontWeight:600, fontSize:"0.95rem", marginBottom:"0.3rem" }}>{t.prenom} {t.nom}</div>
+                <div style={{ fontSize:"0.8rem", color:GRAY_DIM, marginBottom:"0.2rem" }}>
+                  {fmtDateGroupe(t.created_at)} · {fmtHeure(t.created_at)}
+                </div>
                 <div style={{ fontSize:"0.82rem", color:GRAY, marginBottom:"0.5rem" }}>
                   {t.type_appareil} {t.probleme ? `— ${t.probleme.slice(0,40)}${t.probleme.length>40?"...":""}` : ""}
                 </div>
