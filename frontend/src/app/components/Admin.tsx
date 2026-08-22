@@ -1832,7 +1832,7 @@ function Tickets() {
     .filter((t:any) => showArchived || t.statut !== "livre");
 
   const sortedFiltered = [...filtered].sort((a:any, b:any) =>
-    new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    new Date(b.date_reception || 0).getTime() - new Date(a.date_reception || 0).getTime()
   );
 
   const changeStatut = async (id: number, statut: string) => {
@@ -1926,7 +1926,7 @@ function Tickets() {
                   const rows: React.ReactNode[] = [];
                   let lastDate = "";
                   sortedFiltered.forEach((t:any)=>{
-                    const dateKey = t.created_at ? new Date(t.created_at).toLocaleDateString("fr-CA") : "inconnue";
+                    const dateKey = t.date_reception ? new Date(t.date_reception).toLocaleDateString("fr-CA") : "inconnue";
                     if (dateKey !== lastDate) {
                       lastDate = dateKey;
                       rows.push(
@@ -1935,7 +1935,7 @@ function Tickets() {
                             borderBottom:"1px solid rgba(109,212,0,0.12)", borderTop:"1px solid rgba(109,212,0,0.08)" }}>
                             <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700,
                               fontSize:"0.72rem", letterSpacing:"0.12em", color:GREEN, textTransform:"uppercase" }}>
-                              📅 {fmtDateGroupe(t.created_at)}
+                              📅 {fmtDateGroupe(t.date_reception)}
                             </span>
                           </td>
                         </tr>
@@ -1952,7 +1952,7 @@ function Tickets() {
                           </span>
                         </td>
                         <td style={{...tdStyle,fontSize:"0.78rem",color:GRAY,whiteSpace:"nowrap"}}>
-                          {fmtHeure(t.created_at)}
+                          {fmtHeure(t.date_reception)}
                         </td>
                         <td style={{...tdStyle,fontWeight:500}}>{t.prenom} {t.nom}</td>
                     <td style={{...tdStyle,color:GRAY}}>{t.type_appareil}</td>
@@ -2021,7 +2021,7 @@ function Tickets() {
                 </div>
                 <div style={{ fontWeight:600, fontSize:"0.95rem", marginBottom:"0.3rem" }}>{t.prenom} {t.nom}</div>
                 <div style={{ fontSize:"0.8rem", color:GRAY_DIM, marginBottom:"0.2rem" }}>
-                  {fmtDateGroupe(t.created_at)} · {fmtHeure(t.created_at)}
+                  {fmtDateGroupe(t.date_reception)} · {fmtHeure(t.date_reception)}
                 </div>
                 <div style={{ fontSize:"0.82rem", color:GRAY, marginBottom:"0.5rem" }}>
                   {t.type_appareil} {t.probleme ? `— ${t.probleme.slice(0,40)}${t.probleme.length>40?"...":""}` : ""}
