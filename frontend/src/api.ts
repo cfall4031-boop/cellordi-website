@@ -155,6 +155,15 @@ export const prixApi = {
     req<any>("GET", "/prix/calculer" + toQuery(params)),
 };
 
+// ── GESTION DE STOCK ────────────────────────────────────────
+export const stockApi = {
+  list:        () => req<any>("GET", "/stock"),
+  stats:       () => req<any>("GET", "/stock/stats"),
+  mouvements:  (id: number) => req<any>("GET", `/stock/${id}/mouvements`),
+  mouvement:   (id: number, body: Record<string, unknown>) => req<any>("POST", `/stock/${id}/mouvement`, body),
+  updateSeuil: (id: number, seuil_alerte: number) => req<any>("PUT", `/stock/${id}`, { seuil_alerte }),
+};
+
 // ── NOTIFICATIONS PUSH ──────────────────────────────────────
 export const notificationsApi = {
   getVapidKey:  () => req<{ publicKey: string }>("GET", "/notifications/vapid-key", null, true),

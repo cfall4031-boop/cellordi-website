@@ -80,6 +80,7 @@ app.use("/api/messages",   require("./routes/messages"));
 app.use("/api/decharges",  require("./routes/decharges"));
 app.use("/api/prix",          require("./routes/prix"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/stock",         require("./routes/stock"));
 
 // ── SANTÉ ────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {

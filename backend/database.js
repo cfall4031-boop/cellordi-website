@@ -229,6 +229,22 @@ db.exec(`
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN cout_vente REAL").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN piece_detachee INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN nb_demandes INTEGER DEFAULT 0").run(); } catch {}
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN quantite_stock INTEGER DEFAULT 0").run(); } catch {}
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN seuil_alerte INTEGER DEFAULT 3").run(); } catch {}
+
+// ── TABLE MOUVEMENTS STOCK ───────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS mouvements_stock (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    piece_id      INTEGER NOT NULL REFERENCES pieces_catalogue(id) ON DELETE CASCADE,
+    type          TEXT    NOT NULL CHECK(type IN ('entree','sortie','ajustement')),
+    quantite      INTEGER NOT NULL,
+    cout_unitaire REAL    DEFAULT 0,
+    prix_unitaire REAL    DEFAULT 0,
+    notes         TEXT,
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
 
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
