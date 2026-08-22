@@ -1,4 +1,5 @@
 import React from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { motion } from "motion/react";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
@@ -15,6 +16,7 @@ import "../styles/fonts.css";
 
 export default function App() {
   return (
+    <>
     <motion.div
       style={{ overflowX: "hidden" }}
       initial={{ opacity: 0, y: 18 }}
@@ -105,5 +107,7 @@ export default function App() {
         }
       `}</style>
     </motion.div>
+    <Analytics />
+    </>
   );
 }
