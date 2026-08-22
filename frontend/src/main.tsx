@@ -2,6 +2,7 @@ import './i18n';
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router";
 import { AnimatePresence } from "motion/react";
+import { Analytics } from "@vercel/analytics/react";
 import App from "./app/App.tsx";
 import Admin from "./app/components/Admin.tsx";
 import BlogListing from "./app/components/BlogListing.tsx";
@@ -39,5 +40,6 @@ createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
     <ScrollRestoration />
     <AnimatedRoutes />
+    <Analytics />
   </BrowserRouter>
 );
