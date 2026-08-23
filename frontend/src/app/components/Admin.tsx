@@ -4433,16 +4433,20 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
 function fmt$(n: number) { return n.toLocaleString("fr-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }); }
 
 function GestionStock() {
-  const [pieces, setPieces]       = useState<Piece[]>([]);
-  const [stats, setStats]         = useState<StockStats | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [modalPiece, setModalPiece] = useState<Piece | null>(null);
-  const [histPiece, setHistPiece]   = useState<{ piece: Piece; mouvements: Mouvement[] } | null>(null);
-  const [form, setForm]           = useState({ type: "entree", quantite: "", cout_unitaire: "", prix_unitaire: "", notes: "" });
-  const [saving, setSaving]       = useState(false);
-  const [err, setErr]             = useState("");
-  const [search, setSearch]       = useState("");
-  const [chartTab, setChartTab]   = useState<"mensuel"|"top">("mensuel");
+  const [pieces, setPieces]           = useState<Piece[]>([]);
+  const [stats, setStats]             = useState<StockStats | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [modalPiece, setModalPiece]   = useState<Piece | null>(null);
+  const [histPiece, setHistPiece]     = useState<{ piece: Piece; mouvements: Mouvement[] } | null>(null);
+  const [form, setForm]               = useState({ type: "entree", quantite: "", cout_unitaire: "", prix_unitaire: "", notes: "" });
+  const [saving, setSaving]           = useState(false);
+  const [err, setErr]                 = useState("");
+  const [search, setSearch]           = useState("");
+  const [chartTab, setChartTab]       = useState<"mensuel"|"top">("mensuel");
+  // Catégories
+  const [collapsed, setCollapsed]     = useState<Record<string, boolean>>({});
+  const [renamingCat, setRenamingCat] = useState<{ old: string; val: string } | null>(null);
+  const [recatPiece, setRecatPiece]   = useState<{ piece: Piece; val: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -4467,8 +4471,7 @@ function GestionStock() {
     setSaving(true); setErr("");
     try {
       await stockApi.mouvement(modalPiece.id, {
-        type: form.type,
-        quantite: Number(form.quantite),
+        type: form.type, quantite: Number(form.quantite),
         cout_unitaire: Number(form.cout_unitaire) || 0,
         prix_unitaire: Number(form.prix_unitaire) || 0,
         notes: form.notes || null,
@@ -4480,26 +4483,45 @@ function GestionStock() {
     setSaving(false);
   };
 
-  const filtered = pieces.filter(p =>
-    `${p.type_appareil} ${p.modele || ""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const saveRenameCategorie = async () => {
+    if (!renamingCat || !renamingCat.val.trim()) return;
+    if (renamingCat.val.trim() === renamingCat.old) { setRenamingCat(null); return; }
+    try { await stockApi.renameCategorie(renamingCat.old, renamingCat.val.trim()); load(); }
+    catch { /* ignore */ }
+    setRenamingCat(null);
+  };
+
+  const saveRecatPiece = async () => {
+    if (!recatPiece || !recatPiece.val.trim()) return;
+    if (recatPiece.val.trim() === recatPiece.piece.type_piece) { setRecatPiece(null); return; }
+    try { await stockApi.updateCategorie(recatPiece.piece.id, recatPiece.val.trim()); load(); }
+    catch { /* ignore */ }
+    setRecatPiece(null);
+  };
 
   const stockBadge = (p: Piece) => {
-    if (p.quantite_calculee <= 0)            return { label: "Rupture",  color: "#ff4d4d", bg: "rgba(255,77,77,0.12)" };
-    if (p.quantite_calculee <= p.seuil_alerte) return { label: "Faible",   color: ORANGE,    bg: "rgba(245,158,11,0.12)" };
-    return                                          { label: "OK",        color: GREEN,     bg: GREEN_DIM };
+    if (p.quantite_calculee <= 0)              return { label: "Rupture", color: "#ff4d4d", bg: "rgba(255,77,77,0.12)" };
+    if (p.quantite_calculee <= p.seuil_alerte) return { label: "Faible",  color: ORANGE,   bg: "rgba(245,158,11,0.12)" };
+    return                                            { label: "OK",      color: GREEN,    bg: GREEN_DIM };
   };
 
   const mensuelData = (stats?.mensuel || []).map(m => ({
-    mois: m.mois.slice(5),
-    Investi: Math.round(m.investi),
-    Revenus: Math.round(m.revenus),
+    mois: m.mois.slice(5), Investi: Math.round(m.investi), Revenus: Math.round(m.revenus),
+  }));
+  const topData = (stats?.top_pieces || []).filter(p => p.nb_sorties > 0).map(p => ({
+    name: `${p.type_piece}${p.modele ? ` – ${p.modele}` : ""}`, Sorties: p.nb_sorties,
   }));
 
-  const topData = (stats?.top_pieces || []).filter(p => p.nb_sorties > 0).map(p => ({
-    name: `${p.type_piece}${p.modele ? ` – ${p.modele}` : ""}`,
-    Sorties: p.nb_sorties,
-  }));
+  // Groupement par type_piece
+  const filtered = pieces.filter(p =>
+    `${p.type_appareil} ${p.modele || ""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase())
+  );
+  const allCats = Array.from(new Set(pieces.map(p => p.type_piece))).sort();
+  const groups: Record<string, Piece[]> = {};
+  for (const p of filtered) {
+    (groups[p.type_piece] = groups[p.type_piece] || []).push(p);
+  }
+  const groupKeys = Object.keys(groups).sort();
 
   if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
 
@@ -4512,10 +4534,10 @@ function GestionStock() {
       {/* ── KPI CARDS ── */}
       {stats && (
         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          <StatCard label="Coût d'achat total"   value={fmt$(stats.total_investi)} sub="COGS cumulé"           color={ORANGE} />
-          <StatCard label="Revenus pièces"        value={fmt$(stats.total_revenus)} sub="Pièces facturées"      color={BLUE}   />
-          <StatCard label="Profit"                value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
-          <StatCard label="Pièces écoulées"       value={String(stats.total_pieces_vendues)} sub="Total sorties" color={GRAY}  />
+          <StatCard label="Coût d'achat total" value={fmt$(stats.total_investi)} sub="COGS cumulé"           color={ORANGE} />
+          <StatCard label="Revenus pièces"      value={fmt$(stats.total_revenus)} sub="Pièces facturées"      color={BLUE}   />
+          <StatCard label="Profit"              value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
+          <StatCard label="Pièces écoulées"     value={String(stats.total_pieces_vendues)} sub="Total sorties" color={GRAY} />
         </div>
       )}
 
@@ -4536,8 +4558,7 @@ function GestionStock() {
         {chartTab === "mensuel" ? (
           mensuelData.length === 0
             ? <div style={{ color: GRAY_DIM, textAlign: "center", padding: "2rem" }}>Aucune donnée mensuelle pour l'instant.</div>
-            : (
-              <ResponsiveContainer width="100%" height={220}>
+            : <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={mensuelData} barCategoryGap="30%">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                   <XAxis dataKey="mois" tick={{ fill: GRAY, fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -4547,12 +4568,10 @@ function GestionStock() {
                   <Bar dataKey="Revenus" fill={BLUE}   radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
-            )
         ) : (
           topData.length === 0
             ? <div style={{ color: GRAY_DIM, textAlign: "center", padding: "2rem" }}>Aucune sortie enregistrée pour l'instant.</div>
-            : (
-              <ResponsiveContainer width="100%" height={220}>
+            : <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={topData} layout="vertical" barCategoryGap="25%">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                   <XAxis type="number" tick={{ fill: GRAY, fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -4561,59 +4580,149 @@ function GestionStock() {
                   <Bar dataKey="Sorties" fill={GREEN} radius={[0,4,4,0]} />
                 </BarChart>
               </ResponsiveContainer>
-            )
         )}
       </div>
 
-      {/* ── TABLEAU STOCK ── */}
+      {/* ── TABLEAU STOCK (groupé par catégorie) ── */}
       <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden" }}>
         <div style={{ padding: "0.9rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: "0.8rem", alignItems: "center" }}>
           <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>Catalogue de pièces</span>
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher…"
-            style={{ marginLeft: "auto", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#fff", padding: "0.35rem 0.8rem", fontSize: "0.82rem", outline: "none", width: 200 }}
-          />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+            style={{ marginLeft: "auto", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#fff", padding: "0.35rem 0.8rem", fontSize: "0.82rem", outline: "none", width: 200 }} />
         </div>
+
+        {/* En-têtes colonnes */}
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem" }}>
             <thead>
               <tr style={{ background: "rgba(255,255,255,0.03)" }}>
-                {["Appareil","Modèle","Pièce","Stock","Statut","COGS unitaire","Prix vente","Actions"].map(h => (
+                {["Appareil","Modèle","Stock","Statut","COGS unitaire","Prix vente","Actions"].map(h => (
                   <th key={h} style={{ padding: "0.65rem 0.9rem", textAlign: "left", color: GRAY_DIM, fontWeight: 600, fontSize: "0.74rem", letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: GRAY_DIM }}>Aucune pièce trouvée.</td></tr>
+              {groupKeys.length === 0 && (
+                <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: GRAY_DIM }}>Aucune pièce trouvée.</td></tr>
               )}
-              {filtered.map(p => {
-                const badge = stockBadge(p);
+
+              {groupKeys.map(cat => {
+                const isCollapsed = collapsed[cat];
+                const isRenaming  = renamingCat?.old === cat;
+                const groupPieces = groups[cat];
+                const totalStock  = groupPieces.reduce((s, p) => s + p.quantite_calculee, 0);
+                const hasAlert    = groupPieces.some(p => p.quantite_calculee <= p.seuil_alerte);
+
                 return (
-                  <tr key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <td style={{ padding: "0.65rem 0.9rem", color: "#fff" }}>{p.type_appareil}</td>
-                    <td style={{ padding: "0.65rem 0.9rem", color: GRAY }}>{p.modele || "—"}</td>
-                    <td style={{ padding: "0.65rem 0.9rem", color: "#fff" }}>{p.type_piece}</td>
-                    <td style={{ padding: "0.65rem 0.9rem", color: "#fff", fontWeight: 700 }}>{p.quantite_calculee}</td>
-                    <td style={{ padding: "0.65rem 0.9rem" }}>
-                      <span style={{ background: badge.bg, color: badge.color, borderRadius: 4, padding: "0.2rem 0.6rem", fontSize: "0.76rem", fontWeight: 700 }}>{badge.label}</span>
-                    </td>
-                    <td style={{ padding: "0.65rem 0.9rem", color: ORANGE }}>{p.cout_fournisseur ? fmt$(p.cout_fournisseur) : "—"}</td>
-                    <td style={{ padding: "0.65rem 0.9rem", color: BLUE }}>{p.cout_vente ? fmt$(p.cout_vente) : "—"}</td>
-                    <td style={{ padding: "0.65rem 0.9rem" }}>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button onClick={() => { setModalPiece(p); setForm({ type: "entree", quantite: "", cout_unitaire: String(p.cout_fournisseur || ""), prix_unitaire: String(p.cout_vente || ""), notes: "" }); }}
-                          style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer" }}>
-                          + Mouvement
-                        </button>
-                        <button onClick={() => openHistory(p)}
-                          style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: BLUE, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer" }}>
-                          Historique
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                  <React.Fragment key={cat}>
+                    {/* ── En-tête de catégorie ── */}
+                    <tr style={{ background: "rgba(109,212,0,0.05)", borderBottom: "1px solid rgba(109,212,0,0.15)", borderTop: "1px solid rgba(109,212,0,0.15)" }}>
+                      <td colSpan={7} style={{ padding: "0.55rem 0.9rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.7rem" }}>
+                          {/* Flèche collapse */}
+                          <button onClick={() => setCollapsed(c => ({ ...c, [cat]: !c[cat] }))}
+                            style={{ background: "none", border: "none", color: GREEN, cursor: "pointer", fontSize: "0.9rem", padding: 0, lineHeight: 1 }}>
+                            {isCollapsed ? "▶" : "▼"}
+                          </button>
+
+                          {/* Nom catégorie (éditable au clic sur ✎) */}
+                          {isRenaming ? (
+                            <input
+                              autoFocus value={renamingCat!.val}
+                              onChange={e => setRenamingCat(r => r ? { ...r, val: e.target.value } : r)}
+                              onBlur={saveRenameCategorie}
+                              onKeyDown={e => { if (e.key === "Enter") saveRenameCategorie(); if (e.key === "Escape") setRenamingCat(null); }}
+                              style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${GREEN}`, borderRadius: 5, color: "#fff", padding: "0.2rem 0.5rem", fontSize: "0.88rem", fontWeight: 700, outline: "none", width: 220 }}
+                            />
+                          ) : (
+                            <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>{cat}</span>
+                          )}
+
+                          {/* Bouton renommer catégorie */}
+                          {!isRenaming && (
+                            <button title="Renommer cette catégorie"
+                              onClick={() => setRenamingCat({ old: cat, val: cat })}
+                              style={{ background: "none", border: "none", color: GRAY_DIM, cursor: "pointer", fontSize: "0.78rem", padding: "0 0.2rem" }}>
+                              ✎
+                            </button>
+                          )}
+
+                          {/* Badges */}
+                          <span style={{ background: "rgba(255,255,255,0.07)", color: GRAY, borderRadius: 10, padding: "0.1rem 0.55rem", fontSize: "0.72rem" }}>
+                            {groupPieces.length} pièce{groupPieces.length > 1 ? "s" : ""}
+                          </span>
+                          <span style={{ background: "rgba(255,255,255,0.07)", color: GRAY, borderRadius: 10, padding: "0.1rem 0.55rem", fontSize: "0.72rem" }}>
+                            Stock total : {totalStock}
+                          </span>
+                          {hasAlert && (
+                            <span style={{ background: "rgba(255,77,77,0.15)", color: RED, borderRadius: 10, padding: "0.1rem 0.55rem", fontSize: "0.72rem", fontWeight: 700 }}>
+                              ⚠ alerte
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* ── Lignes pièces ── */}
+                    {!isCollapsed && groupPieces.map(p => {
+                      const badge = stockBadge(p);
+                      const isRecat = recatPiece?.piece.id === p.id;
+                      return (
+                        <tr key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                          <td style={{ padding: "0.65rem 0.9rem", color: "#fff" }}>{p.type_appareil}</td>
+                          <td style={{ padding: "0.65rem 0.9rem", color: GRAY }}>{p.modele || "—"}</td>
+                          <td style={{ padding: "0.65rem 0.9rem", color: "#fff", fontWeight: 700 }}>{p.quantite_calculee}</td>
+                          <td style={{ padding: "0.65rem 0.9rem" }}>
+                            <span style={{ background: badge.bg, color: badge.color, borderRadius: 4, padding: "0.2rem 0.6rem", fontSize: "0.76rem", fontWeight: 700 }}>{badge.label}</span>
+                          </td>
+                          <td style={{ padding: "0.65rem 0.9rem", color: ORANGE }}>{p.cout_fournisseur ? fmt$(p.cout_fournisseur) : "—"}</td>
+                          <td style={{ padding: "0.65rem 0.9rem", color: BLUE }}>{p.cout_vente ? fmt$(p.cout_vente) : "—"}</td>
+                          <td style={{ padding: "0.65rem 0.9rem" }}>
+                            <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
+                              <button onClick={() => { setModalPiece(p); setForm({ type: "entree", quantite: "", cout_unitaire: String(p.cout_fournisseur || ""), prix_unitaire: String(p.cout_vente || ""), notes: "" }); }}
+                                style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer", whiteSpace: "nowrap" }}>
+                                + Mouvement
+                              </button>
+                              <button onClick={() => openHistory(p)}
+                                style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: BLUE, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                                Historique
+                              </button>
+                              {/* Recatégoriser */}
+                              {isRecat ? (
+                                <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+                                  <select value={recatPiece!.val}
+                                    onChange={e => setRecatPiece(r => r ? { ...r, val: e.target.value } : r)}
+                                    style={{ background: NAVY, border: `1px solid ${ORANGE}`, borderRadius: 5, color: "#fff", padding: "0.2rem 0.4rem", fontSize: "0.76rem" }}>
+                                    {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+                                    <option value="__nouveau__">+ Nouvelle catégorie…</option>
+                                  </select>
+                                  {recatPiece!.val === "__nouveau__" ? (
+                                    <input autoFocus placeholder="Nom…"
+                                      onBlur={e => { if (e.target.value.trim()) setRecatPiece(r => r ? { ...r, val: e.target.value.trim() } : r); }}
+                                      onKeyDown={async e => { if (e.key === "Enter") { const v = (e.target as HTMLInputElement).value.trim(); if (v) { await stockApi.updateCategorie(p.id, v); load(); setRecatPiece(null); } } if (e.key === "Escape") setRecatPiece(null); }}
+                                      style={{ background: NAVY, border: `1px solid ${ORANGE}`, borderRadius: 5, color: "#fff", padding: "0.2rem 0.5rem", fontSize: "0.76rem", width: 120 }} />
+                                  ) : (
+                                    <button onClick={saveRecatPiece}
+                                      style={{ background: ORANGE, border: "none", borderRadius: 5, color: "#000", padding: "0.2rem 0.5rem", fontSize: "0.76rem", cursor: "pointer", fontWeight: 700 }}>
+                                      OK
+                                    </button>
+                                  )}
+                                  <button onClick={() => setRecatPiece(null)}
+                                    style={{ background: "none", border: "none", color: GRAY_DIM, cursor: "pointer", fontSize: "0.9rem" }}>✕</button>
+                                </div>
+                              ) : (
+                                <button title="Changer de catégorie"
+                                  onClick={() => setRecatPiece({ piece: p, val: p.type_piece })}
+                                  style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: ORANGE, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                                  ✎ Catégorie
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -4628,7 +4737,6 @@ function GestionStock() {
             <h3 style={{ color: "#fff", margin: "0 0 0.3rem", fontWeight: 800 }}>Enregistrer un mouvement</h3>
             <p style={{ color: GRAY, fontSize: "0.84rem", margin: "0 0 1.2rem" }}>{modalPiece.type_piece} — {modalPiece.type_appareil} {modalPiece.modele || ""}</p>
             {err && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>{err}</div>}
-
             {[
               { label: "Type", field: "type", type: "select", opts: [["entree","Entrée (achat)"],["sortie","Sortie (vente)"],["ajustement","Ajustement"]] },
               { label: "Quantité", field: "quantite", type: "number" },
@@ -4649,7 +4757,6 @@ function GestionStock() {
                 )}
               </div>
             ))}
-
             <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
               <button onClick={submitMouvement} disabled={saving}
                 style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>

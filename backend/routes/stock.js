@@ -89,14 +89,31 @@ router.post("/:id/mouvement", auth, (req, res) => {
   res.status(201).json({ message: "Mouvement enregistré.", id: result.lastInsertRowid });
 });
 
-// ── PUT /api/stock/:id — mettre à jour seuil_alerte ─────────────────────────
+// ── PUT /api/stock/:id — mettre à jour seuil_alerte et/ou type_piece ────────
 router.put("/:id", auth, (req, res) => {
-  const { seuil_alerte } = req.body;
+  const { seuil_alerte, type_piece } = req.body;
+  const piece = db.prepare("SELECT id FROM pieces_catalogue WHERE id = ?").get(req.params.id);
+  if (!piece) return res.status(404).json({ erreur: "Pièce introuvable." });
+
+  if (seuil_alerte !== undefined) {
+    db.prepare("UPDATE pieces_catalogue SET seuil_alerte = ? WHERE id = ?").run(Number(seuil_alerte) || 3, req.params.id);
+  }
+  if (type_piece !== undefined && type_piece.trim()) {
+    db.prepare("UPDATE pieces_catalogue SET type_piece = ? WHERE id = ?").run(type_piece.trim(), req.params.id);
+  }
+  res.json({ message: "Pièce mise à jour." });
+});
+
+// ── PATCH /api/stock/categorie — renommer une catégorie (toutes les pièces) ─
+router.patch("/categorie", auth, (req, res) => {
+  const { old_name, new_name } = req.body;
+  if (!old_name || !new_name || !new_name.trim()) {
+    return res.status(400).json({ erreur: "old_name et new_name sont requis." });
+  }
   const result = db.prepare(
-    "UPDATE pieces_catalogue SET seuil_alerte = ? WHERE id = ?"
-  ).run(Number(seuil_alerte) || 3, req.params.id);
-  if (result.changes === 0) return res.status(404).json({ erreur: "Pièce introuvable." });
-  res.json({ message: "Seuil mis à jour." });
+    "UPDATE pieces_catalogue SET type_piece = ? WHERE type_piece = ?"
+  ).run(new_name.trim(), old_name);
+  res.json({ message: `${result.changes} pièce(s) renommées.`, changes: result.changes });
 });
 
 // ── GET /api/stock/:id/mouvements — historique d'une pièce ──────────────────

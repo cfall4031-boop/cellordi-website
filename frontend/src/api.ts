@@ -160,8 +160,10 @@ export const stockApi = {
   list:        () => req<any>("GET", "/stock"),
   stats:       () => req<any>("GET", "/stock/stats"),
   mouvements:  (id: number) => req<any>("GET", `/stock/${id}/mouvements`),
-  mouvement:   (id: number, body: Record<string, unknown>) => req<any>("POST", `/stock/${id}/mouvement`, body),
-  updateSeuil: (id: number, seuil_alerte: number) => req<any>("PUT", `/stock/${id}`, { seuil_alerte }),
+  mouvement:       (id: number, body: Record<string, unknown>) => req<any>("POST", `/stock/${id}/mouvement`, body),
+  updateSeuil:     (id: number, seuil_alerte: number) => req<any>("PUT", `/stock/${id}`, { seuil_alerte }),
+  updateCategorie: (id: number, type_piece: string) => req<any>("PUT", `/stock/${id}`, { type_piece }),
+  renameCategorie: (old_name: string, new_name: string) => req<any>("PATCH", "/stock/categorie", { old_name, new_name }),
 };
 
 // ── NOTIFICATIONS PUSH ──────────────────────────────────────
