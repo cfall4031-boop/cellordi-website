@@ -4432,6 +4432,8 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
 
 function fmt$(n: number) { return n.toLocaleString("fr-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }); }
 
+const EMPTY_NEW_PIECE = { type_appareil: "", modele: "", type_piece: "", cout_fournisseur: "", cout_vente: "", fournisseur: "Tan Star Trade", notes: "" };
+
 function GestionStock() {
   const [pieces, setPieces]           = useState<Piece[]>([]);
   const [stats, setStats]             = useState<StockStats | null>(null);
@@ -4447,6 +4449,11 @@ function GestionStock() {
   const [collapsed, setCollapsed]     = useState<Record<string, boolean>>({});
   const [renamingCat, setRenamingCat] = useState<{ old: string; val: string } | null>(null);
   const [recatPiece, setRecatPiece]   = useState<{ piece: Piece; val: string } | null>(null);
+  // Ajout / suppression pièce
+  const [addModal, setAddModal]       = useState<{ cat: string } | null>(null);
+  const [newPiece, setNewPiece]       = useState(EMPTY_NEW_PIECE);
+  const [addErr, setAddErr]           = useState("");
+  const [confirmDel, setConfirmDel]   = useState<Piece | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -4481,6 +4488,77 @@ function GestionStock() {
       load();
     } catch { setErr("Erreur lors de l'enregistrement."); }
     setSaving(false);
+  };
+
+  const submitAddPiece = async () => {
+    if (!addModal) return;
+    if (!newPiece.type_appareil.trim() || !newPiece.type_piece.trim() || !newPiece.cout_fournisseur) {
+      setAddErr("Appareil, catégorie et coût fournisseur sont requis."); return;
+    }
+    setSaving(true); setAddErr("");
+    try {
+      await prixApi.addPiece({
+        type_appareil:    newPiece.type_appareil.trim(),
+        modele:           newPiece.modele.trim() || null,
+        type_piece:       newPiece.type_piece.trim(),
+        cout_fournisseur: Number(newPiece.cout_fournisseur),
+        cout_vente:       newPiece.cout_vente ? Number(newPiece.cout_vente) : null,
+        fournisseur:      newPiece.fournisseur.trim() || "Tan Star Trade",
+        notes:            newPiece.notes.trim() || null,
+      });
+      setAddModal(null);
+      setNewPiece(EMPTY_NEW_PIECE);
+      load();
+    } catch { setAddErr("Erreur lors de la création."); }
+    setSaving(false);
+  };
+
+  // Modifier une pièce (réutilise le modal d'ajout en mode édition)
+  const [editPiece, setEditPiece] = useState<Piece | null>(null);
+  const [editForm, setEditForm]   = useState(EMPTY_NEW_PIECE);
+  const [editErr, setEditErr]     = useState("");
+
+  const openEdit = (p: Piece) => {
+    setEditPiece(p);
+    setEditForm({
+      type_appareil:    p.type_appareil,
+      modele:           p.modele || "",
+      type_piece:       p.type_piece,
+      cout_fournisseur: String(p.cout_fournisseur || ""),
+      cout_vente:       p.cout_vente ? String(p.cout_vente) : "",
+      fournisseur:      "Tan Star Trade",
+      notes:            "",
+    });
+    setEditErr("");
+  };
+
+  const submitEditPiece = async () => {
+    if (!editPiece) return;
+    if (!editForm.type_appareil.trim() || !editForm.type_piece.trim() || !editForm.cout_fournisseur) {
+      setEditErr("Appareil, catégorie et coût fournisseur sont requis."); return;
+    }
+    setSaving(true); setEditErr("");
+    try {
+      await prixApi.updatePiece(editPiece.id, {
+        type_appareil:    editForm.type_appareil.trim(),
+        modele:           editForm.modele.trim() || null,
+        type_piece:       editForm.type_piece.trim(),
+        cout_fournisseur: Number(editForm.cout_fournisseur),
+        cout_vente:       editForm.cout_vente ? Number(editForm.cout_vente) : null,
+        fournisseur:      editForm.fournisseur.trim() || "Tan Star Trade",
+        notes:            editForm.notes.trim() || null,
+      });
+      setEditPiece(null);
+      load();
+    } catch { setEditErr("Erreur lors de la modification."); }
+    setSaving(false);
+  };
+
+  const deletePiece = async () => {
+    if (!confirmDel) return;
+    try { await prixApi.deletePiece(confirmDel.id); load(); }
+    catch { /* ignore */ }
+    setConfirmDel(null);
   };
 
   const saveRenameCategorie = async () => {
@@ -4659,6 +4737,12 @@ function GestionStock() {
                               ⚠ alerte
                             </span>
                           )}
+                          {/* Bouton + Ajouter dans cette catégorie */}
+                          <button title={`Ajouter une pièce dans "${cat}"`}
+                            onClick={() => { setAddModal({ cat }); setNewPiece({ ...EMPTY_NEW_PIECE, type_piece: cat }); setAddErr(""); }}
+                            style={{ marginLeft: "auto", background: GREEN_DIM, border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.18rem 0.55rem", fontSize: "0.78rem", cursor: "pointer", fontWeight: 800, lineHeight: 1 }}>
+                            + Ajouter
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -4686,6 +4770,16 @@ function GestionStock() {
                               <button onClick={() => openHistory(p)}
                                 style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: BLUE, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer" }}>
                                 Historique
+                              </button>
+                              {/* Modifier */}
+                              <button title="Modifier la pièce" onClick={() => openEdit(p)}
+                                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: GRAY, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                                ✎ Modifier
+                              </button>
+                              {/* Supprimer */}
+                              <button title="Supprimer la pièce" onClick={() => setConfirmDel(p)}
+                                style={{ background: "rgba(255,77,77,0.1)", border: "1px solid rgba(255,77,77,0.3)", color: RED, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                                ✕
                               </button>
                               {/* Recatégoriser */}
                               {isRecat ? (
@@ -4729,6 +4823,109 @@ function GestionStock() {
           </table>
         </div>
       </div>
+
+      {/* ── MODAL AJOUT PIÈCE ── */}
+      {addModal && (() => {
+        const fields = [
+          { label: "Appareil *", key: "type_appareil", ph: "ex: Apple, Samsung…" },
+          { label: "Modèle", key: "modele", ph: "ex: iPhone 14 Pro" },
+          { label: "Catégorie *", key: "type_piece", ph: "ex: Batterie, LCD…" },
+          { label: "Coût fournisseur ($) *", key: "cout_fournisseur", ph: "ex: 25" },
+          { label: "Prix de vente ($)", key: "cout_vente", ph: "ex: 79" },
+          { label: "Fournisseur", key: "fournisseur", ph: "ex: Tan Star Trade" },
+          { label: "Notes", key: "notes", ph: "" },
+        ];
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "2rem", width: 420, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
+              <h3 style={{ color: "#fff", margin: "0 0 0.2rem", fontWeight: 800 }}>Nouvelle pièce</h3>
+              <p style={{ color: GRAY, fontSize: "0.84rem", margin: "0 0 1.2rem" }}>Catégorie : <strong style={{ color: GREEN }}>{addModal.cat}</strong></p>
+              {addErr && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>{addErr}</div>}
+              {fields.map(({ label, key, ph }) => (
+                <div key={key} style={{ marginBottom: "0.85rem" }}>
+                  <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+                  <input value={(newPiece as any)[key]} placeholder={ph}
+                    onChange={e => setNewPiece(f => ({ ...f, [key]: e.target.value }))}
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
+                <button onClick={submitAddPiece} disabled={saving}
+                  style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
+                  {saving ? "…" : "Créer la pièce"}
+                </button>
+                <button onClick={() => { setAddModal(null); setAddErr(""); }}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── MODAL MODIFICATION PIÈCE ── */}
+      {editPiece && (() => {
+        const fields = [
+          { label: "Appareil *", key: "type_appareil", ph: "ex: Apple" },
+          { label: "Modèle", key: "modele", ph: "ex: iPhone 14 Pro" },
+          { label: "Catégorie *", key: "type_piece", ph: "ex: Batterie" },
+          { label: "Coût fournisseur ($) *", key: "cout_fournisseur", ph: "ex: 25" },
+          { label: "Prix de vente ($)", key: "cout_vente", ph: "ex: 79" },
+          { label: "Fournisseur", key: "fournisseur", ph: "ex: Tan Star Trade" },
+          { label: "Notes", key: "notes", ph: "" },
+        ];
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "2rem", width: 420, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
+              <h3 style={{ color: "#fff", margin: "0 0 1.2rem", fontWeight: 800 }}>Modifier la pièce</h3>
+              {editErr && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>{editErr}</div>}
+              {fields.map(({ label, key, ph }) => (
+                <div key={key} style={{ marginBottom: "0.85rem" }}>
+                  <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+                  <input value={(editForm as any)[key]} placeholder={ph}
+                    onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                    style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
+                <button onClick={submitEditPiece} disabled={saving}
+                  style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
+                  {saving ? "…" : "Enregistrer"}
+                </button>
+                <button onClick={() => setEditPiece(null)}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── MODAL CONFIRMATION SUPPRESSION ── */}
+      {confirmDel && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(255,77,77,0.3)", borderRadius: 10, padding: "2rem", width: 380, maxWidth: "90vw", textAlign: "center" }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.8rem" }}>🗑️</div>
+            <h3 style={{ color: "#fff", margin: "0 0 0.5rem", fontWeight: 800 }}>Supprimer cette pièce ?</h3>
+            <p style={{ color: GRAY, fontSize: "0.9rem", margin: "0 0 1.5rem" }}>
+              <strong style={{ color: "#fff" }}>{confirmDel.type_piece}</strong> — {confirmDel.type_appareil} {confirmDel.modele || ""}
+              <br /><span style={{ color: RED, fontSize: "0.82rem" }}>Cette action est irréversible.</span>
+            </p>
+            <div style={{ display: "flex", gap: "0.8rem" }}>
+              <button onClick={deletePiece}
+                style={{ flex: 1, background: RED, color: "#fff", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: "pointer" }}>
+                Supprimer
+              </button>
+              <button onClick={() => setConfirmDel(null)}
+                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── MODAL MOUVEMENT ── */}
       {modalPiece && (
