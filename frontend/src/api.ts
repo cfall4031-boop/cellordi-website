@@ -163,6 +163,7 @@ export const stockApi = {
   mouvement:       (id: number, body: Record<string, unknown>) => req<any>("POST", `/stock/${id}/mouvement`, body),
   updateSeuil:     (id: number, seuil_alerte: number) => req<any>("PUT", `/stock/${id}`, { seuil_alerte }),
   updateCategorie: (id: number, type_piece: string) => req<any>("PUT", `/stock/${id}`, { type_piece }),
+  updatePhotos:    (id: number, photos: string[]) => req<any>("PUT", `/stock/${id}`, { photos }),
   renameCategorie: (old_name: string, new_name: string) => req<any>("PATCH", "/stock/categorie", { old_name, new_name }),
 };
 

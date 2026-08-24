@@ -231,6 +231,7 @@ try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN piece_detachee INTEGER
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN nb_demandes INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN quantite_stock INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN seuil_alerte INTEGER DEFAULT 3").run(); } catch {}
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN photos TEXT DEFAULT '[]'").run(); } catch {}
 
 // ── TABLE MOUVEMENTS STOCK ───────────────────────────────────────────────────
 db.exec(`

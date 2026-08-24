@@ -4409,6 +4409,7 @@ type Piece = {
   id: number; type_appareil: string; modele: string | null; type_piece: string;
   cout_fournisseur: number; cout_vente: number | null; seuil_alerte: number;
   quantite_calculee: number; total_investi: number; total_revenus: number;
+  photos?: string; // JSON string: string[]
 };
 type Mouvement = {
   id: number; piece_id: number; type: string; quantite: number;
@@ -4432,7 +4433,54 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
 
 function fmt$(n: number) { return n.toLocaleString("fr-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }); }
 
-const EMPTY_NEW_PIECE = { type_appareil: "", modele: "", type_piece: "", cout_fournisseur: "", cout_vente: "", fournisseur: "Tan Star Trade", notes: "" };
+const EMPTY_NEW_PIECE = { type_appareil: "", modele: "", type_piece: "", cout_fournisseur: "", cout_vente: "", fournisseur: "Tan Star Trade", notes: "", photos: [] as string[] };
+
+function PhotoUploadZone({ photos, onAdd, onRemove }: {
+  photos: string[];
+  onAdd: (files: FileList | null) => void;
+  onRemove: (index: number) => void;
+}) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  return (
+    <div style={{ marginBottom: "0.85rem" }}>
+      <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        Photos ({photos.length})
+      </label>
+      {/* Thumbnails */}
+      {photos.length > 0 && (
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
+          {photos.map((src, i) => (
+            <div key={i} style={{ position: "relative", width: 72, height: 72 }}>
+              <img src={src} alt="" onClick={() => setLightbox(src)}
+                style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(255,255,255,0.14)", cursor: "pointer" }} />
+              <button onClick={() => onRemove(i)}
+                style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: RED, border: "none", color: "#fff", fontSize: "0.7rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0 }}>
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Zone de dépôt / bouton upload */}
+      <label style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+        border: "1.5px dashed rgba(109,212,0,0.35)", borderRadius: 8, padding: "0.75rem",
+        cursor: "pointer", color: GREEN, fontSize: "0.82rem", background: "rgba(109,212,0,0.04)",
+      }}>
+        <span>📷</span> Ajouter des photos
+        <input type="file" accept="image/*" multiple style={{ display: "none" }}
+          onChange={e => onAdd(e.target.files)} />
+      </label>
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+          <img src={lightbox} alt="" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 8, boxShadow: "0 0 40px rgba(0,0,0,0.8)" }} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function GestionStock() {
   const [pieces, setPieces]           = useState<Piece[]>([]);
@@ -4490,6 +4538,20 @@ function GestionStock() {
     setSaving(false);
   };
 
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result as string);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+  const addPhotos = async (files: FileList | null, setter: React.Dispatch<React.SetStateAction<typeof EMPTY_NEW_PIECE>>) => {
+    if (!files) return;
+    const b64s = await Promise.all(Array.from(files).map(fileToBase64));
+    setter(f => ({ ...f, photos: [...f.photos, ...b64s] }));
+  };
+
   const submitAddPiece = async () => {
     if (!addModal) return;
     if (!newPiece.type_appareil.trim() || !newPiece.type_piece.trim() || !newPiece.cout_fournisseur) {
@@ -4497,7 +4559,7 @@ function GestionStock() {
     }
     setSaving(true); setAddErr("");
     try {
-      await prixApi.addPiece({
+      const res = await prixApi.addPiece({
         type_appareil:    newPiece.type_appareil.trim(),
         modele:           newPiece.modele.trim() || null,
         type_piece:       newPiece.type_piece.trim(),
@@ -4506,6 +4568,9 @@ function GestionStock() {
         fournisseur:      newPiece.fournisseur.trim() || "Tan Star Trade",
         notes:            newPiece.notes.trim() || null,
       });
+      if (newPiece.photos.length > 0 && res?.id) {
+        await stockApi.updatePhotos(res.id, newPiece.photos);
+      }
       setAddModal(null);
       setNewPiece(EMPTY_NEW_PIECE);
       load();
@@ -4520,6 +4585,8 @@ function GestionStock() {
 
   const openEdit = (p: Piece) => {
     setEditPiece(p);
+    let existingPhotos: string[] = [];
+    try { existingPhotos = JSON.parse(p.photos || "[]"); } catch {}
     setEditForm({
       type_appareil:    p.type_appareil,
       modele:           p.modele || "",
@@ -4528,6 +4595,7 @@ function GestionStock() {
       cout_vente:       p.cout_vente ? String(p.cout_vente) : "",
       fournisseur:      "Tan Star Trade",
       notes:            "",
+      photos:           existingPhotos,
     });
     setEditErr("");
   };
@@ -4548,6 +4616,7 @@ function GestionStock() {
         fournisseur:      editForm.fournisseur.trim() || "Tan Star Trade",
         notes:            editForm.notes.trim() || null,
       });
+      await stockApi.updatePhotos(editPiece.id, editForm.photos);
       setEditPiece(null);
       load();
     } catch { setEditErr("Erreur lors de la modification."); }
@@ -4837,7 +4906,7 @@ function GestionStock() {
         ];
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "2rem", width: 420, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "2rem", width: 440, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
               <h3 style={{ color: "#fff", margin: "0 0 0.2rem", fontWeight: 800 }}>Nouvelle pièce</h3>
               <p style={{ color: GRAY, fontSize: "0.84rem", margin: "0 0 1.2rem" }}>Catégorie : <strong style={{ color: GREEN }}>{addModal.cat}</strong></p>
               {addErr && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>{addErr}</div>}
@@ -4849,12 +4918,18 @@ function GestionStock() {
                     style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
                 </div>
               ))}
+              {/* Zone photos */}
+              <PhotoUploadZone
+                photos={newPiece.photos}
+                onAdd={async files => addPhotos(files, setNewPiece)}
+                onRemove={i => setNewPiece(f => ({ ...f, photos: f.photos.filter((_, idx) => idx !== i) }))}
+              />
               <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
                 <button onClick={submitAddPiece} disabled={saving}
                   style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
                   {saving ? "…" : "Créer la pièce"}
                 </button>
-                <button onClick={() => { setAddModal(null); setAddErr(""); }}
+                <button onClick={() => { setAddModal(null); setAddErr(""); setNewPiece(EMPTY_NEW_PIECE); }}
                   style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer" }}>
                   Annuler
                 </button>
@@ -4877,7 +4952,7 @@ function GestionStock() {
         ];
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "2rem", width: 420, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "2rem", width: 440, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
               <h3 style={{ color: "#fff", margin: "0 0 1.2rem", fontWeight: 800 }}>Modifier la pièce</h3>
               {editErr && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>{editErr}</div>}
               {fields.map(({ label, key, ph }) => (
@@ -4888,6 +4963,12 @@ function GestionStock() {
                     style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
                 </div>
               ))}
+              {/* Zone photos */}
+              <PhotoUploadZone
+                photos={editForm.photos}
+                onAdd={async files => addPhotos(files, setEditForm)}
+                onRemove={i => setEditForm(f => ({ ...f, photos: f.photos.filter((_, idx) => idx !== i) }))}
+              />
               <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
                 <button onClick={submitEditPiece} disabled={saving}
                   style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>

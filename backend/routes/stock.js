@@ -91,7 +91,7 @@ router.post("/:id/mouvement", auth, (req, res) => {
 
 // ── PUT /api/stock/:id — mettre à jour seuil_alerte et/ou type_piece ────────
 router.put("/:id", auth, (req, res) => {
-  const { seuil_alerte, type_piece } = req.body;
+  const { seuil_alerte, type_piece, photos } = req.body;
   const piece = db.prepare("SELECT id FROM pieces_catalogue WHERE id = ?").get(req.params.id);
   if (!piece) return res.status(404).json({ erreur: "Pièce introuvable." });
 
@@ -100,6 +100,10 @@ router.put("/:id", auth, (req, res) => {
   }
   if (type_piece !== undefined && type_piece.trim()) {
     db.prepare("UPDATE pieces_catalogue SET type_piece = ? WHERE id = ?").run(type_piece.trim(), req.params.id);
+  }
+  if (photos !== undefined) {
+    const photosJson = typeof photos === "string" ? photos : JSON.stringify(photos);
+    db.prepare("UPDATE pieces_catalogue SET photos = ? WHERE id = ?").run(photosJson, req.params.id);
   }
   res.json({ message: "Pièce mise à jour." });
 });
