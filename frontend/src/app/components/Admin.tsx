@@ -4435,6 +4435,119 @@ function fmt$(n: number) { return n.toLocaleString("fr-CA", { style: "currency",
 
 const EMPTY_NEW_PIECE = { type_appareil: "", modele: "", type_piece: "", cout_fournisseur: "", cout_vente: "", fournisseur: "Tan Star Trade", notes: "", photos: [] as string[] };
 
+function DetailPieceModal({ piece, badge, photos, mouvements, onClose, onEdit, onMouvement }: {
+  piece: Piece;
+  badge: { label: string; color: string; bg: string };
+  photos: string[];
+  mouvements: Mouvement[];
+  onClose: () => void;
+  onEdit: () => void;
+  onMouvement: () => void;
+}) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const recentMvts = mouvements.slice(0, 8);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, width: 560, maxWidth: "94vw", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+        {/* Header */}
+        <div style={{ padding: "1.4rem 1.6rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ color: GREEN, fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.25rem" }}>{piece.type_piece}</div>
+            <h3 style={{ color: "#fff", margin: 0, fontWeight: 800, fontSize: "1.15rem" }}>
+              {piece.type_appareil}{piece.modele ? ` — ${piece.modele}` : ""}
+            </h3>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <button onClick={onMouvement}
+              style={{ background: GREEN_DIM, border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", cursor: "pointer", fontWeight: 700 }}>
+              + Mouvement
+            </button>
+            <button onClick={onEdit}
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: GRAY, borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", cursor: "pointer" }}>
+              ✎ Modifier
+            </button>
+            <button onClick={onClose}
+              style={{ background: "none", border: "none", color: GRAY, fontSize: "1.3rem", cursor: "pointer", padding: "0 0.2rem" }}>✕</button>
+          </div>
+        </div>
+
+        {/* Corps scrollable */}
+        <div style={{ overflowY: "auto", flex: 1, padding: "1.2rem 1.6rem" }}>
+
+          {/* KPI Stock */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.8rem", marginBottom: "1.2rem" }}>
+            {[
+              { label: "Stock actuel", val: String(piece.quantite_calculee), color: badge.color },
+              { label: "COGS unitaire", val: piece.cout_fournisseur ? fmt$(piece.cout_fournisseur) : "—", color: ORANGE },
+              { label: "Prix de vente", val: piece.cout_vente ? fmt$(piece.cout_vente) : "—", color: BLUE },
+            ].map(({ label, val, color }) => (
+              <div key={label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "0.8rem 1rem" }}>
+                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.3rem" }}>{label}</div>
+                <div style={{ color, fontWeight: 800, fontSize: "1.2rem" }}>{val}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Statut + seuil */}
+          <div style={{ display: "flex", gap: "0.8rem", marginBottom: "1.2rem", flexWrap: "wrap" }}>
+            <span style={{ background: badge.bg, color: badge.color, borderRadius: 5, padding: "0.3rem 0.9rem", fontSize: "0.82rem", fontWeight: 700 }}>{badge.label}</span>
+            <span style={{ background: "rgba(255,255,255,0.05)", color: GRAY, borderRadius: 5, padding: "0.3rem 0.9rem", fontSize: "0.82rem" }}>Seuil : {piece.seuil_alerte}</span>
+            {piece.cout_fournisseur && piece.cout_vente && (
+              <span style={{ background: "rgba(109,212,0,0.08)", color: GREEN, borderRadius: 5, padding: "0.3rem 0.9rem", fontSize: "0.82rem" }}>
+                Marge : {Math.round(((piece.cout_vente - piece.cout_fournisseur) / piece.cout_vente) * 100)}%
+              </span>
+            )}
+          </div>
+
+          {/* Photos */}
+          {photos.length > 0 && (
+            <div style={{ marginBottom: "1.2rem" }}>
+              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.6rem" }}>Photos</div>
+              <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+                {photos.map((src, i) => (
+                  <img key={i} src={src} alt="" onClick={() => setLightbox(src)}
+                    style={{ width: 88, height: 88, objectFit: "cover", borderRadius: 7, border: "1px solid rgba(255,255,255,0.14)", cursor: "zoom-in" }} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mouvements récents */}
+          <div>
+            <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.6rem" }}>
+              Derniers mouvements{recentMvts.length === 0 ? " — aucun" : ""}
+            </div>
+            {recentMvts.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem" }}>
+                {recentMvts.map(m => (
+                  <div key={m.id} style={{ display: "flex", alignItems: "center", gap: "0.7rem", padding: "0.5rem 0.8rem", background: "rgba(255,255,255,0.03)", borderRadius: 7 }}>
+                    <span style={{ color: m.type==="entree" ? GREEN : m.type==="sortie" ? ORANGE : BLUE, fontWeight: 700, fontSize: "0.78rem", textTransform: "capitalize", minWidth: 72 }}>{m.type}</span>
+                    <span style={{ color: "#fff", fontWeight: 700, minWidth: 28 }}>{m.type==="sortie" ? "-" : "+"}{m.quantite}</span>
+                    {m.cout_unitaire > 0 && <span style={{ color: ORANGE, fontSize: "0.78rem" }}>{fmt$(m.cout_unitaire)}/u coût</span>}
+                    {m.prix_unitaire > 0 && <span style={{ color: BLUE, fontSize: "0.78rem" }}>{fmt$(m.prix_unitaire)}/u vente</span>}
+                    {m.notes && <span style={{ color: GRAY_DIM, fontSize: "0.76rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.notes}</span>}
+                    <span style={{ color: GRAY_DIM, fontSize: "0.72rem", marginLeft: "auto", whiteSpace: "nowrap" }}>{new Date(m.created_at).toLocaleDateString("fr-CA")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+          <img src={lightbox} alt="" style={{ maxWidth: "90vw", maxHeight: "90vh", borderRadius: 8 }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PhotoUploadZone({ photos, onAdd, onRemove }: {
   photos: string[];
   onAdd: (files: FileList | null) => void;
@@ -4502,6 +4615,9 @@ function GestionStock() {
   const [newPiece, setNewPiece]       = useState(EMPTY_NEW_PIECE);
   const [addErr, setAddErr]           = useState("");
   const [confirmDel, setConfirmDel]   = useState<Piece | null>(null);
+  // Panneau détail pièce
+  const [detailPiece, setDetailPiece]         = useState<Piece | null>(null);
+  const [detailMovements, setDetailMovements] = useState<Mouvement[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -4537,6 +4653,16 @@ function GestionStock() {
     } catch { setErr("Erreur lors de l'enregistrement."); }
     setSaving(false);
   };
+
+  const openDetail = async (p: Piece) => {
+    setDetailPiece(p);
+    try {
+      const res = await stockApi.mouvements(p.id);
+      setDetailMovements(res.mouvements || []);
+    } catch { setDetailMovements([]); }
+  };
+
+  const toNum = (v: string) => Number(v.replace(",", ".").trim()) || 0;
 
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((res, rej) => {
@@ -4821,7 +4947,10 @@ function GestionStock() {
                       const badge = stockBadge(p);
                       const isRecat = recatPiece?.piece.id === p.id;
                       return (
-                        <tr key={p.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                        <tr key={p.id} onClick={() => openDetail(p)}
+                          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "background 0.12s" }}
+                          onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                           <td style={{ padding: "0.65rem 0.9rem", color: "#fff" }}>{p.type_appareil}</td>
                           <td style={{ padding: "0.65rem 0.9rem", color: GRAY }}>{p.modele || "—"}</td>
                           <td style={{ padding: "0.65rem 0.9rem", color: "#fff", fontWeight: 700 }}>{p.quantite_calculee}</td>
@@ -4830,23 +4959,23 @@ function GestionStock() {
                           </td>
                           <td style={{ padding: "0.65rem 0.9rem", color: ORANGE }}>{p.cout_fournisseur ? fmt$(p.cout_fournisseur) : "—"}</td>
                           <td style={{ padding: "0.65rem 0.9rem", color: BLUE }}>{p.cout_vente ? fmt$(p.cout_vente) : "—"}</td>
-                          <td style={{ padding: "0.65rem 0.9rem" }}>
+                          <td style={{ padding: "0.65rem 0.9rem" }} onClick={e => e.stopPropagation()}>
                             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
-                              <button onClick={() => { setModalPiece(p); setForm({ type: "entree", quantite: "", cout_unitaire: String(p.cout_fournisseur || ""), prix_unitaire: String(p.cout_vente || ""), notes: "" }); }}
+                              <button onClick={e => { e.stopPropagation(); setModalPiece(p); setForm({ type: "entree", quantite: "", cout_unitaire: String(p.cout_fournisseur || ""), prix_unitaire: String(p.cout_vente || ""), notes: "" }); }}
                                 style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer", whiteSpace: "nowrap" }}>
                                 + Mouvement
                               </button>
-                              <button onClick={() => openHistory(p)}
+                              <button onClick={e => { e.stopPropagation(); openHistory(p); }}
                                 style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: BLUE, borderRadius: 5, padding: "0.25rem 0.6rem", fontSize: "0.76rem", cursor: "pointer" }}>
                                 Historique
                               </button>
                               {/* Modifier */}
-                              <button title="Modifier la pièce" onClick={() => openEdit(p)}
+                              <button title="Modifier la pièce" onClick={e => { e.stopPropagation(); openEdit(p); }}
                                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: GRAY, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
                                 ✎ Modifier
                               </button>
                               {/* Supprimer */}
-                              <button title="Supprimer la pièce" onClick={() => setConfirmDel(p)}
+                              <button title="Supprimer la pièce" onClick={e => { e.stopPropagation(); setConfirmDel(p); }}
                                 style={{ background: "rgba(255,77,77,0.1)", border: "1px solid rgba(255,77,77,0.3)", color: RED, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
                                 ✕
                               </button>
@@ -4892,6 +5021,19 @@ function GestionStock() {
           </table>
         </div>
       </div>
+
+      {/* ── PANNEAU DÉTAIL PIÈCE ── */}
+      {detailPiece && (
+        <DetailPieceModal
+          piece={detailPiece}
+          badge={stockBadge(detailPiece)}
+          photos={(() => { try { return JSON.parse(detailPiece.photos || "[]"); } catch { return []; } })()}
+          mouvements={detailMovements}
+          onClose={() => setDetailPiece(null)}
+          onEdit={() => { setDetailPiece(null); openEdit(detailPiece); }}
+          onMouvement={() => { setDetailPiece(null); setModalPiece(detailPiece); setForm({ type: "entree", quantite: "", cout_unitaire: String(detailPiece.cout_fournisseur || ""), prix_unitaire: String(detailPiece.cout_vente || ""), notes: "" }); }}
+        />
+      )}
 
       {/* ── MODAL AJOUT PIÈCE ── */}
       {addModal && (() => {
