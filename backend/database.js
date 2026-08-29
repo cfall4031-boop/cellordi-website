@@ -247,6 +247,35 @@ db.exec(`
   );
 `);
 
+// ── NOTES ADMIN ──────────────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notes_admin (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    titre      TEXT    NOT NULL DEFAULT 'Note sans titre',
+    contenu    TEXT    DEFAULT '',
+    couleur    TEXT    DEFAULT '#1e3a5f',
+    epingled   INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+// ── REGISTRE FINANCIER ────────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS registre_financier (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    type           TEXT    NOT NULL CHECK(type IN ('pret','emprunt','autre')),
+    personne       TEXT    NOT NULL,
+    description    TEXT    DEFAULT '',
+    montant        REAL    NOT NULL,
+    date_echeance  TEXT,
+    statut         TEXT    DEFAULT 'actif' CHECK(statut IN ('actif','rembourse','annule')),
+    notes          TEXT    DEFAULT '',
+    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (

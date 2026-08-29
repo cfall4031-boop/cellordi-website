@@ -155,6 +155,22 @@ export const prixApi = {
     req<any>("GET", "/prix/calculer" + toQuery(params)),
 };
 
+// ── NOTES ADMIN ─────────────────────────────────────────────
+export const notesApi = {
+  getAll:  () => req<{ notes: any[] }>("GET", "/notes"),
+  create:  (data: Record<string, unknown>) => req<{ message: string; id: number }>("POST", "/notes", data),
+  update:  (id: number, data: Record<string, unknown>) => req<{ message: string }>("PATCH", `/notes/${id}`, data),
+  delete:  (id: number) => req<{ message: string }>("DELETE", `/notes/${id}`),
+};
+
+// ── REGISTRE FINANCIER ───────────────────────────────────────
+export const registreApi = {
+  getAll:  () => req<{ entrees: any[]; stats: any }>("GET", "/registre"),
+  create:  (data: Record<string, unknown>) => req<{ message: string; id: number }>("POST", "/registre", data),
+  update:  (id: number, data: Record<string, unknown>) => req<{ message: string }>("PATCH", `/registre/${id}`, data),
+  delete:  (id: number) => req<{ message: string }>("DELETE", `/registre/${id}`),
+};
+
 // ── GESTION DE STOCK ────────────────────────────────────────
 export const stockApi = {
   list:        () => req<any>("GET", "/stock"),

@@ -4,7 +4,7 @@ import {
 } from "recharts";
 import {
   authApi, rdvApi, ticketsApi, clientsApi,
-  messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, setToken, removeToken, getToken
+  messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, notesApi, registreApi, setToken, removeToken, getToken
 } from "../../api";
 
 // ── MOBILE CONTEXT ───────────────────────────────────────────
@@ -219,6 +219,8 @@ const NAV_ITEMS = [
   { id:"decharges", icon:"📋", label:"Décharges"       },
   { id:"calculateur", icon:"🧮", label:"Calculateur"   },
   { id:"stock",       icon:"📦", label:"Stock"          },
+  { id:"notes",       icon:"📝", label:"Notes"          },
+  { id:"registre",    icon:"💰", label:"Registre"       },
 ];
 
 // ── Helpers pour push notifications ──────────────────────────
@@ -4409,6 +4411,7 @@ type Piece = {
   id: number; type_appareil: string; modele: string | null; type_piece: string;
   cout_fournisseur: number; cout_vente: number | null; seuil_alerte: number;
   quantite_calculee: number; total_investi: number; total_revenus: number;
+  fournisseur?: string | null; notes?: string | null;
   photos?: string; // JSON string: string[]
 };
 type Mouvement = {
@@ -4719,8 +4722,8 @@ function GestionStock() {
       type_piece:       p.type_piece,
       cout_fournisseur: String(p.cout_fournisseur || ""),
       cout_vente:       p.cout_vente ? String(p.cout_vente) : "",
-      fournisseur:      "Tan Star Trade",
-      notes:            "",
+      fournisseur:      p.fournisseur || "Tan Star Trade",
+      notes:            p.notes || "",
       photos:           existingPhotos,
     });
     setEditErr("");
@@ -5235,6 +5238,411 @@ function GestionStock() {
   );
 }
 
+// ── CARNET DE NOTES ──────────────────────────────────────────
+const NOTE_COLORS = ["#1e3a5f","#2d4a22","#4a2020","#3a2d4a","#1a3a3a","#3a3520"];
+const NOTE_COLOR_LABELS = ["Bleu","Vert","Rouge","Mauve","Sarcelle","Or"];
+
+type Note = { id: number; titre: string; contenu: string; couleur: string; epingled: number; created_at: string; updated_at: string };
+
+function CarnetNotes() {
+  const [notes, setNotes]         = useState<Note[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [modal, setModal]         = useState<Partial<Note> | null>(null);
+  const [saving, setSaving]       = useState(false);
+  const [delId, setDelId]         = useState<number | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { const r = await notesApi.getAll(); setNotes(r.notes || []); } catch {}
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const openNew = () => setModal({ titre: "", contenu: "", couleur: NOTE_COLORS[0], epingled: 0 });
+  const openEdit = (n: Note) => setModal({ ...n });
+
+  const save = async () => {
+    if (!modal) return;
+    setSaving(true);
+    try {
+      if (modal.id) {
+        await notesApi.update(modal.id, { titre: modal.titre, contenu: modal.contenu, couleur: modal.couleur, epingled: modal.epingled });
+      } else {
+        await notesApi.create({ titre: modal.titre, contenu: modal.contenu, couleur: modal.couleur, epingled: modal.epingled });
+      }
+      setModal(null); load();
+    } catch {}
+    setSaving(false);
+  };
+
+  const togglePin = async (n: Note) => {
+    await notesApi.update(n.id, { epingled: n.epingled ? 0 : 1 });
+    load();
+  };
+
+  const del = async () => {
+    if (!delId) return;
+    await notesApi.delete(delId);
+    setDelId(null); load();
+  };
+
+  if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
+
+  return (
+    <div style={{ padding: "1.5rem", maxWidth: 1100 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+        <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.4rem", margin: 0 }}>📝 Notes</h2>
+        <button onClick={openNew}
+          style={{ marginLeft: "auto", background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.5rem 1.1rem", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer" }}>
+          + Nouvelle note
+        </button>
+      </div>
+
+      {notes.length === 0 ? (
+        <div style={{ textAlign: "center", color: GRAY_DIM, padding: "4rem 0" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "0.8rem" }}>📝</div>
+          <div>Aucune note pour l'instant. Créez-en une !</div>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
+          {notes.map(n => (
+            <div key={n.id} onClick={() => openEdit(n)}
+              style={{ background: n.couleur, borderRadius: 10, padding: "1.2rem 1.3rem", cursor: "pointer", position: "relative", minHeight: 140, transition: "transform 0.1s, box-shadow 0.1s", boxShadow: n.epingled ? `0 0 0 2px ${GREEN}` : "0 2px 12px rgba(0,0,0,0.3)" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 24px rgba(0,0,0,0.4)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = n.epingled ? `0 0 0 2px ${GREEN}` : "0 2px 12px rgba(0,0,0,0.3)"; }}>
+              {/* Titre */}
+              <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "#fff", marginBottom: "0.6rem", paddingRight: "2.5rem", wordBreak: "break-word" }}>{n.titre || "Sans titre"}</div>
+              {/* Contenu */}
+              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.84rem", lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: 120, overflow: "hidden" }}>{n.contenu}</div>
+              {/* Date */}
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", marginTop: "0.8rem" }}>
+                {new Date(n.updated_at).toLocaleDateString("fr-CA", { day: "numeric", month: "short", year: "numeric" })}
+              </div>
+              {/* Boutons */}
+              <div style={{ position: "absolute", top: "0.7rem", right: "0.7rem", display: "flex", gap: "0.3rem" }}>
+                <button onClick={e => { e.stopPropagation(); togglePin(n); }} title={n.epingled ? "Désépingler" : "Épingler"}
+                  style={{ background: "rgba(0,0,0,0.25)", border: "none", borderRadius: 5, color: n.epingled ? GREEN : "rgba(255,255,255,0.5)", cursor: "pointer", padding: "0.2rem 0.35rem", fontSize: "0.8rem" }}>
+                  📌
+                </button>
+                <button onClick={e => { e.stopPropagation(); setDelId(n.id); }} title="Supprimer"
+                  style={{ background: "rgba(0,0,0,0.25)", border: "none", borderRadius: 5, color: "rgba(255,100,100,0.8)", cursor: "pointer", padding: "0.2rem 0.35rem", fontSize: "0.8rem" }}>
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal édition */}
+      {modal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: modal.couleur || NAVY_MID, border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "1.8rem", width: 480, maxWidth: "92vw" }}>
+            <input value={modal.titre || ""} onChange={e => setModal(m => m ? { ...m, titre: e.target.value } : m)}
+              placeholder="Titre de la note…"
+              style={{ width: "100%", background: "rgba(0,0,0,0.25)", border: "none", borderBottom: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: "1.1rem", fontWeight: 800, padding: "0.4rem 0", marginBottom: "1rem", outline: "none", boxSizing: "border-box" }} />
+            <textarea value={modal.contenu || ""} onChange={e => setModal(m => m ? { ...m, contenu: e.target.value } : m)}
+              placeholder="Écrivez votre note ici…" rows={8}
+              style={{ width: "100%", background: "rgba(0,0,0,0.18)", border: "none", color: "rgba(255,255,255,0.9)", fontSize: "0.9rem", lineHeight: 1.6, padding: "0.6rem", borderRadius: 6, outline: "none", resize: "vertical", boxSizing: "border-box", marginBottom: "1rem" }} />
+            {/* Couleurs */}
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.2rem", alignItems: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>Couleur :</span>
+              {NOTE_COLORS.map((c, i) => (
+                <button key={c} onClick={() => setModal(m => m ? { ...m, couleur: c } : m)}
+                  title={NOTE_COLOR_LABELS[i]}
+                  style={{ width: 22, height: 22, borderRadius: "50%", background: c, border: modal.couleur === c ? "2px solid #fff" : "2px solid transparent", cursor: "pointer", padding: 0 }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "0.7rem" }}>
+              <button onClick={save} disabled={saving}
+                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.65rem", fontWeight: 800, cursor: saving ? "wait" : "pointer" }}>
+                {saving ? "…" : modal.id ? "Enregistrer" : "Créer"}
+              </button>
+              <button onClick={() => setModal(null)}
+                style={{ flex: 1, background: "rgba(0,0,0,0.3)", color: "rgba(255,255,255,0.8)", border: "none", borderRadius: 7, padding: "0.65rem", fontWeight: 700, cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation suppression */}
+      {delId && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(255,77,77,0.3)", borderRadius: 10, padding: "2rem", width: 340, textAlign: "center" }}>
+            <div style={{ fontSize: "2rem", marginBottom: "0.8rem" }}>🗑️</div>
+            <p style={{ color: "#fff", marginBottom: "1.5rem" }}>Supprimer cette note définitivement ?</p>
+            <div style={{ display: "flex", gap: "0.8rem" }}>
+              <button onClick={del} style={{ flex: 1, background: RED, color: "#fff", border: "none", borderRadius: 7, padding: "0.65rem", fontWeight: 800, cursor: "pointer" }}>Supprimer</button>
+              <button onClick={() => setDelId(null)} style={{ flex: 1, background: "rgba(255,255,255,0.07)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.65rem", fontWeight: 700, cursor: "pointer" }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── REGISTRE FINANCIER ────────────────────────────────────────
+type EntreeRegistre = {
+  id: number; type: string; personne: string; description: string;
+  montant: number; date_echeance: string | null; statut: string; notes: string; created_at: string;
+};
+type StatsRegistre = { total_prete: number; total_emprunte: number; total_rembourse_pret: number; total_rembourse_emprunt: number };
+
+const EMPTY_ENTREE = { type: "pret", personne: "", description: "", montant: "", date_echeance: "", notes: "" };
+
+function RegistreFinancier() {
+  const [entrees, setEntrees]     = useState<EntreeRegistre[]>([]);
+  const [stats, setStats]         = useState<StatsRegistre | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [modal, setModal]         = useState(false);
+  const [form, setForm]           = useState(EMPTY_ENTREE);
+  const [saving, setSaving]       = useState(false);
+  const [detailId, setDetailId]   = useState<number | null>(null);
+  const [editNotes, setEditNotes] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { const r = await registreApi.getAll(); setEntrees(r.entrees || []); setStats(r.stats || null); } catch {}
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const submit = async () => {
+    if (!form.personne.trim() || !form.montant) return;
+    setSaving(true);
+    try {
+      await registreApi.create({
+        type:          form.type,
+        personne:      form.personne.trim(),
+        description:   form.description.trim(),
+        montant:       Number(String(form.montant).replace(",", ".")),
+        date_echeance: form.date_echeance || null,
+        notes:         form.notes.trim(),
+      });
+      setModal(false); setForm(EMPTY_ENTREE); load();
+    } catch {}
+    setSaving(false);
+  };
+
+  const changeStatut = async (id: number, statut: string) => {
+    await registreApi.update(id, { statut });
+    load();
+  };
+
+  const saveNotes = async (id: number) => {
+    await registreApi.update(id, { notes: editNotes });
+    setDetailId(null); load();
+  };
+
+  const del = async (id: number) => {
+    if (!window.confirm("Supprimer cette entrée ?")) return;
+    await registreApi.delete(id);
+    load();
+  };
+
+  const actives    = entrees.filter(e => e.statut === "actif");
+  const archivees  = entrees.filter(e => e.statut !== "actif");
+
+  const statutBadge = (s: string) => {
+    if (s === "actif")     return { label: "Actif",      color: ORANGE, bg: "rgba(245,158,11,0.15)" };
+    if (s === "rembourse") return { label: "Remboursé",  color: GREEN,  bg: GREEN_DIM };
+    return                        { label: "Annulé",     color: GRAY,   bg: "rgba(255,255,255,0.06)" };
+  };
+  const typeBadge = (t: string) => {
+    if (t === "pret")    return { label: "Prêt",    color: BLUE,   bg: "rgba(56,189,248,0.12)" };
+    if (t === "emprunt") return { label: "Emprunt", color: ORANGE, bg: "rgba(245,158,11,0.12)" };
+    return                      { label: "Autre",   color: GRAY,   bg: "rgba(255,255,255,0.06)" };
+  };
+
+  if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
+
+  return (
+    <div style={{ padding: "1.5rem", maxWidth: 960 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+        <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.4rem", margin: 0 }}>💰 Registre financier</h2>
+        <button onClick={() => setModal(true)}
+          style={{ marginLeft: "auto", background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.5rem 1.1rem", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer" }}>
+          + Nouvelle entrée
+        </button>
+      </div>
+
+      {/* KPIs */}
+      {stats && (
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+          {[
+            { label: "Total prêté (actif)",     val: fmt$(stats.total_prete),              color: BLUE   },
+            { label: "Total emprunté (actif)",  val: fmt$(stats.total_emprunte),           color: ORANGE },
+            { label: "Solde net",               val: fmt$(stats.total_prete - stats.total_emprunte), color: (stats.total_prete - stats.total_emprunte) >= 0 ? GREEN : RED },
+            { label: "Remboursements reçus",    val: fmt$(stats.total_rembourse_pret),     color: GRAY   },
+          ].map(({ label, val, color }) => (
+            <div key={label} style={{ background: NAVY_MID, border: `1px solid ${color}33`, borderRadius: 8, padding: "1rem 1.4rem", flex: 1, minWidth: 160 }}>
+              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.3rem" }}>{label}</div>
+              <div style={{ color, fontWeight: 800, fontSize: "1.5rem" }}>{val}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Entrées actives */}
+      {actives.length === 0 && archivees.length === 0 ? (
+        <div style={{ textAlign: "center", color: GRAY_DIM, padding: "4rem 0" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "0.8rem" }}>💰</div>
+          <div>Aucune entrée. Commencez par enregistrer un prêt ou un emprunt.</div>
+        </div>
+      ) : (
+        <>
+          {actives.length > 0 && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>Actifs ({actives.length})</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {actives.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+              </div>
+            </div>
+          )}
+          {archivees.length > 0 && (
+            <div>
+              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>Archivés ({archivees.length})</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", opacity: 0.6 }}>
+                {archivees.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Modal nouvelle entrée */}
+      {modal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "2rem", width: 440, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
+            <h3 style={{ color: "#fff", margin: "0 0 1.3rem", fontWeight: 800 }}>Nouvelle entrée</h3>
+            {/* Type */}
+            <div style={{ marginBottom: "0.9rem" }}>
+              <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Type *</label>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                {[["pret","Prêt (j'ai prêté)"],["emprunt","Emprunt (j'ai emprunté)"],["autre","Autre"]].map(([v, lbl]) => (
+                  <button key={v} onClick={() => setForm(f => ({ ...f, type: v }))}
+                    style={{ flex: 1, background: form.type === v ? (v === "pret" ? "rgba(56,189,248,0.2)" : v === "emprunt" ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.05)", border: `1px solid ${form.type === v ? (v === "pret" ? BLUE : v === "emprunt" ? ORANGE : GRAY) : "rgba(255,255,255,0.12)"}`, color: form.type === v ? "#fff" : GRAY, borderRadius: 6, padding: "0.5rem 0.3rem", fontSize: "0.78rem", cursor: "pointer", fontWeight: form.type === v ? 700 : 400 }}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {[
+              { label: "Personne / Organisation *", key: "personne", ph: "ex: Jean Tremblay" },
+              { label: "Description", key: "description", ph: "ex: Prêt pour réparation iPhone" },
+              { label: "Montant ($) *", key: "montant", ph: "ex: 250" },
+              { label: "Date d'échéance", key: "date_echeance", ph: "", type: "date" },
+              { label: "Notes", key: "notes", ph: "" },
+            ].map(({ label, key, ph, type }) => (
+              <div key={key} style={{ marginBottom: "0.9rem" }}>
+                <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+                <input type={type || "text"} value={(form as any)[key]} placeholder={ph}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box", colorScheme: "dark" }} />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
+              <button onClick={submit} disabled={saving}
+                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
+                {saving ? "…" : "Enregistrer"}
+              </button>
+              <button onClick={() => { setModal(false); setForm(EMPTY_ENTREE); }}
+                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal notes */}
+      {detailId !== null && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "1.8rem", width: 400, maxWidth: "92vw" }}>
+            <h3 style={{ color: "#fff", margin: "0 0 1rem", fontWeight: 800 }}>Notes internes</h3>
+            <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={6}
+              placeholder="Ajoutez des notes sur cette entrée…"
+              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.6rem 0.7rem", fontSize: "0.88rem", resize: "vertical", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: "0.8rem", marginTop: "1rem" }}>
+              <button onClick={() => saveNotes(detailId)}
+                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.65rem", fontWeight: 800, cursor: "pointer" }}>
+                Enregistrer
+              </button>
+              <button onClick={() => setDetailId(null)}
+                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.65rem", fontWeight: 700, cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel }: {
+  e: EntreeRegistre;
+  typeBadge: (t: string) => { label: string; color: string; bg: string };
+  statutBadge: (s: string) => { label: string; color: string; bg: string };
+  onStatut: (id: number, s: string) => void;
+  onEdit: () => void;
+  onDel: (id: number) => void;
+}) {
+  const tb = typeBadge(e.type);
+  const sb = statutBadge(e.statut);
+  return (
+    <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "1rem 1.2rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
+      {/* Badges */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 80 }}>
+        <span style={{ background: tb.bg, color: tb.color, borderRadius: 5, padding: "0.2rem 0.6rem", fontSize: "0.76rem", fontWeight: 700, textAlign: "center" }}>{tb.label}</span>
+        <span style={{ background: sb.bg, color: sb.color, borderRadius: 5, padding: "0.2rem 0.6rem", fontSize: "0.72rem", textAlign: "center" }}>{sb.label}</span>
+      </div>
+      {/* Infos */}
+      <div style={{ flex: 1, minWidth: 160 }}>
+        <div style={{ color: "#fff", fontWeight: 800, fontSize: "0.95rem" }}>{e.personne}</div>
+        {e.description && <div style={{ color: GRAY, fontSize: "0.82rem", marginTop: "0.15rem" }}>{e.description}</div>}
+        {e.notes && <div style={{ color: GRAY_DIM, fontSize: "0.78rem", fontStyle: "italic", marginTop: "0.25rem" }}>{e.notes}</div>}
+        <div style={{ color: GRAY_DIM, fontSize: "0.72rem", marginTop: "0.4rem" }}>
+          {new Date(e.created_at).toLocaleDateString("fr-CA")}
+          {e.date_echeance && <> · Échéance : <span style={{ color: ORANGE }}>{e.date_echeance}</span></>}
+        </div>
+      </div>
+      {/* Montant */}
+      <div style={{ color: e.type === "pret" ? BLUE : ORANGE, fontWeight: 900, fontSize: "1.25rem", minWidth: 90, textAlign: "right" }}>
+        {e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
+      </div>
+      {/* Actions */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 110 }}>
+        {e.statut === "actif" && (
+          <button onClick={() => onStatut(e.id, "rembourse")}
+            style={{ background: GREEN_DIM, border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>
+            ✓ Remboursé
+          </button>
+        )}
+        {e.statut === "actif" && (
+          <button onClick={() => onStatut(e.id, "annule")}
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: GRAY, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>
+            Annuler
+          </button>
+        )}
+        <button onClick={onEdit}
+          style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)", color: BLUE, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>
+          ✎ Notes
+        </button>
+        <button onClick={() => onDel(e.id)}
+          style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", color: RED, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>
+          ✕ Suppr.
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── APP ───────────────────────────────────────────────────────
 export default function Admin() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -5291,6 +5699,8 @@ export default function Admin() {
     decharges: <Decharges/>,
     calculateur: <Calculateur/>,
     stock:     <GestionStock/>,
+    notes:     <CarnetNotes/>,
+    registre:  <RegistreFinancier/>,
   };
 
   if (checking) return (
