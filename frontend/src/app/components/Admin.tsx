@@ -5401,6 +5401,7 @@ function RegistreFinancier() {
   const [modal, setModal]         = useState(false);
   const [form, setForm]           = useState(EMPTY_ENTREE);
   const [saving, setSaving]       = useState(false);
+  const [erreur, setErreur]       = useState("");
   const [detailId, setDetailId]   = useState<number | null>(null);
   const [editNotes, setEditNotes] = useState("");
 
@@ -5413,7 +5414,11 @@ function RegistreFinancier() {
   useEffect(() => { load(); }, [load]);
 
   const submit = async () => {
-    if (!form.personne.trim() || !form.montant) return;
+    setErreur("");
+    if (!form.personne.trim() || !form.montant) {
+      setErreur("Personne et montant sont requis.");
+      return;
+    }
     setSaving(true);
     try {
       await registreApi.create({
@@ -5425,7 +5430,9 @@ function RegistreFinancier() {
         notes:         form.notes.trim(),
       });
       setModal(false); setForm(EMPTY_ENTREE); load();
-    } catch {}
+    } catch (e: any) {
+      setErreur(e?.message || "Impossible de contacter le serveur. Vérifiez que le backend est actif.");
+    }
     setSaving(false);
   };
 
@@ -5546,12 +5553,17 @@ function RegistreFinancier() {
                   style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box", colorScheme: "dark" }} />
               </div>
             ))}
-            <div style={{ display: "flex", gap: "0.8rem", marginTop: "1.2rem" }}>
+            {erreur && (
+              <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 7, padding: "0.6rem 0.9rem", color: RED, fontSize: "0.83rem", marginBottom: "0.8rem" }}>
+                ⚠ {erreur}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "0.8rem", marginTop: "0.4rem" }}>
               <button onClick={submit} disabled={saving}
                 style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
-                {saving ? "…" : "Enregistrer"}
+                {saving ? "Envoi…" : "Enregistrer"}
               </button>
-              <button onClick={() => { setModal(false); setForm(EMPTY_ENTREE); }}
+              <button onClick={() => { setModal(false); setForm(EMPTY_ENTREE); setErreur(""); }}
                 style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
                 Annuler
               </button>
