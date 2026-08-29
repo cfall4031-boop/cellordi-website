@@ -5452,7 +5452,9 @@ function RegistreFinancier() {
     load();
   };
 
-  const actives    = entrees.filter(e => e.statut === "actif");
+  const prets      = entrees.filter(e => e.statut === "actif" && e.type === "pret");
+  const dettes     = entrees.filter(e => e.statut === "actif" && e.type === "emprunt");
+  const autres     = entrees.filter(e => e.statut === "actif" && e.type === "autre");
   const archivees  = entrees.filter(e => e.statut !== "actif");
 
   const statutBadge = (s: string) => {
@@ -5461,9 +5463,9 @@ function RegistreFinancier() {
     return                        { label: "Annulé",     color: GRAY,   bg: "rgba(255,255,255,0.06)" };
   };
   const typeBadge = (t: string) => {
-    if (t === "pret")    return { label: "Prêt",    color: BLUE,   bg: "rgba(56,189,248,0.12)" };
-    if (t === "emprunt") return { label: "Emprunt", color: ORANGE, bg: "rgba(245,158,11,0.12)" };
-    return                      { label: "Autre",   color: GRAY,   bg: "rgba(255,255,255,0.06)" };
+    if (t === "pret")    return { label: "Prêt",   color: BLUE,   bg: "rgba(56,189,248,0.12)" };
+    if (t === "emprunt") return { label: "Dette",  color: RED,    bg: "rgba(255,77,77,0.12)" };
+    return                      { label: "Autre",  color: GRAY,   bg: "rgba(255,255,255,0.06)" };
   };
 
   if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
@@ -5483,7 +5485,7 @@ function RegistreFinancier() {
         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
           {[
             { label: "Total prêté (actif)",     val: fmt$(stats.total_prete),              color: BLUE   },
-            { label: "Total emprunté (actif)",  val: fmt$(stats.total_emprunte),           color: ORANGE },
+            { label: "Total dettes (actif)",     val: fmt$(stats.total_emprunte),           color: RED    },
             { label: "Solde net",               val: fmt$(stats.total_prete - stats.total_emprunte), color: (stats.total_prete - stats.total_emprunte) >= 0 ? GREEN : RED },
             { label: "Remboursements reçus",    val: fmt$(stats.total_rembourse_pret),     color: GRAY   },
           ].map(({ label, val, color }) => (
@@ -5495,26 +5497,60 @@ function RegistreFinancier() {
         </div>
       )}
 
-      {/* Entrées actives */}
-      {actives.length === 0 && archivees.length === 0 ? (
+      {/* Sections */}
+      {prets.length === 0 && dettes.length === 0 && autres.length === 0 && archivees.length === 0 ? (
         <div style={{ textAlign: "center", color: GRAY_DIM, padding: "4rem 0" }}>
           <div style={{ fontSize: "3rem", marginBottom: "0.8rem" }}>💰</div>
-          <div>Aucune entrée. Commencez par enregistrer un prêt ou un emprunt.</div>
+          <div>Aucune entrée. Commencez par enregistrer un prêt ou une dette.</div>
         </div>
       ) : (
         <>
-          {actives.length > 0 && (
+          {/* PRÊTS */}
+          {prets.length > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>Actifs ({actives.length})</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
+                <span style={{ color: BLUE, fontSize: "0.8rem" }}>💸</span>
+                <span style={{ color: BLUE, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Prêts actifs</span>
+                <span style={{ background: "rgba(56,189,248,0.12)", color: BLUE, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{prets.length}</span>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {actives.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+                {prets.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
               </div>
             </div>
           )}
+
+          {/* DETTES */}
+          {dettes.length > 0 && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
+                <span style={{ color: RED, fontSize: "0.8rem" }}>📋</span>
+                <span style={{ color: RED, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Dettes (emprunts)</span>
+                <span style={{ background: "rgba(255,77,77,0.12)", color: RED, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{dettes.length}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {dettes.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+              </div>
+            </div>
+          )}
+
+          {/* AUTRES */}
+          {autres.length > 0 && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
+                <span style={{ color: GRAY, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Autres actifs</span>
+                <span style={{ background: "rgba(255,255,255,0.07)", color: GRAY, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{autres.length}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {autres.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+              </div>
+            </div>
+          )}
+
+          {/* ARCHIVÉS */}
           {archivees.length > 0 && (
             <div>
               <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>Archivés ({archivees.length})</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", opacity: 0.6 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", opacity: 0.55 }}>
                 {archivees.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
               </div>
             </div>
@@ -5531,7 +5567,7 @@ function RegistreFinancier() {
             <div style={{ marginBottom: "0.9rem" }}>
               <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Type *</label>
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                {[["pret","Prêt (j'ai prêté)"],["emprunt","Emprunt (j'ai emprunté)"],["autre","Autre"]].map(([v, lbl]) => (
+                {[["pret","Prêt (j'ai prêté)"],["emprunt","Dette / Emprunt"],["autre","Autre"]].map(([v, lbl]) => (
                   <button key={v} onClick={() => setForm(f => ({ ...f, type: v }))}
                     style={{ flex: 1, background: form.type === v ? (v === "pret" ? "rgba(56,189,248,0.2)" : v === "emprunt" ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.05)", border: `1px solid ${form.type === v ? (v === "pret" ? BLUE : v === "emprunt" ? ORANGE : GRAY) : "rgba(255,255,255,0.12)"}`, color: form.type === v ? "#fff" : GRAY, borderRadius: 6, padding: "0.5rem 0.3rem", fontSize: "0.78rem", cursor: "pointer", fontWeight: form.type === v ? 700 : 400 }}>
                     {lbl}
