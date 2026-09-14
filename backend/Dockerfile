@@ -1,4 +1,4 @@
-FROM node:18-bullseye-slim
+FROM node:18-bookworm-slim
 
 # Outils de compilation requis pour better-sqlite3 (module natif)
 RUN apt-get update && apt-get install -y \
