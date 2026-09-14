@@ -276,6 +276,17 @@ db.exec(`
   );
 `);
 
+// ── VERSEMENTS DU REGISTRE FINANCIER ─────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS versements_registre (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    entree_id  INTEGER NOT NULL REFERENCES registre_financier(id) ON DELETE CASCADE,
+    montant    REAL    NOT NULL,
+    notes      TEXT    DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (

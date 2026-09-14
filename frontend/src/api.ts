@@ -165,10 +165,15 @@ export const notesApi = {
 
 // ── REGISTRE FINANCIER ───────────────────────────────────────
 export const registreApi = {
-  getAll:  () => req<{ entrees: any[]; stats: any }>("GET", "/registre"),
-  create:  (data: Record<string, unknown>) => req<{ message: string; id: number }>("POST", "/registre", data),
-  update:  (id: number, data: Record<string, unknown>) => req<{ message: string }>("PATCH", `/registre/${id}`, data),
-  delete:  (id: number) => req<{ message: string }>("DELETE", `/registre/${id}`),
+  getAll:         () => req<{ entrees: any[]; stats: any }>("GET", "/registre"),
+  create:         (data: Record<string, unknown>) => req<{ message: string; id: number }>("POST", "/registre", data),
+  update:         (id: number, data: Record<string, unknown>) => req<{ message: string }>("PATCH", `/registre/${id}`, data),
+  delete:         (id: number) => req<{ message: string }>("DELETE", `/registre/${id}`),
+  getVersements:  (id: number) => req<{ versements: any[] }>("GET", `/registre/${id}/versements`),
+  addVersement:   (id: number, data: { montant: number; notes?: string }) =>
+    req<{ message: string; total_paye: number }>("POST", `/registre/${id}/versement`, data),
+  deleteVersement:(entreeId: number, vid: number) =>
+    req<{ message: string }>("DELETE", `/registre/${entreeId}/versement/${vid}`),
 };
 
 // ── GESTION DE STOCK ────────────────────────────────────────

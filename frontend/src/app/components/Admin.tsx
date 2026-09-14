@@ -5388,7 +5388,7 @@ function CarnetNotes() {
 // ── REGISTRE FINANCIER ────────────────────────────────────────
 type EntreeRegistre = {
   id: number; type: string; personne: string; description: string;
-  montant: number; date_echeance: string | null; statut: string; notes: string; created_at: string;
+  montant: number; montant_paye: number; date_echeance: string | null; statut: string; notes: string; created_at: string;
 };
 type StatsRegistre = { total_prete: number; total_emprunte: number; total_rembourse_pret: number; total_rembourse_emprunt: number };
 
@@ -5400,10 +5400,15 @@ function RegistreFinancier() {
   const [loading, setLoading]     = useState(true);
   const [modal, setModal]         = useState(false);
   const [form, setForm]           = useState(EMPTY_ENTREE);
-  const [saving, setSaving]       = useState(false);
-  const [erreur, setErreur]       = useState("");
-  const [detailId, setDetailId]   = useState<number | null>(null);
-  const [editNotes, setEditNotes] = useState("");
+  const [saving, setSaving]             = useState(false);
+  const [erreur, setErreur]             = useState("");
+  const [detailId, setDetailId]         = useState<number | null>(null);
+  const [editNotes, setEditNotes]       = useState("");
+  const [versementModal, setVersementModal]   = useState<EntreeRegistre | null>(null);
+  const [versementMontant, setVersementMontant] = useState("");
+  const [versementNotes, setVersementNotes]   = useState("");
+  const [versementSaving, setVersementSaving] = useState(false);
+  const [versementErreur, setVersementErreur] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -5439,6 +5444,23 @@ function RegistreFinancier() {
   const changeStatut = async (id: number, statut: string) => {
     await registreApi.update(id, { statut });
     load();
+  };
+
+  const submitVersement = async () => {
+    if (!versementModal || !versementMontant.trim()) return;
+    setVersementSaving(true);
+    setVersementErreur("");
+    try {
+      const montant = Number(versementMontant.replace(",", "."));
+      if (!montant || montant <= 0) throw new Error("Montant invalide.");
+      await registreApi.addVersement(versementModal.id, { montant, notes: versementNotes.trim() });
+      setVersementModal(null);
+      setVersementMontant(""); setVersementNotes("");
+      load();
+    } catch (e: any) {
+      setVersementErreur(e?.message || "Erreur lors de l'enregistrement.");
+    }
+    setVersementSaving(false);
   };
 
   const saveNotes = async (id: number) => {
@@ -5514,7 +5536,7 @@ function RegistreFinancier() {
                 <span style={{ background: "rgba(56,189,248,0.12)", color: BLUE, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{prets.length}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {prets.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+                {prets.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
@@ -5528,7 +5550,7 @@ function RegistreFinancier() {
                 <span style={{ background: "rgba(255,77,77,0.12)", color: RED, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{dettes.length}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {dettes.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+                {dettes.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
@@ -5541,7 +5563,7 @@ function RegistreFinancier() {
                 <span style={{ background: "rgba(255,255,255,0.07)", color: GRAY, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{autres.length}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {autres.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+                {autres.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
@@ -5551,7 +5573,7 @@ function RegistreFinancier() {
             <div>
               <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>Archivés ({archivees.length})</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", opacity: 0.55 }}>
-                {archivees.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} />)}
+                {archivees.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
@@ -5629,20 +5651,79 @@ function RegistreFinancier() {
           </div>
         </div>
       )}
+
+      {/* Modal versement */}
+      {versementModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(109,212,0,0.2)", borderRadius: 12, padding: "1.8rem", width: 400, maxWidth: "92vw" }}>
+            <h3 style={{ color: "#fff", margin: "0 0 0.3rem", fontWeight: 800 }}>💳 Versement</h3>
+            <div style={{ color: GRAY, fontSize: "0.82rem", marginBottom: "1.2rem" }}>{versementModal.personne}</div>
+
+            {/* Récapitulatif */}
+            <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 7, padding: "0.75rem 1rem", marginBottom: "1.1rem", display: "flex", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Total</div>
+                <div style={{ color: "#fff", fontWeight: 800 }}>{fmt$(versementModal.montant)}</div>
+              </div>
+              <div>
+                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Déjà payé</div>
+                <div style={{ color: GREEN, fontWeight: 800 }}>{fmt$(versementModal.montant_paye || 0)}</div>
+              </div>
+              <div>
+                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Restant</div>
+                <div style={{ color: RED, fontWeight: 800 }}>{fmt$(versementModal.montant - (versementModal.montant_paye || 0))}</div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "0.9rem" }}>
+              <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Montant du versement *</label>
+              <input type="text" value={versementMontant} onChange={e => setVersementMontant(e.target.value)}
+                placeholder={`ex: ${fmt$(versementModal.montant - (versementModal.montant_paye || 0))}`}
+                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.5rem 0.7rem", fontSize: "0.9rem", boxSizing: "border-box" }} />
+            </div>
+            <div style={{ marginBottom: "0.9rem" }}>
+              <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Note (optionnel)</label>
+              <input type="text" value={versementNotes} onChange={e => setVersementNotes(e.target.value)}
+                placeholder="ex: virement e-Transfer du 12 sept"
+                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.5rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
+            </div>
+            {versementErreur && (
+              <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 6, padding: "0.5rem 0.8rem", color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>
+                ⚠ {versementErreur}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "0.8rem" }}>
+              <button onClick={submitVersement} disabled={versementSaving}
+                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, cursor: versementSaving ? "wait" : "pointer" }}>
+                {versementSaving ? "Envoi…" : "Enregistrer"}
+              </button>
+              <button onClick={() => { setVersementModal(null); setVersementMontant(""); setVersementNotes(""); setVersementErreur(""); }}
+                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel }: {
+function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVersement }: {
   e: EntreeRegistre;
   typeBadge: (t: string) => { label: string; color: string; bg: string };
   statutBadge: (s: string) => { label: string; color: string; bg: string };
   onStatut: (id: number, s: string) => void;
   onEdit: () => void;
   onDel: (id: number) => void;
+  onVersement: (e: EntreeRegistre) => void;
 }) {
   const tb = typeBadge(e.type);
   const sb = statutBadge(e.statut);
+  const paye = e.montant_paye || 0;
+  const restant = Math.max(0, e.montant - paye);
+  const pct = e.montant > 0 ? Math.min(100, (paye / e.montant) * 100) : 0;
+
   return (
     <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "1rem 1.2rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
       {/* Badges */}
@@ -5659,16 +5740,41 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel }: {
           {new Date(e.created_at).toLocaleDateString("fr-CA")}
           {e.date_echeance && <> · Échéance : <span style={{ color: ORANGE }}>{e.date_echeance}</span></>}
         </div>
+        {/* Barre de progression versements */}
+        {e.statut === "actif" && paye > 0 && (
+          <div style={{ marginTop: "0.6rem" }}>
+            <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 6, overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, background: pct >= 100 ? GREEN : BLUE, height: "100%", borderRadius: 4, transition: "width 0.4s" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.25rem" }}>
+              <span style={{ color: GREEN, fontSize: "0.7rem" }}>✓ Payé : {fmt$(paye)}</span>
+              {restant > 0 && <span style={{ color: RED, fontSize: "0.7rem" }}>Restant : {fmt$(restant)}</span>}
+            </div>
+          </div>
+        )}
       </div>
       {/* Montant */}
-      <div style={{ color: e.type === "pret" ? BLUE : ORANGE, fontWeight: 900, fontSize: "1.25rem", minWidth: 90, textAlign: "right" }}>
-        {e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
+      <div style={{ textAlign: "right", minWidth: 90 }}>
+        <div style={{ color: e.type === "pret" ? BLUE : RED, fontWeight: 900, fontSize: "1.25rem" }}>
+          {e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
+        </div>
+        {e.statut === "actif" && restant > 0 && restant < e.montant && (
+          <div style={{ color: GRAY_DIM, fontSize: "0.7rem", marginTop: "0.15rem" }}>
+            {Math.round(pct)}% payé
+          </div>
+        )}
       </div>
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 110 }}>
         {e.statut === "actif" && (
+          <button onClick={() => onVersement(e)}
+            style={{ background: "rgba(109,212,0,0.15)", border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>
+            💳 Versement
+          </button>
+        )}
+        {e.statut === "actif" && (
           <button onClick={() => onStatut(e.id, "rembourse")}
-            style={{ background: GREEN_DIM, border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>
+            style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 600 }}>
             ✓ Remboursé
           </button>
         )}
