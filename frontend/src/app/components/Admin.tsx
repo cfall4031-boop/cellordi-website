@@ -5741,7 +5741,7 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
           {e.date_echeance && <> · Échéance : <span style={{ color: ORANGE }}>{e.date_echeance}</span></>}
         </div>
         {/* Barre de progression versements */}
-        {e.statut === "actif" && paye > 0 && (
+        {paye > 0 && (
           <div style={{ marginTop: "0.6rem" }}>
             <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 6, overflow: "hidden" }}>
               <div style={{ width: `${pct}%`, background: pct >= 100 ? GREEN : BLUE, height: "100%", borderRadius: 4, transition: "width 0.4s" }} />
@@ -5758,7 +5758,7 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
         <div style={{ color: e.type === "pret" ? BLUE : RED, fontWeight: 900, fontSize: "1.25rem" }}>
           {e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
         </div>
-        {e.statut === "actif" && restant > 0 && restant < e.montant && (
+        {paye > 0 && restant < e.montant && (
           <div style={{ color: GRAY_DIM, fontSize: "0.7rem", marginTop: "0.15rem" }}>
             {Math.round(pct)}% payé
           </div>
