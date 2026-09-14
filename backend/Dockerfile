@@ -1,7 +1,7 @@
-FROM node:18-bullseye-slim
+FROM node:20-bookworm-slim
 
 # Outils de compilation requis pour better-sqlite3 (module natif)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
     g++ \
