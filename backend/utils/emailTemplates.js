@@ -109,26 +109,90 @@ function rdvClient({ prenom, nom, email, telephone, type_appareil, date_rdv, heu
     <!-- Détails du RDV -->
     <div style="background:#0e2040;padding:4px 0;margin-bottom:24px;">
       <div style="padding:12px 16px;font-size:12px;font-weight:700;color:#6dd400;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid rgba(109,212,0,0.15);">
-        Détails de votre demande
+        Détails de votre rendez-vous
       </div>
       <table style="width:100%;border-collapse:collapse;">
         ${detail("Nom complet", `${prenom} ${nom}`)}
         ${detail("Courriel", email)}
         ${detail("Téléphone", telephone)}
         ${detail("Appareil", type_appareil)}
-        ${detail("Date souhaitée", date_rdv)}
-        ${detail("Heure souhaitée", heure || "À confirmer")}
+        ${detail("Date", date_rdv)}
+        ${detail("Heure", heure || "À confirmer")}
         ${description ? detail("Description", description) : ""}
       </table>
     </div>
 
+    <!-- Déroulement du rendez-vous -->
+    <div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;color:#6dd400;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(109,212,0,0.2);">
+        📋 Déroulement de votre visite
+      </div>
+
+      <!-- Étape 1 -->
+      <div style="display:flex;align-items:flex-start;margin-bottom:14px;">
+        <div style="min-width:32px;height:32px;background:#6dd400;color:#0b1c35;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;line-height:32px;text-align:center;">1</div>
+        <div>
+          <div style="color:#ffffff;font-weight:700;font-size:14px;margin-bottom:2px;">Appel de confirmation du technicien</div>
+          <div style="color:#a8b8d0;font-size:13px;line-height:1.6;">
+            Un technicien vous appellera avant votre rendez-vous pour confirmer votre présence et répondre à vos questions préliminaires.
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div style="display:flex;align-items:flex-start;margin-bottom:14px;">
+        <div style="min-width:32px;height:32px;background:#6dd400;color:#0b1c35;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;line-height:32px;text-align:center;">2</div>
+        <div>
+          <div style="color:#ffffff;font-weight:700;font-size:14px;margin-bottom:2px;">Enregistrement de l'appareil</div>
+          <div style="color:#a8b8d0;font-size:13px;line-height:1.6;">
+            À votre arrivée, nous enregistrons votre appareil et vous faites signer une <strong style="color:#ffffff;">décharge de réparation</strong> qui consigne l'état de l'appareil, les réparations à effectuer et les conditions de service. Ce document vous est remis en copie.
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 3 -->
+      <div style="display:flex;align-items:flex-start;margin-bottom:14px;">
+        <div style="min-width:32px;height:32px;background:#6dd400;color:#0b1c35;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;line-height:32px;text-align:center;">3</div>
+        <div>
+          <div style="color:#ffffff;font-weight:700;font-size:14px;margin-bottom:2px;">Diagnostic &amp; réparation</div>
+          <div style="color:#a8b8d0;font-size:13px;line-height:1.6;">
+            Notre technicien effectue un diagnostic complet et vous tient informé de l'avancement. Vous pouvez suivre l'état de votre réparation en ligne avec votre numéro de suivi.
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 4 -->
+      <div style="display:flex;align-items:flex-start;">
+        <div style="min-width:32px;height:32px;background:#6dd400;color:#0b1c35;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0;line-height:32px;text-align:center;">4</div>
+        <div>
+          <div style="color:#ffffff;font-weight:700;font-size:14px;margin-bottom:2px;">Remise de l'appareil</div>
+          <div style="color:#a8b8d0;font-size:13px;line-height:1.6;">
+            Nous vous contactons dès que la réparation est terminée. Vous récupérez votre appareil réparé et testé.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avertissement annulation -->
+    <div style="background:#f59e0b18;border:1px solid #f59e0b55;border-left:4px solid #f59e0b;padding:14px 16px;margin-bottom:24px;">
+      <div style="color:#f59e0b;font-weight:700;font-size:13px;margin-bottom:6px;">⚠️ Annulation ou report</div>
+      <div style="color:#a8b8d0;font-size:13px;line-height:1.6;">
+        Si vous devez annuler ou reporter votre rendez-vous, veuillez nous appeler
+        <strong style="color:#ffffff;">au moins 1 heure à l'avance</strong> au
+        <strong style="color:#f59e0b;">(514) 237-5792</strong>.
+        Sans avertissement, votre créneau pourrait être réalloué.
+      </div>
+    </div>
+
     ${numero_ticket ? btnVert("Suivre ma réparation →", `${SITE_URL}/#suivi`) : ""}
 
+    <!-- Adresse et contact -->
     <div style="background:rgba(109,212,0,0.06);border-left:3px solid #6dd400;padding:14px 16px;margin-top:24px;">
-      <p style="color:#a8b8d0;font-size:13px;line-height:1.6;margin:0;">
-        <strong style="color:#6dd400;">📍 Adresse :</strong> 5050 QC-132 #203, Sainte-Catherine, QC.<br/>
-        N'oubliez pas d'apporter votre appareil et son chargeur.
-        Pour toute question, appelez-nous au <strong style="color:#6dd400;">(514) 237-5792</strong>.
+      <p style="color:#a8b8d0;font-size:13px;line-height:1.8;margin:0;">
+        <strong style="color:#6dd400;">📍 Adresse :</strong> 5050 QC-132 #203, Sainte-Catherine, QC<br/>
+        <strong style="color:#6dd400;">📞 Téléphone :</strong> (514) 237-5792<br/>
+        <strong style="color:#6dd400;">🕐 Heures :</strong> Lun–Ven 10h–19h &nbsp;|&nbsp; Sam 11h–19h<br/><br/>
+        N'oubliez pas d'apporter votre appareil, son chargeur et tout accessoire pertinent.
       </p>
     </div>
   `;
