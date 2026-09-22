@@ -85,12 +85,20 @@ router.post("/", (req, res) => {
 
   // ── SMS de confirmation client (fire-and-forget, si téléphone fourni) ────────
   if (telephone) {
-    const ticketTxt = numero_ticket ? ` | Ticket: ${numero_ticket}` : "";
-    const dateTxt   = date_rdv ? ` | ${date_rdv}` : "";
-    const heureTxt  = heure ? ` à ${heure}` : "";
+    const dateTxt  = date_rdv ? date_rdv : "";
+    const heureTxt = heure ? ` à ${heure}` : "";
+    const ticketTxt = numero_ticket ? `\nTicket: ${numero_ticket}` : "";
     sendSMS({
       to: telephone,
-      message: `Réparation CeLL&Ordi ✅ RDV confirmé!${ticketTxt}${dateTxt}${heureTxt}. Appareil: ${type_appareil}. Nous vous attendons! 📍5050 QC-132 #203, Ste-Catherine. Questions? (514) 237-5792`,
+      message: `✅ CeLL&Ordi — RDV confirmé, ${prenom}!`
+        + `\n📅 ${dateTxt}${heureTxt} | ${type_appareil}`
+        + ticketTxt
+        + `\n\n📋 Déroulement :`
+        + `\n• Un technicien vous appellera pour confirmer`
+        + `\n• Apportez votre appareil + chargeur`
+        + `\n• Décharge signée à l'arrivée`
+        + `\n\n⚠️ Annulation : appelez-nous au moins 1h avant au (514) 237-5792`
+        + `\n📍 5050 QC-132 #203, Ste-Catherine`,
     }).catch(console.error);
   }
 
