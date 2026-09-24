@@ -287,6 +287,22 @@ db.exec(`
   );
 `);
 
+// ── CALENDRIER FACTURES ───────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS factures_calendrier (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    titre         TEXT    NOT NULL,
+    montant       REAL,
+    type_facture  TEXT    NOT NULL DEFAULT 'autre',
+    date_echeance TEXT    NOT NULL,
+    statut        TEXT    NOT NULL DEFAULT 'en_attente',
+    recurrence    TEXT    DEFAULT 'aucune',
+    notes         TEXT    DEFAULT '',
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (

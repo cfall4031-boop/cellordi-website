@@ -176,6 +176,18 @@ export const registreApi = {
     req<{ message: string }>("DELETE", `/registre/${entreeId}/versement/${vid}`),
 };
 
+// ── CALENDRIER FACTURES ─────────────────────────────────────
+export const facturesApi = {
+  getAll:  (params: Record<string, string> = {}) =>
+    req<{ factures: any[] }>("GET", "/factures" + toQuery(params)),
+  create:  (data: Record<string, unknown>) =>
+    req<{ message: string; id: number }>("POST", "/factures", data),
+  update:  (id: number, data: Record<string, unknown>) =>
+    req<{ message: string }>("PATCH", `/factures/${id}`, data),
+  delete:  (id: number) =>
+    req<{ message: string }>("DELETE", `/factures/${id}`),
+};
+
 // ── GESTION DE STOCK ────────────────────────────────────────
 export const stockApi = {
   list:        () => req<any>("GET", "/stock"),

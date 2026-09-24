@@ -4,7 +4,7 @@ import {
 } from "recharts";
 import {
   authApi, rdvApi, ticketsApi, clientsApi,
-  messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, notesApi, registreApi, setToken, removeToken, getToken
+  messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, notesApi, registreApi, facturesApi, setToken, removeToken, getToken
 } from "../../api";
 
 // ── MOBILE CONTEXT ───────────────────────────────────────────
@@ -221,6 +221,7 @@ const NAV_ITEMS = [
   { id:"stock",       icon:"📦", label:"Stock"          },
   { id:"notes",       icon:"📝", label:"Notes"          },
   { id:"registre",    icon:"💰", label:"Registre"       },
+  { id:"factures",    icon:"🧾", label:"Factures"       },
 ];
 
 // ── Helpers pour push notifications ──────────────────────────
@@ -5797,6 +5798,383 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
   );
 }
 
+// ── CALENDRIER FACTURES ───────────────────────────────────────
+type Facture = {
+  id: number; titre: string; montant: number | null;
+  type_facture: string; date_echeance: string;
+  statut: string; recurrence: string; notes: string;
+};
+
+const FACTURE_TYPES: { value: string; label: string; color: string }[] = [
+  { value: "carte_credit",  label: "Carte de crédit",  color: "#FF8C00" },
+  { value: "marge_credit",  label: "Marge de crédit",  color: "#8B5CF6" },
+  { value: "dette",         label: "Dette",             color: "#EF4444" },
+  { value: "abonnement",    label: "Abonnement",        color: "#3B82F6" },
+  { value: "loyer",         label: "Loyer / Utilités",  color: "#14B8A6" },
+  { value: "autre",         label: "Autre",             color: "#6B7280" },
+];
+
+const RECURRENCES = [
+  { value: "aucune",       label: "Aucune (une fois)" },
+  { value: "hebdomadaire", label: "Hebdomadaire"      },
+  { value: "mensuelle",    label: "Mensuelle"          },
+  { value: "annuelle",     label: "Annuelle"           },
+];
+
+function factureColor(type: string) {
+  return FACTURE_TYPES.find(t => t.value === type)?.color ?? "#6B7280";
+}
+function factureLabel(type: string) {
+  return FACTURE_TYPES.find(t => t.value === type)?.label ?? "Autre";
+}
+
+const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+
+function CalendrierFactures() {
+  const today = new Date();
+  const [year,  setYear]  = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth()); // 0-indexed
+  const [factures, setFactures] = useState<Facture[]>([]);
+  const [loading,  setLoading]  = useState(false);
+
+  // Modal
+  const [modal, setModal] = useState<Facture | null | "new">(null);
+  const [fTitre,      setFTitre]      = useState("");
+  const [fMontant,    setFMontant]    = useState("");
+  const [fType,       setFType]       = useState("carte_credit");
+  const [fDate,       setFDate]       = useState("");
+  const [fRec,        setFRec]        = useState("aucune");
+  const [fNotes,      setFNotes]      = useState("");
+  const [fSaving,     setFSaving]     = useState(false);
+  const [fErreur,     setFErreur]     = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { factures: data } = await facturesApi.getAll({
+        mois: String(month + 1),
+        annee: String(year),
+      });
+      setFactures(data);
+    } catch {}
+    setLoading(false);
+  }, [month, year]);
+
+  useEffect(() => { load(); }, [load]);
+
+  function prevMonth() {
+    if (month === 0) { setMonth(11); setYear(y => y - 1); }
+    else setMonth(m => m - 1);
+  }
+  function nextMonth() {
+    if (month === 11) { setMonth(0); setYear(y => y + 1); }
+    else setMonth(m => m + 1);
+  }
+
+  function openNew(dateStr?: string) {
+    setModal("new");
+    setFTitre(""); setFMontant(""); setFType("carte_credit");
+    setFDate(dateStr || ""); setFRec("aucune"); setFNotes(""); setFErreur("");
+  }
+  function openEdit(f: Facture) {
+    setModal(f);
+    setFTitre(f.titre); setFMontant(f.montant != null ? String(f.montant) : "");
+    setFType(f.type_facture); setFDate(f.date_echeance);
+    setFRec(f.recurrence); setFNotes(f.notes); setFErreur("");
+  }
+
+  async function saveFacture() {
+    if (!fTitre.trim() || !fDate) { setFErreur("Titre et date requis."); return; }
+    setFSaving(true); setFErreur("");
+    try {
+      const payload = {
+        titre: fTitre.trim(),
+        montant: fMontant ? Number(fMontant.replace(",", ".")) : null,
+        type_facture: fType,
+        date_echeance: fDate,
+        recurrence: fRec,
+        notes: fNotes.trim(),
+      };
+      if (modal === "new") {
+        await facturesApi.create(payload);
+      } else {
+        await facturesApi.update((modal as Facture).id, payload);
+      }
+      setModal(null);
+      load();
+    } catch (e: any) {
+      setFErreur(e?.message || "Erreur");
+    }
+    setFSaving(false);
+  }
+
+  async function togglePaye(f: Facture) {
+    try {
+      await facturesApi.update(f.id, { statut: f.statut === "paye" ? "en_attente" : "paye" });
+      load();
+    } catch {}
+  }
+
+  async function deleteFacture() {
+    if (!modal || modal === "new") return;
+    if (!confirm(`Supprimer "${(modal as Facture).titre}" ?`)) return;
+    setFSaving(true);
+    try { await facturesApi.delete((modal as Facture).id); setModal(null); load(); } catch {}
+    setFSaving(false);
+  }
+
+  // Calendrier — grille du mois
+  const firstDay = new Date(year, month, 1).getDay(); // 0=dim
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startOffset = (firstDay + 6) % 7; // lundi=0
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+
+  // Map date → factures
+  const byDate: Record<string, Facture[]> = {};
+  for (const f of factures) {
+    const d = f.date_echeance;
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(f);
+  }
+
+  function getStatutDisplay(f: Facture): { label: string; color: string } {
+    if (f.statut === "paye") return { label: "Payé ✓", color: GREEN };
+    const isLate = f.date_echeance < todayStr;
+    if (isLate) return { label: "En retard", color: RED };
+    return { label: "À venir", color: ORANGE };
+  }
+
+  const totalMois = factures.reduce((s, f) => s + (f.montant ?? 0), 0);
+  const totalPaye = factures.filter(f => f.statut === "paye").reduce((s, f) => s + (f.montant ?? 0), 0);
+  const totalRestant = factures.filter(f => f.statut !== "paye").reduce((s, f) => s + (f.montant ?? 0), 0);
+
+  const cell: React.CSSProperties = {
+    minHeight: 90, padding: "0.25rem", border: "1px solid rgba(255,255,255,0.07)",
+    verticalAlign: "top", position: "relative",
+  };
+  const dayLabel: React.CSSProperties = {
+    fontSize: "0.72rem", color: GRAY, marginBottom: "0.25rem", display: "block",
+  };
+
+  return (
+    <div style={{ padding: "1.5rem", maxWidth: 1100, margin: "0 auto" }}>
+      {/* En-tête */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"1.5rem", flexWrap:"wrap", gap:"0.5rem" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
+          <button onClick={prevMonth} style={{ background:"rgba(255,255,255,0.08)", border:"none", color:"#fff", borderRadius:6, padding:"0.4rem 0.8rem", cursor:"pointer", fontSize:"1.1rem" }}>‹</button>
+          <h2 style={{ margin:0, fontSize:"1.4rem", fontWeight:700, color:"#fff" }}>
+            {MONTHS_FR[month]} {year}
+          </h2>
+          <button onClick={nextMonth} style={{ background:"rgba(255,255,255,0.08)", border:"none", color:"#fff", borderRadius:6, padding:"0.4rem 0.8rem", cursor:"pointer", fontSize:"1.1rem" }}>›</button>
+        </div>
+        <button onClick={() => openNew()} style={{ background:GREEN, border:"none", color:"#fff", borderRadius:8, padding:"0.5rem 1.2rem", cursor:"pointer", fontWeight:600, fontSize:"0.95rem" }}>
+          + Facture
+        </button>
+      </div>
+
+      {/* KPIs */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"0.75rem", marginBottom:"1.5rem" }}>
+        {[
+          { label:"Total du mois", value:fmt$(totalMois),    color:BLUE   },
+          { label:"Payé",          value:fmt$(totalPaye),    color:GREEN  },
+          { label:"Restant",       value:fmt$(totalRestant), color:totalRestant > 0 ? ORANGE : GREEN },
+        ].map(k => (
+          <div key={k.label} style={{ background:NAVY_MID, borderRadius:10, padding:"0.75rem 1rem", borderLeft:`3px solid ${k.color}` }}>
+            <div style={{ fontSize:"0.72rem", color:GRAY, textTransform:"uppercase", letterSpacing:1, marginBottom:"0.2rem" }}>{k.label}</div>
+            <div style={{ fontSize:"1.25rem", fontWeight:700, color:k.color }}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Légende types */}
+      <div style={{ display:"flex", gap:"0.5rem", flexWrap:"wrap", marginBottom:"1rem" }}>
+        {FACTURE_TYPES.map(t => (
+          <span key={t.value} style={{ fontSize:"0.72rem", padding:"0.15rem 0.6rem", borderRadius:20, background:`${t.color}22`, color:t.color, border:`1px solid ${t.color}44` }}>
+            {t.label}
+          </span>
+        ))}
+      </div>
+
+      {/* Grille calendrier */}
+      {loading ? (
+        <div style={{ textAlign:"center", color:GRAY, padding:"2rem" }}>Chargement…</div>
+      ) : (
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", tableLayout:"fixed" }}>
+            <thead>
+              <tr>
+                {["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(d => (
+                  <th key={d} style={{ padding:"0.4rem", fontSize:"0.75rem", color:GRAY, fontWeight:600, borderBottom:"1px solid rgba(255,255,255,0.1)", textAlign:"center" }}>{d}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: Math.ceil((startOffset + daysInMonth) / 7) }, (_, row) => (
+                <tr key={row}>
+                  {Array.from({ length: 7 }, (_, col) => {
+                    const dayNum = row * 7 + col - startOffset + 1;
+                    if (dayNum < 1 || dayNum > daysInMonth) {
+                      return <td key={col} style={{ ...cell, background:"rgba(0,0,0,0.15)" }} />;
+                    }
+                    const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(dayNum).padStart(2,"0")}`;
+                    const isToday = dateStr === todayStr;
+                    const dayFacts = byDate[dateStr] || [];
+                    return (
+                      <td key={col} style={{ ...cell, background: isToday ? "rgba(109,212,0,0.05)" : "transparent", cursor:"pointer" }}
+                        onClick={() => openNew(dateStr)}>
+                        <span style={{ ...dayLabel, color: isToday ? GREEN : GRAY, fontWeight: isToday ? 700 : 400 }}>
+                          {dayNum}
+                        </span>
+                        {dayFacts.map(f => {
+                          const col = factureColor(f.type_facture);
+                          const isPaye = f.statut === "paye";
+                          const isLate = !isPaye && f.date_echeance < todayStr;
+                          return (
+                            <div key={f.id}
+                              onClick={e => { e.stopPropagation(); openEdit(f); }}
+                              style={{ background:`${col}22`, border:`1px solid ${col}55`, borderRadius:4, padding:"0.15rem 0.3rem", marginBottom:2, cursor:"pointer",
+                                opacity: isPaye ? 0.5 : 1, textDecoration: isPaye ? "line-through" : "none" }}>
+                              <div style={{ fontSize:"0.65rem", color: isLate ? RED : col, fontWeight:600, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>
+                                {isLate ? "⚠️ " : ""}{f.titre}
+                              </div>
+                              {f.montant != null && (
+                                <div style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.5)" }}>{fmt$(f.montant)}</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Liste du mois */}
+      <div style={{ marginTop:"2rem" }}>
+        <h3 style={{ color:"#fff", fontSize:"1rem", fontWeight:600, marginBottom:"0.75rem" }}>
+          Factures — {MONTHS_FR[month]} {year} ({factures.length})
+        </h3>
+        {factures.length === 0 ? (
+          <div style={{ color:GRAY, textAlign:"center", padding:"1.5rem", background:NAVY_MID, borderRadius:10 }}>
+            Aucune facture ce mois-ci.
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:"0.5rem" }}>
+            {factures.map(f => {
+              const { label: sLabel, color: sColor } = getStatutDisplay(f);
+              const tColor = factureColor(f.type_facture);
+              return (
+                <div key={f.id} style={{ background:NAVY_MID, borderRadius:10, padding:"0.75rem 1rem", display:"flex", alignItems:"center", gap:"0.75rem", flexWrap:"wrap" }}>
+                  <button onClick={() => togglePaye(f)} title={f.statut === "paye" ? "Marquer non payé" : "Marquer payé"}
+                    style={{ background: f.statut === "paye" ? GREEN : "rgba(255,255,255,0.1)", border:"none", borderRadius:"50%", width:28, height:28,
+                      color: f.statut === "paye" ? "#fff" : GRAY, cursor:"pointer", fontSize:"0.9rem", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    ✓
+                  </button>
+                  <div style={{ width:4, height:36, borderRadius:2, background:tColor, flexShrink:0 }} />
+                  <div style={{ flex:1, minWidth:120 }}>
+                    <div style={{ color:"#fff", fontWeight:600, fontSize:"0.9rem", textDecoration: f.statut === "paye" ? "line-through" : "none" }}>{f.titre}</div>
+                    <div style={{ fontSize:"0.72rem", color:GRAY }}>
+                      {factureLabel(f.type_facture)} · {f.date_echeance}
+                      {f.recurrence !== "aucune" && <span style={{ marginLeft:"0.4rem", color:BLUE }}>↺ {RECURRENCES.find(r=>r.value===f.recurrence)?.label}</span>}
+                    </div>
+                  </div>
+                  {f.montant != null && (
+                    <div style={{ color:"#fff", fontWeight:700, fontSize:"1rem", textAlign:"right" }}>{fmt$(f.montant)}</div>
+                  )}
+                  <span style={{ fontSize:"0.72rem", padding:"0.2rem 0.6rem", borderRadius:20, background:`${sColor}22`, color:sColor, border:`1px solid ${sColor}44` }}>{sLabel}</span>
+                  <button onClick={() => openEdit(f)} style={{ background:"rgba(255,255,255,0.08)", border:"none", color:GRAY, borderRadius:6, padding:"0.3rem 0.6rem", cursor:"pointer" }}>✏️</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Modal ajout / édition */}
+      {modal !== null && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, padding:"1rem" }}
+          onClick={() => setModal(null)}>
+          <div style={{ background:"#0e2040", borderRadius:14, padding:"1.5rem", width:"100%", maxWidth:480, boxShadow:"0 8px 32px rgba(0,0,0,0.5)" }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin:"0 0 1rem", color:"#fff", fontSize:"1.1rem" }}>
+              {modal === "new" ? "➕ Nouvelle facture" : `✏️ Modifier — ${(modal as Facture).titre}`}
+            </h3>
+
+            <label style={{ display:"block", marginBottom:"0.75rem" }}>
+              <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Titre *</div>
+              <input value={fTitre} onChange={e => setFTitre(e.target.value)} placeholder="ex: Visa Desjardins"
+                style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"rgba(255,255,255,0.08)", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }} />
+            </label>
+
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0.75rem", marginBottom:"0.75rem" }}>
+              <label>
+                <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Montant ($)</div>
+                <input value={fMontant} onChange={e => setFMontant(e.target.value)} placeholder="0.00" type="number" min="0" step="0.01"
+                  style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"rgba(255,255,255,0.08)", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }} />
+              </label>
+              <label>
+                <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Date d'échéance *</div>
+                <input value={fDate} onChange={e => setFDate(e.target.value)} type="date"
+                  style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"rgba(255,255,255,0.08)", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }} />
+              </label>
+            </div>
+
+            <label style={{ display:"block", marginBottom:"0.75rem" }}>
+              <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Type de facture</div>
+              <select value={fType} onChange={e => setFType(e.target.value)}
+                style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"#0b1c35", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }}>
+                {FACTURE_TYPES.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label style={{ display:"block", marginBottom:"0.75rem" }}>
+              <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Récurrence</div>
+              <select value={fRec} onChange={e => setFRec(e.target.value)}
+                style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"#0b1c35", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }}>
+                {RECURRENCES.map(r => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <label style={{ display:"block", marginBottom:"1rem" }}>
+              <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Notes</div>
+              <textarea value={fNotes} onChange={e => setFNotes(e.target.value)} rows={2} placeholder="Optionnel…"
+                style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"rgba(255,255,255,0.08)", color:"#fff", fontSize:"0.9rem", resize:"vertical", boxSizing:"border-box" }} />
+            </label>
+
+            {fErreur && <div style={{ color:RED, fontSize:"0.85rem", marginBottom:"0.75rem" }}>{fErreur}</div>}
+
+            <div style={{ display:"flex", gap:"0.5rem", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", gap:"0.5rem" }}>
+                {modal !== "new" && (
+                  <button onClick={deleteFacture} disabled={fSaving}
+                    style={{ padding:"0.55rem 1rem", borderRadius:8, background:"rgba(255,77,77,0.15)", border:"1px solid rgba(255,77,77,0.3)", color:RED, cursor:"pointer", fontWeight:600 }}>
+                    Supprimer
+                  </button>
+                )}
+              </div>
+              <div style={{ display:"flex", gap:"0.5rem" }}>
+                <button onClick={() => setModal(null)} style={{ padding:"0.55rem 1rem", borderRadius:8, background:"rgba(255,255,255,0.08)", border:"none", color:GRAY, cursor:"pointer" }}>Annuler</button>
+                <button onClick={saveFacture} disabled={fSaving}
+                  style={{ padding:"0.55rem 1.2rem", borderRadius:8, background:GREEN, border:"none", color:"#fff", cursor:"pointer", fontWeight:600 }}>
+                  {fSaving ? "…" : modal === "new" ? "Créer" : "Enregistrer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── APP ───────────────────────────────────────────────────────
 export default function Admin() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -5855,6 +6233,7 @@ export default function Admin() {
     stock:     <GestionStock/>,
     notes:     <CarnetNotes/>,
     registre:  <RegistreFinancier/>,
+    factures:  <CalendrierFactures/>,
   };
 
   if (checking) return (
