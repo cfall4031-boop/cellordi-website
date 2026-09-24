@@ -4651,14 +4651,14 @@ function GestionStock() {
   const [detailPiece, setDetailPiece]         = useState<Piece | null>(null);
   const [detailMovements, setDetailMovements] = useState<Mouvement[]>([]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [lRes, sRes] = await Promise.all([stockApi.list(), stockApi.stats()]);
       setPieces(lRes.pieces || []);
       setStats(sRes);
     } catch { /* backend down */ }
-    setLoading(false);
+    if (!silent) setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -4681,7 +4681,7 @@ function GestionStock() {
       });
       setModalPiece(null);
       setForm({ type: "entree", quantite: "", cout_unitaire: "", prix_unitaire: "", notes: "" });
-      load();
+      load(true);
     } catch { setErr("Erreur lors de l'enregistrement."); }
     setSaving(false);
   };
@@ -4731,7 +4731,7 @@ function GestionStock() {
       }
       setAddModal(null);
       setNewPiece(EMPTY_NEW_PIECE);
-      load();
+      load(true);
     } catch { setAddErr("Erreur lors de la création."); }
     setSaving(false);
   };
@@ -4776,14 +4776,14 @@ function GestionStock() {
       });
       await stockApi.updatePhotos(editPiece.id, editForm.photos);
       setEditPiece(null);
-      load();
+      load(true);
     } catch { setEditErr("Erreur lors de la modification."); }
     setSaving(false);
   };
 
   const deletePiece = async () => {
     if (!confirmDel) return;
-    try { await prixApi.deletePiece(confirmDel.id); load(); }
+    try { await prixApi.deletePiece(confirmDel.id); load(true); }
     catch { /* ignore */ }
     setConfirmDel(null);
   };
@@ -4791,7 +4791,7 @@ function GestionStock() {
   const saveRenameCategorie = async () => {
     if (!renamingCat || !renamingCat.val.trim()) return;
     if (renamingCat.val.trim() === renamingCat.old) { setRenamingCat(null); return; }
-    try { await stockApi.renameCategorie(renamingCat.old, renamingCat.val.trim()); load(); }
+    try { await stockApi.renameCategorie(renamingCat.old, renamingCat.val.trim()); load(true); }
     catch { /* ignore */ }
     setRenamingCat(null);
   };
@@ -4799,7 +4799,7 @@ function GestionStock() {
   const saveRecatPiece = async () => {
     if (!recatPiece || !recatPiece.val.trim()) return;
     if (recatPiece.val.trim() === recatPiece.piece.type_piece) { setRecatPiece(null); return; }
-    try { await stockApi.updateCategorie(recatPiece.piece.id, recatPiece.val.trim()); load(); }
+    try { await stockApi.updateCategorie(recatPiece.piece.id, recatPiece.val.trim()); load(true); }
     catch { /* ignore */ }
     setRecatPiece(null);
   };
