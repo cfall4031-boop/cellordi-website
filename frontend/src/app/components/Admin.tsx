@@ -6007,9 +6007,18 @@ function CalendrierFactures() {
           </h2>
           <button onClick={nextMonth} style={{ background:"rgba(255,255,255,0.08)", border:"none", color:"#fff", borderRadius:6, padding:"0.4rem 0.8rem", cursor:"pointer", fontSize:"1.1rem" }}>›</button>
         </div>
-        <button onClick={() => openNew()} style={{ background:GREEN, border:"none", color:"#fff", borderRadius:8, padding:"0.5rem 1.2rem", cursor:"pointer", fontWeight:600, fontSize:"0.95rem" }}>
-          + Facture
-        </button>
+        <div style={{ display:"flex", gap:"0.5rem" }}>
+          <button onClick={async () => {
+            try { await notificationsApi.testFactures(); alert("Rappels envoyés ! Vérifie tes notifications."); }
+            catch (e: any) { alert("Erreur : " + (e?.message || "Aucun abonnement push actif ?")); }
+          }} title="Envoyer maintenant les rappels pour les factures dues aujourd'hui"
+            style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", color:GRAY, borderRadius:8, padding:"0.5rem 0.9rem", cursor:"pointer", fontSize:"0.82rem" }}>
+            🔔 Tester rappels
+          </button>
+          <button onClick={() => openNew()} style={{ background:GREEN, border:"none", color:"#fff", borderRadius:8, padding:"0.5rem 1.2rem", cursor:"pointer", fontWeight:600, fontSize:"0.95rem" }}>
+            + Facture
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}

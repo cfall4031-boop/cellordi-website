@@ -115,4 +115,15 @@ router.post("/test", auth, async (req, res) => {
   });
 });
 
+// POST /api/notifications/test-factures — Déclencher manuellement le rappel du jour (admin)
+router.post("/test-factures", auth, async (req, res) => {
+  const { envoyerRappelsFactures } = require("../utils/scheduler");
+  try {
+    await envoyerRappelsFactures();
+    res.json({ message: "Rappels factures envoyés pour aujourd'hui." });
+  } catch (err) {
+    res.status(500).json({ erreur: err.message });
+  }
+});
+
 module.exports = router;

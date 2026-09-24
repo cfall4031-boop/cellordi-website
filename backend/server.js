@@ -107,10 +107,12 @@ app.use((err, req, res, next) => {
 });
 
 // ── DÉMARRAGE ────────────────────────────────────────────────
+const { startScheduler } = require("./utils/scheduler");
 initAdmin();
 app.listen(PORT, () => {
   console.log(`\n✅ Serveur CeLL&Ordi démarré`);
   console.log(`   http://localhost:${PORT}/api/health`);
   console.log(`   Rate limiting: actif`);
   console.log(`   Helmet: actif\n`);
+  startScheduler();
 });

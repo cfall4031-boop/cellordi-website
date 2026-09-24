@@ -218,6 +218,7 @@ export const notificationsApi = {
     req<{ message: string }>("DELETE", "/notifications/unsubscribe", { endpoint }),
   status:       () => req<{ pushEnabled: boolean; subscriberCount: number; vapidKeyPrefix: string }>("GET", "/notifications/status"),
   test:         () => req<{ message: string; sent: number }>("POST", "/notifications/test"),
+  testFactures: () => req<{ message: string }>("POST", "/notifications/test-factures"),
   purge:        () => req<{ message: string; deleted: number }>("DELETE", "/notifications/purge"),
 };
 
