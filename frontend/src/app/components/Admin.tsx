@@ -735,10 +735,27 @@ function CalEventCard({ e, compact, onClick }: { e: CalEvent; compact?: boolean;
   );
 }
 
-function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () => void }) {
+function CalEventDetailPanel({ event, onClose, onDeleted }: { event: CalEvent; onClose: () => void; onDeleted: () => void }) {
   const c = CAL_TYPE_COLORS[event.type];
   const r = event.raw;
   const typeLabel = event.type === "rdv" ? "Rendez-vous" : event.type === "ticket" ? "Ticket" : "Message";
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    const label = event.type === "rdv" ? "ce rendez-vous" : event.type === "ticket" ? "ce ticket" : "ce message";
+    if (!confirm(`Supprimer ${label} ? Cette action est irréversible.`)) return;
+    setDeleting(true);
+    try {
+      if (event.type === "rdv")     await rdvApi.delete(event.id);
+      else if (event.type === "ticket")  await ticketsApi.delete(event.id);
+      else if (event.type === "message") await messagesApi.delete(event.id);
+      onDeleted();
+    } catch (e: any) {
+      alert("Erreur lors de la suppression : " + (e?.message || "inconnue"));
+    }
+    setDeleting(false);
+  }
+
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 298, background: "rgba(0,0,0,0.45)" }} />
@@ -800,6 +817,15 @@ function CalEventDetailPanel({ event, onClose }: { event: CalEvent; onClose: () 
             {r.reply_text && <CalDetailRow label="Réponse" value={<span style={{ whiteSpace: "pre-wrap" as const, color: GREEN }}>{r.reply_text}</span>} />}
             <CalDetailRow label="Reçu le" value={r.created_at ? new Date(r.created_at).toLocaleString("fr-CA") : undefined} />
           </>}
+        </div>
+        {/* Bouton supprimer */}
+        <div style={{ padding: "1rem 1.4rem", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>
+          <button onClick={handleDelete} disabled={deleting}
+            style={{ width: "100%", padding: "0.65rem", borderRadius: 8, background: "rgba(255,77,77,0.12)",
+              border: "1px solid rgba(255,77,77,0.35)", color: RED, cursor: "pointer",
+              fontWeight: 600, fontSize: "0.9rem", opacity: deleting ? 0.6 : 1 }}>
+            {deleting ? "Suppression…" : `🗑️ Supprimer ce ${typeLabel.toLowerCase()}`}
+          </button>
         </div>
       </div>
     </>
@@ -1083,14 +1109,16 @@ function AdminCalendar() {
         ticketsApi.getAll({}),
         messagesApi.getAll({}),
       ]);
-      const rdvs: CalEvent[] = ((rData as any).rendezvous || []).map((x: any) => ({
-        id: x.id, type: "rdv" as const,
-        date: x.date_rdv || "",
-        heure: x.heure || undefined,
-        title: `${x.prenom} ${x.nom}`,
-        subtitle: x.type_appareil || "",
-        statut: x.statut, raw: x,
-      }));
+      const rdvs: CalEvent[] = ((rData as any).rendezvous || [])
+        .filter((x: any) => x.statut !== "annule" && x.statut !== "complete")
+        .map((x: any) => ({
+          id: x.id, type: "rdv" as const,
+          date: x.date_rdv || "",
+          heure: x.heure || undefined,
+          title: `${x.prenom} ${x.nom}`,
+          subtitle: x.type_appareil || "",
+          statut: x.statut, raw: x,
+        }));
       const tickets: CalEvent[] = ((tData as any).tickets || []).map((x: any) => ({
         id: x.id, type: "ticket" as const,
         date: (x.date_reception || x.created_at || "").slice(0, 10),
@@ -1224,7 +1252,7 @@ function AdminCalendar() {
         }
       </div>
 
-      {selected && <CalEventDetailPanel event={selected} onClose={() => setSelected(null)} />}
+      {selected && <CalEventDetailPanel event={selected} onClose={() => setSelected(null)} onDeleted={() => { setSelected(null); loadAll(); }} />}
     </div>
   );
 }
