@@ -5804,15 +5804,7 @@ type Facture = {
   type_facture: string; date_echeance: string;
   statut: string; recurrence: string; notes: string;
 };
-
-const FACTURE_TYPES: { value: string; label: string; color: string }[] = [
-  { value: "carte_credit",  label: "Carte de crédit",  color: "#FF8C00" },
-  { value: "marge_credit",  label: "Marge de crédit",  color: "#8B5CF6" },
-  { value: "dette",         label: "Dette",             color: "#EF4444" },
-  { value: "abonnement",    label: "Abonnement",        color: "#3B82F6" },
-  { value: "loyer",         label: "Loyer / Utilités",  color: "#14B8A6" },
-  { value: "autre",         label: "Autre",             color: "#6B7280" },
-];
+type FactureType = { id: number; label: string; color: string; ordre: number };
 
 const RECURRENCES = [
   { value: "aucune",       label: "Aucune (une fois)" },
@@ -5821,11 +5813,11 @@ const RECURRENCES = [
   { value: "annuelle",     label: "Annuelle"           },
 ];
 
-function factureColor(type: string) {
-  return FACTURE_TYPES.find(t => t.value === type)?.color ?? "#6B7280";
+function factureColor(types: FactureType[], id: string) {
+  return types.find(t => String(t.id) === String(id))?.color ?? "#6B7280";
 }
-function factureLabel(type: string) {
-  return FACTURE_TYPES.find(t => t.value === type)?.label ?? "Autre";
+function factureLabel(types: FactureType[], id: string) {
+  return types.find(t => String(t.id) === String(id))?.label ?? id;
 }
 
 const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
@@ -5833,20 +5825,35 @@ const MONTHS_FR = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","A
 function CalendrierFactures() {
   const today = new Date();
   const [year,  setYear]  = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth()); // 0-indexed
+  const [month, setMonth] = useState(today.getMonth());
   const [factures, setFactures] = useState<Facture[]>([]);
   const [loading,  setLoading]  = useState(false);
+  const [types, setTypes] = useState<FactureType[]>([]);
 
-  // Modal
+  // Modal facture
   const [modal, setModal] = useState<Facture | null | "new">(null);
-  const [fTitre,      setFTitre]      = useState("");
-  const [fMontant,    setFMontant]    = useState("");
-  const [fType,       setFType]       = useState("carte_credit");
-  const [fDate,       setFDate]       = useState("");
-  const [fRec,        setFRec]        = useState("aucune");
-  const [fNotes,      setFNotes]      = useState("");
-  const [fSaving,     setFSaving]     = useState(false);
-  const [fErreur,     setFErreur]     = useState("");
+  const [fTitre,  setFTitre]  = useState("");
+  const [fMontant,setFMontant]= useState("");
+  const [fType,   setFType]   = useState("");
+  const [fDate,   setFDate]   = useState("");
+  const [fRec,    setFRec]    = useState("aucune");
+  const [fNotes,  setFNotes]  = useState("");
+  const [fSaving, setFSaving] = useState(false);
+  const [fErreur, setFErreur] = useState("");
+
+  // Modal type personnalisé
+  const [typeModal, setTypeModal] = useState<FactureType | null | "new">(null);
+  const [tLabel,  setTLabel]  = useState("");
+  const [tColor,  setTColor]  = useState("#6B7280");
+  const [tSaving, setTSaving] = useState(false);
+  const [tErreur, setTErreur] = useState("");
+
+  const loadTypes = useCallback(async () => {
+    try {
+      const { types: data } = await facturesApi.getTypes();
+      setTypes(data);
+    } catch {}
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -5860,6 +5867,7 @@ function CalendrierFactures() {
     setLoading(false);
   }, [month, year]);
 
+  useEffect(() => { loadTypes(); }, [loadTypes]);
   useEffect(() => { load(); }, [load]);
 
   function prevMonth() {
@@ -5873,7 +5881,8 @@ function CalendrierFactures() {
 
   function openNew(dateStr?: string) {
     setModal("new");
-    setFTitre(""); setFMontant(""); setFType("carte_credit");
+    setFTitre(""); setFMontant("");
+    setFType(types[0] ? String(types[0].id) : "");
     setFDate(dateStr || ""); setFRec("aucune"); setFNotes(""); setFErreur("");
   }
   function openEdit(f: Facture) {
@@ -5890,7 +5899,7 @@ function CalendrierFactures() {
       const payload = {
         titre: fTitre.trim(),
         montant: fMontant ? Number(fMontant.replace(",", ".")) : null,
-        type_facture: fType,
+        type_facture: fType || (types[0] ? String(types[0].id) : "autre"),
         date_echeance: fDate,
         recurrence: fRec,
         notes: fNotes.trim(),
@@ -5921,6 +5930,37 @@ function CalendrierFactures() {
     setFSaving(true);
     try { await facturesApi.delete((modal as Facture).id); setModal(null); load(); } catch {}
     setFSaving(false);
+  }
+
+  // Gestion types
+  function openTypeNew() {
+    setTypeModal("new"); setTLabel(""); setTColor("#6B7280"); setTErreur("");
+  }
+  function openTypeEdit(t: FactureType) {
+    setTypeModal(t); setTLabel(t.label); setTColor(t.color); setTErreur("");
+  }
+  async function saveType() {
+    if (!tLabel.trim()) { setTErreur("Nom requis."); return; }
+    setTSaving(true); setTErreur("");
+    try {
+      if (typeModal === "new") {
+        await facturesApi.createType({ label: tLabel.trim(), color: tColor });
+      } else {
+        await facturesApi.updateType((typeModal as FactureType).id, { label: tLabel.trim(), color: tColor });
+      }
+      setTypeModal(null);
+      loadTypes();
+    } catch (e: any) {
+      setTErreur(e?.message || "Erreur");
+    }
+    setTSaving(false);
+  }
+  async function deleteType() {
+    if (!typeModal || typeModal === "new") return;
+    if (!confirm(`Supprimer le type "${(typeModal as FactureType).label}" ?`)) return;
+    setTSaving(true);
+    try { await facturesApi.deleteType((typeModal as FactureType).id); setTypeModal(null); loadTypes(); } catch {}
+    setTSaving(false);
   }
 
   // Calendrier — grille du mois
@@ -5986,13 +6026,18 @@ function CalendrierFactures() {
         ))}
       </div>
 
-      {/* Légende types */}
-      <div style={{ display:"flex", gap:"0.5rem", flexWrap:"wrap", marginBottom:"1rem" }}>
-        {FACTURE_TYPES.map(t => (
-          <span key={t.value} style={{ fontSize:"0.72rem", padding:"0.15rem 0.6rem", borderRadius:20, background:`${t.color}22`, color:t.color, border:`1px solid ${t.color}44` }}>
-            {t.label}
-          </span>
+      {/* Légende types — cliquable pour modifier */}
+      <div style={{ display:"flex", gap:"0.5rem", flexWrap:"wrap", marginBottom:"1rem", alignItems:"center" }}>
+        {types.map(t => (
+          <button key={t.id} onClick={() => openTypeEdit(t)} title="Modifier ce type"
+            style={{ fontSize:"0.72rem", padding:"0.15rem 0.6rem", borderRadius:20, background:`${t.color}22`, color:t.color, border:`1px solid ${t.color}44`, cursor:"pointer", display:"flex", alignItems:"center", gap:"0.3rem" }}>
+            {t.label} <span style={{ fontSize:"0.6rem", opacity:0.7 }}>✏️</span>
+          </button>
         ))}
+        <button onClick={openTypeNew} title="Ajouter un type"
+          style={{ fontSize:"0.72rem", padding:"0.15rem 0.7rem", borderRadius:20, background:"rgba(255,255,255,0.06)", color:GRAY, border:"1px dashed rgba(255,255,255,0.2)", cursor:"pointer" }}>
+          + Type
+        </button>
       </div>
 
       {/* Grille calendrier */}
@@ -6026,7 +6071,7 @@ function CalendrierFactures() {
                           {dayNum}
                         </span>
                         {dayFacts.map(f => {
-                          const col = factureColor(f.type_facture);
+                          const col = factureColor(types, f.type_facture);
                           const isPaye = f.statut === "paye";
                           const isLate = !isPaye && f.date_echeance < todayStr;
                           return (
@@ -6066,7 +6111,7 @@ function CalendrierFactures() {
           <div style={{ display:"flex", flexDirection:"column", gap:"0.5rem" }}>
             {factures.map(f => {
               const { label: sLabel, color: sColor } = getStatutDisplay(f);
-              const tColor = factureColor(f.type_facture);
+              const tColor = factureColor(types, f.type_facture);
               return (
                 <div key={f.id} style={{ background:NAVY_MID, borderRadius:10, padding:"0.75rem 1rem", display:"flex", alignItems:"center", gap:"0.75rem", flexWrap:"wrap" }}>
                   <button onClick={() => togglePaye(f)} title={f.statut === "paye" ? "Marquer non payé" : "Marquer payé"}
@@ -6078,7 +6123,7 @@ function CalendrierFactures() {
                   <div style={{ flex:1, minWidth:120 }}>
                     <div style={{ color:"#fff", fontWeight:600, fontSize:"0.9rem", textDecoration: f.statut === "paye" ? "line-through" : "none" }}>{f.titre}</div>
                     <div style={{ fontSize:"0.72rem", color:GRAY }}>
-                      {factureLabel(f.type_facture)} · {f.date_echeance}
+                      {factureLabel(types, f.type_facture)} · {f.date_echeance}
                       {f.recurrence !== "aucune" && <span style={{ marginLeft:"0.4rem", color:BLUE }}>↺ {RECURRENCES.find(r=>r.value===f.recurrence)?.label}</span>}
                     </div>
                   </div>
@@ -6093,6 +6138,57 @@ function CalendrierFactures() {
           </div>
         )}
       </div>
+
+      {/* Modal type personnalisé */}
+      {typeModal !== null && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1100, padding:"1rem" }}
+          onClick={() => setTypeModal(null)}>
+          <div style={{ background:"#0e2040", borderRadius:14, padding:"1.5rem", width:"100%", maxWidth:380, boxShadow:"0 8px 32px rgba(0,0,0,0.6)" }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin:"0 0 1rem", color:"#fff", fontSize:"1.05rem" }}>
+              {typeModal === "new" ? "➕ Nouveau type de facture" : `✏️ Modifier — ${(typeModal as FactureType).label}`}
+            </h3>
+
+            <label style={{ display:"block", marginBottom:"0.75rem" }}>
+              <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Nom *</div>
+              <input value={tLabel} onChange={e => setTLabel(e.target.value)} placeholder="ex: Assurance"
+                style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"rgba(255,255,255,0.08)", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }} />
+            </label>
+
+            <label style={{ display:"block", marginBottom:"1rem" }}>
+              <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Couleur</div>
+              <div style={{ display:"flex", alignItems:"center", gap:"0.75rem" }}>
+                <input type="color" value={tColor} onChange={e => setTColor(e.target.value)}
+                  style={{ width:48, height:36, border:"none", background:"none", cursor:"pointer", borderRadius:8 }} />
+                <span style={{ padding:"0.3rem 0.8rem", borderRadius:20, background:`${tColor}22`, color:tColor, border:`1px solid ${tColor}66`, fontSize:"0.85rem", fontWeight:600 }}>
+                  {tLabel || "Aperçu"}
+                </span>
+                <span style={{ color:GRAY, fontSize:"0.75rem" }}>{tColor}</span>
+              </div>
+            </label>
+
+            {tErreur && <div style={{ color:RED, fontSize:"0.85rem", marginBottom:"0.75rem" }}>{tErreur}</div>}
+
+            <div style={{ display:"flex", justifyContent:"space-between", gap:"0.5rem" }}>
+              <div>
+                {typeModal !== "new" && (
+                  <button onClick={deleteType} disabled={tSaving}
+                    style={{ padding:"0.5rem 0.9rem", borderRadius:8, background:"rgba(255,77,77,0.15)", border:"1px solid rgba(255,77,77,0.3)", color:RED, cursor:"pointer", fontWeight:600 }}>
+                    Supprimer
+                  </button>
+                )}
+              </div>
+              <div style={{ display:"flex", gap:"0.5rem" }}>
+                <button onClick={() => setTypeModal(null)} style={{ padding:"0.5rem 0.9rem", borderRadius:8, background:"rgba(255,255,255,0.08)", border:"none", color:GRAY, cursor:"pointer" }}>Annuler</button>
+                <button onClick={saveType} disabled={tSaving}
+                  style={{ padding:"0.5rem 1.1rem", borderRadius:8, background:GREEN, border:"none", color:"#fff", cursor:"pointer", fontWeight:600 }}>
+                  {tSaving ? "…" : typeModal === "new" ? "Créer" : "Enregistrer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal ajout / édition */}
       {modal !== null && (
@@ -6127,8 +6223,8 @@ function CalendrierFactures() {
               <div style={{ color:GRAY, fontSize:"0.8rem", marginBottom:"0.25rem" }}>Type de facture</div>
               <select value={fType} onChange={e => setFType(e.target.value)}
                 style={{ width:"100%", padding:"0.6rem", borderRadius:8, border:"1px solid rgba(255,255,255,0.15)", background:"#0b1c35", color:"#fff", fontSize:"0.9rem", boxSizing:"border-box" }}>
-                {FACTURE_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                {types.map(t => (
+                  <option key={t.id} value={String(t.id)}>{t.label}</option>
                 ))}
               </select>
             </label>

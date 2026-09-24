@@ -178,14 +178,23 @@ export const registreApi = {
 
 // ── CALENDRIER FACTURES ─────────────────────────────────────
 export const facturesApi = {
-  getAll:  (params: Record<string, string> = {}) =>
+  getAll:      (params: Record<string, string> = {}) =>
     req<{ factures: any[] }>("GET", "/factures" + toQuery(params)),
-  create:  (data: Record<string, unknown>) =>
+  create:      (data: Record<string, unknown>) =>
     req<{ message: string; id: number }>("POST", "/factures", data),
-  update:  (id: number, data: Record<string, unknown>) =>
+  update:      (id: number, data: Record<string, unknown>) =>
     req<{ message: string }>("PATCH", `/factures/${id}`, data),
-  delete:  (id: number) =>
+  delete:      (id: number) =>
     req<{ message: string }>("DELETE", `/factures/${id}`),
+  // Types personnalisables
+  getTypes:    () =>
+    req<{ types: any[] }>("GET", "/factures/types"),
+  createType:  (data: { label: string; color: string }) =>
+    req<{ message: string; id: number }>("POST", "/factures/types", data),
+  updateType:  (tid: number, data: { label?: string; color?: string }) =>
+    req<{ message: string }>("PATCH", `/factures/types/${tid}`, data),
+  deleteType:  (tid: number) =>
+    req<{ message: string }>("DELETE", `/factures/types/${tid}`),
 };
 
 // ── GESTION DE STOCK ────────────────────────────────────────

@@ -287,6 +287,34 @@ db.exec(`
   );
 `);
 
+// ── TYPES DE FACTURES (personnalisables) ─────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS facture_types (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    label      TEXT    NOT NULL,
+    color      TEXT    NOT NULL DEFAULT '#6B7280',
+    ordre      INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+// Seed des types par défaut si la table est vide
+(function seedFactureTypes() {
+  const count = db.prepare("SELECT COUNT(*) as c FROM facture_types").get();
+  if (count.c > 0) return;
+  const ins = db.prepare("INSERT INTO facture_types (label, color, ordre) VALUES (?, ?, ?)");
+  const defaults = [
+    ["Carte de crédit", "#FF8C00", 0],
+    ["Marge de crédit", "#8B5CF6", 1],
+    ["Dette",           "#EF4444", 2],
+    ["Abonnement",      "#3B82F6", 3],
+    ["Loyer / Utilités","#14B8A6", 4],
+    ["Autre",           "#6B7280", 5],
+  ];
+  db.transaction(() => { for (const [l, c, o] of defaults) ins.run(l, c, o); })();
+  console.log("✅ Types de factures initialisés.");
+})();
+
 // ── CALENDRIER FACTURES ───────────────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS factures_calendrier (
