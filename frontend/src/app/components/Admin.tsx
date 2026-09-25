@@ -1306,6 +1306,16 @@ function Rendez_vous() {
 
   useEffect(() => { load(); }, [load]);
 
+  // ── Auto-refresh toutes les 30 secondes (silencieux) ────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      rdvApi.getAll().then((data: any) => {
+        setRdvs(data.rendezvous || []);
+      }).catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // ── Slots quand date change ─────────────────────────────────────────────────
   useEffect(() => {
     if (!newRdv.date) { setSlots([]); return; }
