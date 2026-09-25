@@ -1371,6 +1371,12 @@ function Rendez_vous() {
       setCreateOk(`✅ RDV créé${res.numero_ticket ? ` — Ticket ${res.numero_ticket}` : ""}. Email envoyé au client.`);
       setNewRdv(emptyForm);
       load();
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("📅 Nouveau rendez-vous créé", {
+          body: `${newRdv.prenom} ${newRdv.nom} — ${newRdv.service || newRdv.appareil || "Non spécifié"} (${newRdv.date}${newRdv.heure ? " à " + newRdv.heure : ""})`,
+          tag: "rdv-admin",
+        });
+      }
     } catch(e:any) { setCreateErr(e.message || "Erreur lors de la création."); }
     finally { setCreating(false); }
   };
