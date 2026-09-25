@@ -153,7 +153,7 @@ export function Hero() {
           {t("hero.prefix")}
           <br />
           {/* Ligne 2 — typewriter */}
-          <span style={{ color: WHITE }}>
+          <span id="hero-typed" style={{ color: WHITE, whiteSpace: "nowrap" }}>
             {typed}
           </span>
           {/* Curseur clignotant vert */}
@@ -288,6 +288,12 @@ export function Hero() {
             padding: 1.8rem !important;
             padding-top: 110px !important;
             padding-bottom: 2rem !important;
+          }
+          #hero-left h1 {
+            font-size: clamp(1.5rem, 6.5vw, 2.8rem) !important;
+          }
+          #hero-typed {
+            white-space: nowrap !important;
           }
           #hero-right {
             flex: none !important;
