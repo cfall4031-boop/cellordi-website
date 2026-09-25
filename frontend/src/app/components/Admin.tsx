@@ -5023,7 +5023,7 @@ function GestionStock() {
                                   {recatPiece!.val === "__nouveau__" ? (
                                     <input autoFocus placeholder="Nom…"
                                       onBlur={e => { if (e.target.value.trim()) setRecatPiece(r => r ? { ...r, val: e.target.value.trim() } : r); }}
-                                      onKeyDown={async e => { if (e.key === "Enter") { const v = (e.target as HTMLInputElement).value.trim(); if (v) { await stockApi.updateCategorie(p.id, v); load(); setRecatPiece(null); } } if (e.key === "Escape") setRecatPiece(null); }}
+                                      onKeyDown={async e => { if (e.key === "Enter") { const v = (e.target as HTMLInputElement).value.trim(); if (v) { await stockApi.updateCategorie(p.id, v); load(true); setRecatPiece(null); } } if (e.key === "Escape") setRecatPiece(null); }}
                                       style={{ background: NAVY, border: `1px solid ${ORANGE}`, borderRadius: 5, color: "#fff", padding: "0.2rem 0.5rem", fontSize: "0.76rem", width: 120 }} />
                                   ) : (
                                     <button onClick={saveRecatPiece}
