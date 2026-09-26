@@ -247,9 +247,14 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
 
   useEffect(() => {
     if (!pushSupported) return;
-    navigator.serviceWorker.ready.then(reg =>
-      reg.pushManager.getSubscription().then(sub => setPushEnabled(!!sub))
-    ).catch(() => {});
+    navigator.serviceWorker.ready.then(async reg => {
+      const sub = await reg.pushManager.getSubscription();
+      setPushEnabled(!!sub);
+      // Ré-enregistre automatiquement l'abonnement si le backend l'a perdu (ex: redéploiement Railway)
+      if (sub && Notification.permission === "granted") {
+        notificationsApi.subscribe(sub.toJSON() as any).catch(() => {});
+      }
+    }).catch(() => {});
   }, []);
 
   const togglePush = async () => {
