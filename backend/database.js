@@ -361,24 +361,19 @@ function seedHoraires() {
   console.log("✅ Horaires initialisés : Lun–Ven 10:30–18h, Sam 11:30–17h, Dim fermé.");
 }
 
-// Migration : supprimer les créneaux hors-horaires (10:00, 10:30 LV, 11:00, 11:30 Sam)
-db.prepare("DELETE FROM horaires_dispo WHERE jour BETWEEN 1 AND 5 AND heure = '10:00'").run();
-db.prepare("DELETE FROM horaires_dispo WHERE jour BETWEEN 1 AND 5 AND heure = '10:30'").run();
-db.prepare("DELETE FROM horaires_dispo WHERE jour = 6 AND heure = '11:00'").run();
-db.prepare("DELETE FROM horaires_dispo WHERE jour = 6 AND heure = '11:30'").run();
-
-// Migration : supprimer les créneaux après 18h en semaine et après 17h le samedi
-db.prepare("DELETE FROM horaires_dispo WHERE jour BETWEEN 1 AND 5 AND heure IN ('18:30','19:00')").run();
-db.prepare("DELETE FROM horaires_dispo WHERE jour = 6 AND heure IN ('17:30','18:00')").run();
-
-// Migration : si l'ancien schedule (sans :30) est détecté, effacer et re-seeder
+// Migration : si ancien schedule (ex: 09:00) détecté → tout effacer et re-seeder
 const hasOldSchedule = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '09:00' AND actif = 1").get();
-const has30min = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '10:30'").get();
-if (hasOldSchedule.c > 0 || has30min.c === 0) {
+if (hasOldSchedule.c > 0) {
   db.prepare("DELETE FROM horaires_dispo").run();
   console.log("🔄 Migration horaires → créneaux de 30 min.");
 }
 seedHoraires();
+
+// Supprimer tous les créneaux avant 11h (tous jours) — idempotent
+db.prepare("DELETE FROM horaires_dispo WHERE heure IN ('10:00','10:30')").run();
+// Supprimer créneaux tardifs hors-horaires
+db.prepare("DELETE FROM horaires_dispo WHERE jour BETWEEN 1 AND 5 AND heure IN ('18:30','19:00')").run();
+db.prepare("DELETE FROM horaires_dispo WHERE jour = 6 AND heure IN ('11:00','11:30','17:30','18:00')").run();
 
 function initAdmin() {
   const adminEmail    = process.env.ADMIN_EMAIL    || "admin@reparationcellordi.ca";
