@@ -4694,11 +4694,19 @@ function GestionStock() {
     if (!form.quantite) { setErr("La quantité est requise."); return; }
     setSaving(true); setErr("");
     try {
+      let type = form.type;
+      let quantite = Number(form.quantite);
+      if (form.type === "definir") {
+        const current = modalPiece.quantite_calculee ?? 0;
+        const delta = quantite - current;
+        type = "ajustement";
+        quantite = delta;
+      }
       await stockApi.mouvement(modalPiece.id, {
-        type: form.type, quantite: Number(form.quantite),
+        type, quantite,
         cout_unitaire: Number(form.cout_unitaire) || 0,
         prix_unitaire: Number(form.prix_unitaire) || 0,
-        notes: form.notes || null,
+        notes: form.notes || `Ajustement direct → ${Number(form.quantite)} pièces`,
       });
       setModalPiece(null);
       setForm({ type: "entree", quantite: "", cout_unitaire: "", prix_unitaire: "", notes: "" });
@@ -4860,9 +4868,12 @@ function GestionStock() {
       {/* ── KPI CARDS ── */}
       {stats && (
         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          <StatCard label="Coût d'achat total" value={fmt$(stats.total_investi)} sub="COGS cumulé"           color={ORANGE} />
-          <StatCard label="Revenus pièces"      value={fmt$(stats.total_revenus)} sub="Pièces facturées"      color={BLUE}   />
-          <StatCard label="Profit"              value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
+          <StatCard label="Coût d'achat total" value={fmt$(stats.total_investi)} sub="COGS cumulé (entrées)"  color={ORANGE} />
+          <StatCard label="Revenus réels"       value={fmt$(stats.total_revenus)} sub="Sorties facturées"      color={BLUE}   />
+          <StatCard label="Valeur du stock"
+            value={fmt$(pieces.reduce((s, p) => s + ((p.cout_vente || 0) * Math.max(p.quantite_calculee, 0)), 0))}
+            sub="Stock × prix de vente" color={"#a78bfa"} />
+          <StatCard label="Profit réalisé"      value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
           <StatCard label="Pièces écoulées"     value={String(stats.total_pieces_vendues)} sub="Total sorties" color={GRAY} />
         </div>
       )}
@@ -5211,8 +5222,8 @@ function GestionStock() {
             <p style={{ color: GRAY, fontSize: "0.84rem", margin: "0 0 1.2rem" }}>{modalPiece.type_piece} — {modalPiece.type_appareil} {modalPiece.modele || ""}</p>
             {err && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>{err}</div>}
             {[
-              { label: "Type", field: "type", type: "select", opts: [["entree","Entrée (achat)"],["sortie","Sortie (vente)"],["ajustement","Ajustement"]] },
-              { label: "Quantité", field: "quantite", type: "number" },
+              { label: "Type", field: "type", type: "select", opts: [["entree","Entrée (achat)"],["sortie","Sortie (vente)"],["ajustement","Ajustement (±)"],["definir","📍 Définir quantité"]] },
+              { label: form.type === "definir" ? `Quantité cible (actuel : ${modalPiece?.quantite_calculee ?? 0})` : "Quantité (delta)", field: "quantite", type: "number" },
               { label: "Coût unitaire ($)", field: "cout_unitaire", type: "number" },
               { label: "Prix de vente unitaire ($)", field: "prix_unitaire", type: "number" },
               { label: "Notes", field: "notes", type: "text" },
