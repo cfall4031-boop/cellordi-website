@@ -96,7 +96,7 @@ router.put("/:id", auth, (req, res) => {
   if (!piece) return res.status(404).json({ erreur: "Pièce introuvable." });
 
   if (seuil_alerte !== undefined) {
-    db.prepare("UPDATE pieces_catalogue SET seuil_alerte = ? WHERE id = ?").run(Number(seuil_alerte) || 3, req.params.id);
+    db.prepare("UPDATE pieces_catalogue SET seuil_alerte = ? WHERE id = ?").run(Math.max(Number(seuil_alerte) || 1, 1), req.params.id);
   }
   if (type_piece !== undefined && type_piece.trim()) {
     db.prepare("UPDATE pieces_catalogue SET type_piece = ? WHERE id = ?").run(type_piece.trim(), req.params.id);

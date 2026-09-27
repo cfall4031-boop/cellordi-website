@@ -230,7 +230,9 @@ try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN cout_vente REAL").run(
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN piece_detachee INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN nb_demandes INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN quantite_stock INTEGER DEFAULT 0").run(); } catch {}
-try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN seuil_alerte INTEGER DEFAULT 3").run(); } catch {}
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN seuil_alerte INTEGER DEFAULT 1").run(); } catch {}
+// Ramener les pièces avec seuil par défaut (3) au nouveau minimum (1)
+try { db.prepare("UPDATE pieces_catalogue SET seuil_alerte = 1 WHERE seuil_alerte = 3").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN photos TEXT DEFAULT '[]'").run(); } catch {}
 
 // ── TABLE MOUVEMENTS STOCK ───────────────────────────────────────────────────
