@@ -4859,10 +4859,157 @@ function GestionStock() {
 
   if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
 
+  const exportPDF = async () => {
+    const date = new Date().toLocaleDateString("fr-CA", { year: "numeric", month: "long", day: "numeric" });
+    const fmtCAD = (n: number) => n.toLocaleString("fr-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 });
+    const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-CA", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+    // Charger tous les mouvements
+    let allMvts: any[] = [];
+    try { allMvts = (await stockApi.allMouvements()).mouvements || []; } catch {}
+    const mvtsByPiece: Record<number, any[]> = {};
+    allMvts.forEach((m: any) => {
+      if (!mvtsByPiece[m.piece_id]) mvtsByPiece[m.piece_id] = [];
+      mvtsByPiece[m.piece_id].push(m);
+    });
+
+    const groups: Record<string, Piece[]> = {};
+    pieces.forEach(p => {
+      const cat = p.type_piece || "Sans catégorie";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(p);
+    });
+
+    const typeLabel = (t: string) => t === "entree" ? "Entrée" : t === "sortie" ? "Sortie" : "Ajustement";
+    const typeColor = (t: string) => t === "entree" ? "#22c55e" : t === "sortie" ? "#ef4444" : "#f59e0b";
+
+    const rowsHtml = Object.entries(groups).map(([cat, items]) => {
+      const totalQ = items.reduce((s, p) => s + p.quantite_calculee, 0);
+      const totalC = items.reduce((s, p) => s + (p.cout_fournisseur || 0) * Math.max(p.quantite_calculee, 0), 0);
+      const rows = items.map(p => {
+        const statut = p.quantite_calculee <= 0 ? "Rupture" : p.quantite_calculee <= p.seuil_alerte ? "Faible" : "OK";
+        const statutColor = p.quantite_calculee <= 0 ? "#ef4444" : p.quantite_calculee <= p.seuil_alerte ? "#f59e0b" : "#22c55e";
+        const vente = p.cout_vente ? fmtCAD(p.cout_vente) : "—";
+        const achat = p.cout_fournisseur ? fmtCAD(p.cout_fournisseur) : "—";
+        const valeur = fmtCAD((p.cout_vente || 0) * Math.max(p.quantite_calculee, 0));
+        const mvts = mvtsByPiece[p.id] || [];
+        const mvtRows = mvts.length === 0
+          ? `<tr><td colspan="5" style="color:#aaa;font-style:italic;padding:4px 8px">Aucune activité enregistrée</td></tr>`
+          : mvts.map((m: any) => `<tr>
+              <td style="padding:3px 8px;color:#666">${fmtDate(m.created_at)}</td>
+              <td style="padding:3px 8px;color:${typeColor(m.type)};font-weight:700">${typeLabel(m.type)}</td>
+              <td style="padding:3px 8px;text-align:center;font-weight:700">${m.type === "ajustement" && m.quantite >= 0 ? "+" : ""}${m.quantite}</td>
+              <td style="padding:3px 8px;text-align:right">${m.cout_unitaire ? fmtCAD(m.cout_unitaire) : "—"}</td>
+              <td style="padding:3px 8px;color:#888">${m.notes || ""}</td>
+            </tr>`).join("");
+        return `<tr class="piece-row">
+          <td>${p.type_appareil}</td>
+          <td>${p.modele || "—"}</td>
+          <td style="text-align:center;font-weight:700">${p.quantite_calculee}</td>
+          <td style="text-align:center;color:${statutColor};font-weight:700">${statut}</td>
+          <td style="text-align:right">${achat}</td>
+          <td style="text-align:right">${vente}</td>
+          <td style="text-align:right">${valeur}</td>
+        </tr>
+        <tr class="activite-row">
+          <td colspan="7" style="padding:0 8px 10px 24px;background:#fafafa">
+            <div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;padding:6px 0 4px">Activité (${mvts.length} mouvement${mvts.length > 1 ? "s" : ""})</div>
+            <table style="width:100%;border-collapse:collapse;font-size:10px">
+              <thead><tr style="color:#999">
+                <th style="text-align:left;padding:2px 8px;font-weight:600">Date</th>
+                <th style="text-align:left;padding:2px 8px;font-weight:600">Type</th>
+                <th style="text-align:center;padding:2px 8px;font-weight:600">Qté</th>
+                <th style="text-align:right;padding:2px 8px;font-weight:600">Coût unit.</th>
+                <th style="text-align:left;padding:2px 8px;font-weight:600">Notes</th>
+              </tr></thead>
+              <tbody>${mvtRows}</tbody>
+            </table>
+          </td>
+        </tr>`;
+      }).join("");
+      return `
+        <tr class="cat-header">
+          <td colspan="2"><strong>${cat}</strong></td>
+          <td style="text-align:center">${totalQ}</td>
+          <td></td>
+          <td colspan="2" style="text-align:right;font-size:0.8em;color:#166534">Coût total stock</td>
+          <td style="text-align:right;font-weight:700">${fmtCAD(totalC)}</td>
+        </tr>
+        ${rows}`;
+    }).join("");
+
+    const valeurStock = pieces.reduce((s, p) => s + ((p.cout_vente || 0) * Math.max(p.quantite_calculee, 0)), 0);
+
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Rapport de stock — CeLL&amp;Ordi — ${date}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; padding: 32px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; border-bottom: 3px solid #6dd400; padding-bottom: 14px; }
+  header h1 { font-size: 22px; font-weight: 900; color: #1a1a2e; }
+  header .date { color: #666; font-size: 11px; }
+  .kpis { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .kpi { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 18px; flex: 1; min-width: 140px; }
+  .kpi .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #666; margin-bottom: 4px; }
+  .kpi .val { font-size: 20px; font-weight: 900; }
+  .kpi .sub { font-size: 10px; color: #999; margin-top: 2px; }
+  h2 { font-size: 14px; font-weight: 800; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #1a1a2e; color: #fff; padding: 7px 10px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  th:nth-child(3), th:nth-child(4) { text-align: center; }
+  th:nth-child(5), th:nth-child(6), th:nth-child(7) { text-align: right; }
+  td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  tr.cat-header td { background: #f0fdf4; font-weight: 700; border-top: 2px solid #6dd400; border-bottom: 1px solid #bbf7d0; color: #166534; }
+  tr.piece-row td { border-bottom: none; }
+  tr.activite-row td { border-bottom: 1px solid #e5e7eb; }
+  footer { margin-top: 28px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+  @media print { body { padding: 16px; } @page { margin: 1.5cm; } }
+</style></head><body>
+<header>
+  <div>
+    <div style="font-size:11px;font-weight:700;color:#6dd400;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Réparation CeLL&amp;Ordi</div>
+    <h1>📦 Rapport de Stock</h1>
+  </div>
+  <div class="date">Généré le ${date}</div>
+</header>
+${stats ? `<div class="kpis">
+  <div class="kpi"><div class="label">Coût d'achat total</div><div class="val" style="color:#f59e0b">${fmtCAD(stats.total_investi)}</div><div class="sub">COGS cumulé</div></div>
+  <div class="kpi"><div class="label">Valeur du stock</div><div class="val" style="color:#a78bfa">${fmtCAD(valeurStock)}</div><div class="sub">Stock × prix de vente</div></div>
+  <div class="kpi"><div class="label">Revenus réels</div><div class="val" style="color:#38bdf8">${fmtCAD(stats.total_revenus)}</div><div class="sub">Sorties facturées</div></div>
+  <div class="kpi"><div class="label">Profit réalisé</div><div class="val" style="color:${stats.profit >= 0 ? "#22c55e" : "#ef4444"}">${fmtCAD(stats.profit)}</div><div class="sub">${stats.profit >= 0 ? "Positif" : "Déficit"}</div></div>
+  <div class="kpi"><div class="label">Pièces écoulées</div><div class="val" style="color:#94a3b8">${stats.total_pieces_vendues}</div><div class="sub">Total sorties</div></div>
+</div>` : ""}
+<h2>Catalogue — ${pieces.length} référence${pieces.length > 1 ? "s" : ""} · ${allMvts.length} mouvement${allMvts.length > 1 ? "s" : ""} au total</h2>
+<table>
+  <thead><tr>
+    <th>Appareil</th><th>Modèle</th>
+    <th style="text-align:center">Qté</th>
+    <th style="text-align:center">Statut</th>
+    <th style="text-align:right">Coût achat</th>
+    <th style="text-align:right">Prix vente</th>
+    <th style="text-align:right">Valeur stock</th>
+  </tr></thead>
+  <tbody>${rowsHtml}</tbody>
+</table>
+<footer>CeLL&amp;Ordi — rapport généré automatiquement le ${date} • 5050 QC-132 #203, Ste-Catherine</footer>
+</body></html>`;
+
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  };
+
   return (
     <div style={{ padding: "1.5rem", maxWidth: 1100 }}>
-      <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.4rem", marginBottom: "1.5rem", letterSpacing: "0.02em" }}>
+      <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.4rem", marginBottom: "1.5rem", letterSpacing: "0.02em", display: "flex", alignItems: "center", gap: "1rem" }}>
         📦 Gestion de Stock
+        <button onClick={exportPDF}
+          style={{ marginLeft: "auto", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.18)", color: "#e2e8f0", borderRadius: 7, padding: "0.38rem 0.9rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", letterSpacing: "0.02em" }}>
+          📄 Exporter PDF
+        </button>
       </h2>
 
       {/* ── KPI CARDS ── */}

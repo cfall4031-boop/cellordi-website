@@ -120,6 +120,17 @@ router.patch("/categorie", auth, (req, res) => {
   res.json({ message: `${result.changes} pièce(s) renommées.`, changes: result.changes });
 });
 
+// ── GET /api/stock/mouvements/all — tous les mouvements (pour export PDF) ───
+router.get("/mouvements/all", auth, (req, res) => {
+  const mouvements = db.prepare(`
+    SELECT m.*, p.type_appareil, p.modele, p.type_piece
+    FROM mouvements_stock m
+    JOIN pieces_catalogue p ON p.id = m.piece_id
+    ORDER BY m.piece_id, m.created_at DESC
+  `).all();
+  res.json({ mouvements });
+});
+
 // ── GET /api/stock/:id/mouvements — historique d'une pièce ──────────────────
 router.get("/:id/mouvements", auth, (req, res) => {
   const mouvements = db.prepare(`
