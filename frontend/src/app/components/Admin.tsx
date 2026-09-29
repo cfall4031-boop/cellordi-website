@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line
 } from "recharts";
 import {
   authApi, rdvApi, ticketsApi, clientsApi,
@@ -5602,32 +5603,55 @@ function CarnetNotes() {
 // ── REGISTRE FINANCIER ────────────────────────────────────────
 type EntreeRegistre = {
   id: number; type: string; personne: string; description: string;
-  montant: number; montant_paye: number; date_echeance: string | null; statut: string; notes: string; created_at: string;
+  montant: number; montant_paye: number; date_echeance: string | null;
+  statut: string; notes: string; created_at: string;
   dernier_versement: string | null;
+  portee: string; limite_credit: number | null;
+  paiement_minimum: number | null; taux_interet: number | null;
+  categorie_actif: string | null; cout_achat: number | null; date_valeur: string | null;
 };
-type StatsRegistre = { total_prete: number; total_emprunte: number; total_rembourse_pret: number; total_rembourse_emprunt: number };
+type StatsRegistre = {
+  total_prete: number; total_emprunte: number;
+  total_rembourse_pret: number; total_rembourse_emprunt: number;
+  total_actifs_entreprise: number; total_actifs_personnel: number;
+  total_passifs_entreprise: number; total_passifs_personnel: number;
+  valeur_nette_entreprise: number; valeur_nette_personnel: number;
+  valeur_nette_totale: number;
+};
 
-const EMPTY_ENTREE = { type: "pret", personne: "", description: "", montant: "", date_echeance: "", notes: "" };
+const EMPTY_ENTREE = {
+  type: "pret", personne: "", description: "", montant: "", date_echeance: "", notes: "",
+  portee: "entreprise", limite_credit: "", paiement_minimum: "", taux_interet: "",
+  categorie_actif: "", cout_achat: "", date_valeur: "",
+};
 
 function RegistreFinancier() {
-  const [entrees, setEntrees]     = useState<EntreeRegistre[]>([]);
-  const [stats, setStats]         = useState<StatsRegistre | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [modal, setModal]         = useState(false);
-  const [form, setForm]           = useState(EMPTY_ENTREE);
-  const [saving, setSaving]             = useState(false);
-  const [erreur, setErreur]             = useState("");
+  const [entrees, setEntrees]   = useState<EntreeRegistre[]>([]);
+  const [stats, setStats]       = useState<StatsRegistre | null>(null);
+  const [bilans, setBilans]     = useState<any[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [modal, setModal]       = useState(false);
+  const [form, setForm]         = useState(EMPTY_ENTREE);
+  const [saving, setSaving]     = useState(false);
+  const [erreur, setErreur]     = useState("");
+  const [porteeFilter, setPorteeFilter] = useState<"tout"|"entreprise"|"personnel">("tout");
   const [detailId, setDetailId]         = useState<number | null>(null);
   const [editNotes, setEditNotes]       = useState("");
-  const [versementModal, setVersementModal]   = useState<EntreeRegistre | null>(null);
+  const [versementModal, setVersementModal]     = useState<EntreeRegistre | null>(null);
   const [versementMontant, setVersementMontant] = useState("");
-  const [versementNotes, setVersementNotes]   = useState("");
-  const [versementSaving, setVersementSaving] = useState(false);
-  const [versementErreur, setVersementErreur] = useState("");
+  const [versementNotes, setVersementNotes]     = useState("");
+  const [versementSaving, setVersementSaving]   = useState(false);
+  const [versementErreur, setVersementErreur]   = useState("");
+  const [bilanSaving, setBilanSaving] = useState(false);
+  const [showChart, setShowChart]     = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { const r = await registreApi.getAll(); setEntrees(r.entrees || []); setStats(r.stats || null); } catch {}
+    try {
+      const [r, b] = await Promise.all([registreApi.getAll(), registreApi.getBilans()]);
+      setEntrees(r.entrees || []); setStats(r.stats || null);
+      setBilans(b.bilans || []);
+    } catch {}
     setLoading(false);
   }, []);
 
@@ -5635,10 +5659,7 @@ function RegistreFinancier() {
 
   const submit = async () => {
     setErreur("");
-    if (!form.personne.trim() || !form.montant) {
-      setErreur("Personne et montant sont requis.");
-      return;
-    }
+    if (!form.personne.trim() || !form.montant) { setErreur("Personne et montant sont requis."); return; }
     setSaving(true);
     try {
       await registreApi.create({
@@ -5648,141 +5669,196 @@ function RegistreFinancier() {
         montant:       Number(String(form.montant).replace(",", ".")),
         date_echeance: form.date_echeance || null,
         notes:         form.notes.trim(),
+        portee:        form.portee || "entreprise",
+        limite_credit:    form.limite_credit    ? Number(form.limite_credit)    : undefined,
+        paiement_minimum: form.paiement_minimum ? Number(form.paiement_minimum) : undefined,
+        taux_interet:     form.taux_interet     ? Number(form.taux_interet)     : undefined,
+        categorie_actif:  form.categorie_actif  || undefined,
+        cout_achat:       form.cout_achat       ? Number(form.cout_achat)       : undefined,
+        date_valeur:      form.date_valeur      || undefined,
       });
       setModal(false); setForm(EMPTY_ENTREE); load();
     } catch (e: any) {
-      setErreur(e?.message || "Impossible de contacter le serveur. Vérifiez que le backend est actif.");
+      setErreur(e?.message || "Impossible de contacter le serveur.");
     }
     setSaving(false);
   };
 
-  const changeStatut = async (id: number, statut: string) => {
-    await registreApi.update(id, { statut });
-    load();
-  };
+  const changeStatut = async (id: number, statut: string) => { await registreApi.update(id, { statut }); load(); };
 
   const submitVersement = async () => {
     if (!versementModal || !versementMontant.trim()) return;
-    setVersementSaving(true);
-    setVersementErreur("");
+    setVersementSaving(true); setVersementErreur("");
     try {
       const montant = Number(versementMontant.replace(",", "."));
       if (!montant || montant <= 0) throw new Error("Montant invalide.");
       await registreApi.addVersement(versementModal.id, { montant, notes: versementNotes.trim() });
-      setVersementModal(null);
-      setVersementMontant(""); setVersementNotes("");
-      load();
-    } catch (e: any) {
-      setVersementErreur(e?.message || "Erreur lors de l'enregistrement.");
-    }
+      setVersementModal(null); setVersementMontant(""); setVersementNotes(""); load();
+    } catch (e: any) { setVersementErreur(e?.message || "Erreur lors de l'enregistrement."); }
     setVersementSaving(false);
   };
 
-  const saveNotes = async (id: number) => {
-    await registreApi.update(id, { notes: editNotes });
-    setDetailId(null); load();
+  const saveNotes = async (id: number) => { await registreApi.update(id, { notes: editNotes }); setDetailId(null); load(); };
+  const del = async (id: number) => { if (!window.confirm("Supprimer cette entrée ?")) return; await registreApi.delete(id); load(); };
+
+  const saveBilan = async () => {
+    if (!stats) return;
+    setBilanSaving(true);
+    const portee = porteeFilter === "tout" ? "tout" : porteeFilter;
+    const actifs  = portee === "entreprise" ? stats.total_actifs_entreprise  : portee === "personnel" ? stats.total_actifs_personnel  : stats.total_actifs_entreprise  + stats.total_actifs_personnel;
+    const passifs = portee === "entreprise" ? stats.total_passifs_entreprise : portee === "personnel" ? stats.total_passifs_personnel : stats.total_passifs_entreprise + stats.total_passifs_personnel;
+    try {
+      await registreApi.saveBilan({ date_bilan: new Date().toISOString().slice(0, 10), total_actifs: actifs, total_passifs: passifs, valeur_nette: actifs - passifs, portee });
+      load();
+    } catch {}
+    setBilanSaving(false);
   };
 
-  const del = async (id: number) => {
-    if (!window.confirm("Supprimer cette entrée ?")) return;
-    await registreApi.delete(id);
-    load();
-  };
+  const filteredEntrees = porteeFilter === "tout" ? entrees : entrees.filter(e => (e.portee || "entreprise") === porteeFilter);
+  const actifs    = filteredEntrees.filter(e => e.statut === "actif" && e.type === "actif");
+  const prets     = filteredEntrees.filter(e => e.statut === "actif" && e.type === "pret");
+  const dettes    = filteredEntrees.filter(e => e.statut === "actif" && e.type === "emprunt");
+  const autres    = filteredEntrees.filter(e => e.statut === "actif" && e.type === "autre");
+  const archivees = filteredEntrees.filter(e => e.statut !== "actif");
 
-  const prets      = entrees.filter(e => e.statut === "actif" && e.type === "pret");
-  const dettes     = entrees.filter(e => e.statut === "actif" && e.type === "emprunt");
-  const autres     = entrees.filter(e => e.statut === "actif" && e.type === "autre");
-  const archivees  = entrees.filter(e => e.statut !== "actif");
+  const totalActifs  = actifs.reduce((s, e) => s + e.montant, 0);
+  const totalPassifs = [...prets, ...dettes, ...autres].reduce((s, e) => s + Math.max(0, e.montant - (e.montant_paye || 0)), 0);
+  const valeurNette  = totalActifs - totalPassifs;
 
   const statutBadge = (s: string) => {
-    if (s === "actif")     return { label: "Actif",      color: ORANGE, bg: "rgba(245,158,11,0.15)" };
-    if (s === "rembourse") return { label: "Remboursé",  color: GREEN,  bg: GREEN_DIM };
-    return                        { label: "Annulé",     color: GRAY,   bg: "rgba(255,255,255,0.06)" };
+    if (s === "actif")     return { label: "Actif",     color: ORANGE, bg: "rgba(245,158,11,0.15)" };
+    if (s === "rembourse") return { label: "Remboursé", color: GREEN,  bg: GREEN_DIM };
+    return                        { label: "Annulé",    color: GRAY,   bg: "rgba(255,255,255,0.06)" };
   };
   const typeBadge = (t: string) => {
-    if (t === "pret")    return { label: "Prêt",   color: BLUE,   bg: "rgba(56,189,248,0.12)" };
-    if (t === "emprunt") return { label: "Dette",  color: RED,    bg: "rgba(255,77,77,0.12)" };
-    return                      { label: "Autre",  color: GRAY,   bg: "rgba(255,255,255,0.06)" };
+    if (t === "pret")    return { label: "Prêt",  color: BLUE,     bg: "rgba(56,189,248,0.12)"  };
+    if (t === "emprunt") return { label: "Dette", color: RED,      bg: "rgba(255,77,77,0.12)"   };
+    if (t === "actif")   return { label: "Actif", color: "#a78bfa", bg: "rgba(167,139,250,0.12)" };
+    return                      { label: "Autre", color: GRAY,     bg: "rgba(255,255,255,0.06)" };
   };
+
+  const inpStyle: React.CSSProperties = { width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box", colorScheme: "dark" as any };
+  const lblStyle: React.CSSProperties = { display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase" as const, letterSpacing: "0.06em" };
+
+  const chartData = [...bilans].reverse().map(b => ({
+    date: b.date_bilan,
+    "Actifs":       Number(b.total_actifs),
+    "Passifs":      Number(b.total_passifs),
+    "Valeur nette": Number(b.valeur_nette),
+  }));
 
   if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: 960 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+    <div style={{ padding: "1.5rem", maxWidth: 980 }}>
+
+      {/* En-tête */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", flexWrap: "wrap", marginBottom: "1.2rem" }}>
         <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.4rem", margin: 0 }}>💰 Registre financier</h2>
-        <button onClick={() => setModal(true)}
-          style={{ marginLeft: "auto", background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.5rem 1.1rem", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer" }}>
-          + Nouvelle entrée
-        </button>
+        <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <button onClick={() => setShowChart(v => !v)}
+            style={{ background: showChart ? "rgba(56,189,248,0.2)" : "rgba(255,255,255,0.06)", border: `1px solid ${showChart ? BLUE : "rgba(255,255,255,0.12)"}`, color: showChart ? BLUE : GRAY, borderRadius: 7, padding: "0.45rem 0.9rem", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}>
+            📈 Bilans
+          </button>
+          <button onClick={saveBilan} disabled={bilanSaving}
+            style={{ background: "rgba(109,212,0,0.1)", border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 7, padding: "0.45rem 0.9rem", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}>
+            {bilanSaving ? "…" : "📸 Capturer bilan"}
+          </button>
+          <button onClick={() => { setForm(EMPTY_ENTREE); setModal(true); }}
+            style={{ background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.5rem 1.1rem", fontWeight: 800, fontSize: "0.88rem", cursor: "pointer" }}>
+            + Nouvelle entrée
+          </button>
+        </div>
       </div>
 
-      {/* KPIs */}
-      {stats && (
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          {[
-            { label: "Total prêté (actif)",     val: fmt$(stats.total_prete),              color: BLUE   },
-            { label: "Total dettes (actif)",     val: fmt$(stats.total_emprunte),           color: RED    },
-            { label: "Solde net",               val: fmt$(stats.total_prete - stats.total_emprunte), color: (stats.total_prete - stats.total_emprunte) >= 0 ? GREEN : RED },
-            { label: "Remboursements reçus",    val: fmt$(stats.total_rembourse_pret),     color: GRAY   },
-          ].map(({ label, val, color }) => (
-            <div key={label} style={{ background: NAVY_MID, border: `1px solid ${color}33`, borderRadius: 8, padding: "1rem 1.4rem", flex: 1, minWidth: 160 }}>
-              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.3rem" }}>{label}</div>
-              <div style={{ color, fontWeight: 800, fontSize: "1.5rem" }}>{val}</div>
-            </div>
-          ))}
+      {/* Filtre portée */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.2rem" }}>
+        {(["tout","entreprise","personnel"] as const).map(v => (
+          <button key={v} onClick={() => setPorteeFilter(v)}
+            style={{ background: porteeFilter === v ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${porteeFilter === v ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.1)"}`, color: porteeFilter === v ? "#fff" : GRAY, borderRadius: 6, padding: "0.35rem 0.85rem", fontSize: "0.78rem", fontWeight: porteeFilter === v ? 700 : 400, cursor: "pointer", textTransform: "capitalize" }}>
+            {v === "tout" ? "Tout" : v === "entreprise" ? "🏢 Entreprise" : "👤 Personnel"}
+          </button>
+        ))}
+      </div>
+
+      {/* Dashboard ACTIF / PASSIF / VALEUR NETTE */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: "0.8rem", marginBottom: "1.4rem" }}>
+        {[
+          { label: "Valeur nette",   val: valeurNette,  color: valeurNette >= 0 ? GREEN : RED },
+          { label: "Total actifs",   val: totalActifs,  color: "#a78bfa" },
+          { label: "Total passifs",  val: totalPassifs, color: RED },
+          { label: "Prêts actifs",   val: prets.reduce((s,e) => s + Math.max(0, e.montant - (e.montant_paye||0)), 0), color: BLUE },
+          { label: "Dettes actives", val: dettes.reduce((s,e) => s + Math.max(0, e.montant - (e.montant_paye||0)), 0), color: ORANGE },
+        ].map(({ label, val, color }) => (
+          <div key={label} style={{ background: NAVY_MID, border: `1px solid ${color}33`, borderRadius: 9, padding: "0.9rem 1.1rem" }}>
+            <div style={{ color: GRAY_DIM, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.25rem" }}>{label}</div>
+            <div style={{ color, fontWeight: 800, fontSize: "1.3rem" }}>{fmt$(val)}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Graphique bilans */}
+      {showChart && chartData.length > 0 && (
+        <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "1.2rem", marginBottom: "1.4rem" }}>
+          <div style={{ color: GRAY, fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "0.8rem" }}>Évolution — bilans capturés</div>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="date" tick={{ fill: GRAY_DIM, fontSize: 10 }} />
+              <YAxis tick={{ fill: GRAY_DIM, fontSize: 10 }} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, color: "#fff" }} formatter={(v: any) => fmt$(v)} />
+              <Line type="monotone" dataKey="Actifs"       stroke="#a78bfa" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Passifs"      stroke={RED}     strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Valeur nette" stroke={GREEN}   strokeWidth={2.5} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       )}
 
       {/* Sections */}
-      {prets.length === 0 && dettes.length === 0 && autres.length === 0 && archivees.length === 0 ? (
+      {actifs.length + prets.length + dettes.length + autres.length + archivees.length === 0 ? (
         <div style={{ textAlign: "center", color: GRAY_DIM, padding: "4rem 0" }}>
           <div style={{ fontSize: "3rem", marginBottom: "0.8rem" }}>💰</div>
-          <div>Aucune entrée. Commencez par enregistrer un prêt ou une dette.</div>
+          <div>Aucune entrée. Commencez par enregistrer un actif, un prêt ou une dette.</div>
         </div>
       ) : (
         <>
+          {/* ACTIFS */}
+          {actifs.length > 0 && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <SectionHeader label="Actifs" count={actifs.length} color="#a78bfa" icon="🏦" />
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {actifs.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
+              </div>
+            </div>
+          )}
           {/* PRÊTS */}
           {prets.length > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
-                <span style={{ color: BLUE, fontSize: "0.8rem" }}>💸</span>
-                <span style={{ color: BLUE, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Prêts actifs</span>
-                <span style={{ background: "rgba(56,189,248,0.12)", color: BLUE, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{prets.length}</span>
-              </div>
+              <SectionHeader label="Prêts actifs" count={prets.length} color={BLUE} icon="💸" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                 {prets.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
-
           {/* DETTES */}
           {dettes.length > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
-                <span style={{ color: RED, fontSize: "0.8rem" }}>📋</span>
-                <span style={{ color: RED, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Dettes (emprunts)</span>
-                <span style={{ background: "rgba(255,77,77,0.12)", color: RED, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{dettes.length}</span>
-              </div>
+              <SectionHeader label="Dettes (emprunts)" count={dettes.length} color={RED} icon="📋" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                 {dettes.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
-
           {/* AUTRES */}
           {autres.length > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
-                <span style={{ color: GRAY, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Autres actifs</span>
-                <span style={{ background: "rgba(255,255,255,0.07)", color: GRAY, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{autres.length}</span>
-              </div>
+              <SectionHeader label="Autres" count={autres.length} color={GRAY} icon="📄" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                 {autres.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
               </div>
             </div>
           )}
-
           {/* ARCHIVÉS */}
           {archivees.length > 0 && (
             <div>
@@ -5795,49 +5871,101 @@ function RegistreFinancier() {
         </>
       )}
 
-      {/* Modal nouvelle entrée */}
+      {/* ── MODAL NOUVELLE ENTRÉE ──────────────────────────────── */}
       {modal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "2rem", width: 440, maxWidth: "92vw", maxHeight: "90vh", overflowY: "auto" }}>
-            <h3 style={{ color: "#fff", margin: "0 0 1.3rem", fontWeight: 800 }}>Nouvelle entrée</h3>
-            {/* Type */}
-            <div style={{ marginBottom: "0.9rem" }}>
-              <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Type *</label>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                {[["pret","Prêt (j'ai prêté)"],["emprunt","Dette / Emprunt"],["autre","Autre"]].map(([v, lbl]) => (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "2rem", width: 460, maxWidth: "92vw", maxHeight: "92vh", overflowY: "auto" }}>
+            <h3 style={{ color: "#fff", margin: "0 0 1.2rem", fontWeight: 800 }}>Nouvelle entrée</h3>
+
+            {/* Type (4 boutons) */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={lblStyle}>Type *</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem" }}>
+                {([["pret","💸 Prêt (j'ai prêté)",BLUE],["emprunt","📋 Dette / Emprunt",RED],["actif","🏦 Actif (bien/compte)","#a78bfa"],["autre","📄 Autre",GRAY]] as [string,string,string][]).map(([v, lbl, c]) => (
                   <button key={v} onClick={() => setForm(f => ({ ...f, type: v }))}
-                    style={{ flex: 1, background: form.type === v ? (v === "pret" ? "rgba(56,189,248,0.2)" : v === "emprunt" ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.05)", border: `1px solid ${form.type === v ? (v === "pret" ? BLUE : v === "emprunt" ? ORANGE : GRAY) : "rgba(255,255,255,0.12)"}`, color: form.type === v ? "#fff" : GRAY, borderRadius: 6, padding: "0.5rem 0.3rem", fontSize: "0.78rem", cursor: "pointer", fontWeight: form.type === v ? 700 : 400 }}>
+                    style={{ background: form.type === v ? `${c}22` : "rgba(255,255,255,0.04)", border: `1px solid ${form.type === v ? c : "rgba(255,255,255,0.1)"}`, color: form.type === v ? c : GRAY, borderRadius: 7, padding: "0.5rem 0.4rem", fontSize: "0.8rem", cursor: "pointer", fontWeight: form.type === v ? 700 : 400 }}>
                     {lbl}
                   </button>
                 ))}
               </div>
             </div>
+
+            {/* Portée */}
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={lblStyle}>Portée</label>
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                {[["entreprise","🏢 Entreprise"],["personnel","👤 Personnel"]].map(([v, lbl]) => (
+                  <button key={v} onClick={() => setForm(f => ({ ...f, portee: v }))}
+                    style={{ flex: 1, background: form.portee === v ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${form.portee === v ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.1)"}`, color: form.portee === v ? "#fff" : GRAY, borderRadius: 7, padding: "0.45rem", fontSize: "0.82rem", cursor: "pointer", fontWeight: form.portee === v ? 700 : 400 }}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Champs communs */}
             {[
-              { label: "Personne / Organisation *", key: "personne", ph: "ex: Jean Tremblay" },
-              { label: "Description", key: "description", ph: "ex: Prêt pour réparation iPhone" },
-              { label: "Montant ($) *", key: "montant", ph: "ex: 250" },
-              { label: "Date d'échéance", key: "date_echeance", ph: "", type: "date" },
-              { label: "Notes", key: "notes", ph: "" },
-            ].map(({ label, key, ph, type }) => (
-              <div key={key} style={{ marginBottom: "0.9rem" }}>
-                <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
-                <input type={type || "text"} value={(form as any)[key]} placeholder={ph}
-                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                  style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box", colorScheme: "dark" }} />
+              { label: "Personne / Organisation *", key: "personne",    ph: "ex: Jean Tremblay" },
+              { label: "Description",               key: "description", ph: "ex: Prêt pour réparation iPhone" },
+              { label: "Montant ($) *",             key: "montant",     ph: "ex: 250" },
+              { label: "Notes",                     key: "notes",       ph: "" },
+            ].map(({ label, key, ph }) => (
+              <div key={key} style={{ marginBottom: "0.85rem" }}>
+                <label style={lblStyle}>{label}</label>
+                <input type="text" value={(form as any)[key]} placeholder={ph} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={inpStyle} />
               </div>
             ))}
-            {erreur && (
-              <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 7, padding: "0.6rem 0.9rem", color: RED, fontSize: "0.83rem", marginBottom: "0.8rem" }}>
-                ⚠ {erreur}
+
+            {/* Champs conditionnels — actif */}
+            {form.type === "actif" && (
+              <>
+                <div style={{ color: "#a78bfa", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0.5rem 0 0.7rem", fontWeight: 700 }}>Détails de l'actif</div>
+                {[
+                  { label: "Catégorie (ex: Véhicule, Épargne)", key: "categorie_actif", ph: "Véhicule / Épargne / Immo…" },
+                  { label: "Coût d'achat ($)",                  key: "cout_achat",      ph: "ex: 12000" },
+                  { label: "Date d'acquisition",                key: "date_valeur",     ph: "", type: "date" },
+                ].map(({ label, key, ph, type }) => (
+                  <div key={key} style={{ marginBottom: "0.85rem" }}>
+                    <label style={lblStyle}>{label}</label>
+                    <input type={type||"text"} value={(form as any)[key]} placeholder={ph} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={inpStyle} />
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Champs conditionnels — emprunt/dette */}
+            {form.type === "emprunt" && (
+              <>
+                <div style={{ color: RED, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.07em", margin: "0.5rem 0 0.7rem", fontWeight: 700 }}>Détails de la dette</div>
+                {[
+                  { label: "Limite de crédit ($)",   key: "limite_credit",    ph: "ex: 5000" },
+                  { label: "Paiement minimum ($)",   key: "paiement_minimum", ph: "ex: 25"   },
+                  { label: "Taux d'intérêt (%)",     key: "taux_interet",     ph: "ex: 19.99" },
+                  { label: "Date d'échéance",         key: "date_echeance",    ph: "", type: "date" },
+                ].map(({ label, key, ph, type }) => (
+                  <div key={key} style={{ marginBottom: "0.85rem" }}>
+                    <label style={lblStyle}>{label}</label>
+                    <input type={type||"text"} value={(form as any)[key]} placeholder={ph} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} style={inpStyle} />
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Champ échéance pour prêt / autre */}
+            {(form.type === "pret" || form.type === "autre") && (
+              <div style={{ marginBottom: "0.85rem" }}>
+                <label style={lblStyle}>Date d'échéance</label>
+                <input type="date" value={form.date_echeance} onChange={e => setForm(f => ({ ...f, date_echeance: e.target.value }))} style={inpStyle} />
               </div>
             )}
-            <div style={{ display: "flex", gap: "0.8rem", marginTop: "0.4rem" }}>
-              <button onClick={submit} disabled={saving}
-                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
+
+            {erreur && <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 7, padding: "0.6rem 0.9rem", color: RED, fontSize: "0.83rem", marginBottom: "0.8rem" }}>⚠ {erreur}</div>}
+
+            <div style={{ display: "flex", gap: "0.8rem", marginTop: "0.5rem" }}>
+              <button onClick={submit} disabled={saving} style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, fontSize: "0.9rem", cursor: saving ? "wait" : "pointer" }}>
                 {saving ? "Envoi…" : "Enregistrer"}
               </button>
-              <button onClick={() => { setModal(false); setForm(EMPTY_ENTREE); setErreur(""); }}
-                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
+              <button onClick={() => { setModal(false); setForm(EMPTY_ENTREE); setErreur(""); }} style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
                 Annuler
               </button>
             </div>
@@ -5845,81 +5973,60 @@ function RegistreFinancier() {
         </div>
       )}
 
-      {/* Modal notes */}
+      {/* ── MODAL NOTES ────────────────────────────────────────── */}
       {detailId !== null && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "1.8rem", width: 400, maxWidth: "92vw" }}>
             <h3 style={{ color: "#fff", margin: "0 0 1rem", fontWeight: 800 }}>Notes internes</h3>
-            <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={6}
-              placeholder="Ajoutez des notes sur cette entrée…"
+            <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={6} placeholder="Ajoutez des notes…"
               style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.6rem 0.7rem", fontSize: "0.88rem", resize: "vertical", boxSizing: "border-box" }} />
             <div style={{ display: "flex", gap: "0.8rem", marginTop: "1rem" }}>
-              <button onClick={() => saveNotes(detailId)}
-                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.65rem", fontWeight: 800, cursor: "pointer" }}>
-                Enregistrer
-              </button>
-              <button onClick={() => setDetailId(null)}
-                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.65rem", fontWeight: 700, cursor: "pointer" }}>
-                Annuler
-              </button>
+              <button onClick={() => saveNotes(detailId)} style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.65rem", fontWeight: 800, cursor: "pointer" }}>Enregistrer</button>
+              <button onClick={() => setDetailId(null)} style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.65rem", fontWeight: 700, cursor: "pointer" }}>Annuler</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal versement */}
+      {/* ── MODAL VERSEMENT ────────────────────────────────────── */}
       {versementModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: NAVY_MID, border: "1px solid rgba(109,212,0,0.2)", borderRadius: 12, padding: "1.8rem", width: 400, maxWidth: "92vw" }}>
             <h3 style={{ color: "#fff", margin: "0 0 0.3rem", fontWeight: 800 }}>💳 Versement</h3>
             <div style={{ color: GRAY, fontSize: "0.82rem", marginBottom: "1.2rem" }}>{versementModal.personne}</div>
-
-            {/* Récapitulatif */}
             <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 7, padding: "0.75rem 1rem", marginBottom: "1.1rem", display: "flex", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Total</div>
-                <div style={{ color: "#fff", fontWeight: 800 }}>{fmt$(versementModal.montant)}</div>
-              </div>
-              <div>
-                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Déjà payé</div>
-                <div style={{ color: GREEN, fontWeight: 800 }}>{fmt$(versementModal.montant_paye || 0)}</div>
-              </div>
-              <div>
-                <div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Restant</div>
-                <div style={{ color: RED, fontWeight: 800 }}>{fmt$(versementModal.montant - (versementModal.montant_paye || 0))}</div>
-              </div>
+              <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Total</div><div style={{ color: "#fff", fontWeight: 800 }}>{fmt$(versementModal.montant)}</div></div>
+              <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Déjà payé</div><div style={{ color: GREEN, fontWeight: 800 }}>{fmt$(versementModal.montant_paye || 0)}</div></div>
+              <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Restant</div><div style={{ color: RED, fontWeight: 800 }}>{fmt$(versementModal.montant - (versementModal.montant_paye || 0))}</div></div>
             </div>
-
             <div style={{ marginBottom: "0.9rem" }}>
               <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Montant du versement *</label>
-              <input type="text" value={versementMontant} onChange={e => setVersementMontant(e.target.value)}
-                placeholder={`ex: ${fmt$(versementModal.montant - (versementModal.montant_paye || 0))}`}
+              <input type="text" value={versementMontant} onChange={e => setVersementMontant(e.target.value)} placeholder={`ex: ${fmt$(versementModal.montant - (versementModal.montant_paye || 0))}`}
                 style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.5rem 0.7rem", fontSize: "0.9rem", boxSizing: "border-box" }} />
             </div>
             <div style={{ marginBottom: "0.9rem" }}>
               <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Note (optionnel)</label>
-              <input type="text" value={versementNotes} onChange={e => setVersementNotes(e.target.value)}
-                placeholder="ex: virement e-Transfer du 12 sept"
+              <input type="text" value={versementNotes} onChange={e => setVersementNotes(e.target.value)} placeholder="ex: virement e-Transfer du 12 sept"
                 style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.5rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
             </div>
-            {versementErreur && (
-              <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 6, padding: "0.5rem 0.8rem", color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>
-                ⚠ {versementErreur}
-              </div>
-            )}
+            {versementErreur && <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 6, padding: "0.5rem 0.8rem", color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>⚠ {versementErreur}</div>}
             <div style={{ display: "flex", gap: "0.8rem" }}>
-              <button onClick={submitVersement} disabled={versementSaving}
-                style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, cursor: versementSaving ? "wait" : "pointer" }}>
-                {versementSaving ? "Envoi…" : "Enregistrer"}
-              </button>
-              <button onClick={() => { setVersementModal(null); setVersementMontant(""); setVersementNotes(""); setVersementErreur(""); }}
-                style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
-                Annuler
-              </button>
+              <button onClick={submitVersement} disabled={versementSaving} style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, cursor: versementSaving ? "wait" : "pointer" }}>{versementSaving ? "Envoi…" : "Enregistrer"}</button>
+              <button onClick={() => { setVersementModal(null); setVersementMontant(""); setVersementNotes(""); setVersementErreur(""); }} style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>Annuler</button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SectionHeader({ label, count, color, icon }: { label: string; count: number; color: string; icon: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.7rem" }}>
+      <span style={{ fontSize: "0.82rem" }}>{icon}</span>
+      <span style={{ color, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>{label}</span>
+      <span style={{ background: `${color}20`, color, borderRadius: 5, padding: "0.1rem 0.45rem", fontSize: "0.7rem", fontWeight: 700 }}>{count}</span>
     </div>
   );
 }
@@ -5935,33 +6042,36 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
 }) {
   const tb = typeBadge(e.type);
   const sb = statutBadge(e.statut);
-  const paye = e.montant_paye || 0;
+  const paye    = e.montant_paye || 0;
   const restant = Math.max(0, e.montant - paye);
-  const pct = e.montant > 0 ? Math.min(100, (paye / e.montant) * 100) : 0;
+  const pct     = e.montant > 0 ? Math.min(100, (paye / e.montant) * 100) : 0;
+  const isActif = e.type === "actif";
+  const porteeLabel = (e.portee || "entreprise") === "personnel" ? "👤" : "🏢";
 
   return (
     <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "1rem 1.2rem", display: "flex", gap: "1rem", alignItems: "flex-start", flexWrap: "wrap" }}>
       {/* Badges */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 80 }}>
-        <span style={{ background: tb.bg, color: tb.color, borderRadius: 5, padding: "0.2rem 0.6rem", fontSize: "0.76rem", fontWeight: 700, textAlign: "center" }}>{tb.label}</span>
-        <span style={{ background: sb.bg, color: sb.color, borderRadius: 5, padding: "0.2rem 0.6rem", fontSize: "0.72rem", textAlign: "center" }}>{sb.label}</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", minWidth: 78 }}>
+        <span style={{ background: tb.bg, color: tb.color, borderRadius: 5, padding: "0.2rem 0.55rem", fontSize: "0.75rem", fontWeight: 700, textAlign: "center" }}>{tb.label}</span>
+        <span style={{ background: sb.bg, color: sb.color, borderRadius: 5, padding: "0.18rem 0.55rem", fontSize: "0.7rem", textAlign: "center" }}>{sb.label}</span>
+        <span style={{ background: "rgba(255,255,255,0.05)", color: GRAY_DIM, borderRadius: 5, padding: "0.15rem 0.55rem", fontSize: "0.68rem", textAlign: "center" }}>{porteeLabel}</span>
       </div>
       {/* Infos */}
       <div style={{ flex: 1, minWidth: 160 }}>
         <div style={{ color: "#fff", fontWeight: 800, fontSize: "0.95rem" }}>{e.personne}</div>
         {e.description && <div style={{ color: GRAY, fontSize: "0.82rem", marginTop: "0.15rem" }}>{e.description}</div>}
+        {isActif && e.categorie_actif && <div style={{ color: "#a78bfa", fontSize: "0.75rem", marginTop: "0.15rem", fontWeight: 600 }}>{e.categorie_actif}</div>}
+        {!isActif && e.taux_interet && <div style={{ color: ORANGE, fontSize: "0.72rem", marginTop: "0.1rem" }}>Taux : {e.taux_interet}%{e.paiement_minimum ? ` · Min : ${fmt$(e.paiement_minimum)}` : ""}</div>}
+        {!isActif && e.limite_credit && <div style={{ color: GRAY_DIM, fontSize: "0.72rem" }}>Limite : {fmt$(e.limite_credit)} · Utilisation : {e.limite_credit > 0 ? Math.round((e.montant/e.limite_credit)*100) : 0}%</div>}
         {e.notes && <div style={{ color: GRAY_DIM, fontSize: "0.78rem", fontStyle: "italic", marginTop: "0.25rem" }}>{e.notes}</div>}
         <div style={{ color: GRAY_DIM, fontSize: "0.72rem", marginTop: "0.4rem" }}>
           {new Date(e.created_at).toLocaleDateString("fr-CA")}
           {e.date_echeance && <> · Échéance : <span style={{ color: ORANGE }}>{e.date_echeance}</span></>}
-          {e.dernier_versement && (
-            <> · Dernier versement : <span style={{ color: GREEN }}>
-              {new Date(e.dernier_versement).toLocaleDateString("fr-CA")}
-            </span></>
-          )}
+          {e.date_valeur && <> · Acquisition : <span style={{ color: GRAY }}>{e.date_valeur}</span></>}
+          {e.dernier_versement && <> · Dernier versement : <span style={{ color: GREEN }}>{new Date(e.dernier_versement).toLocaleDateString("fr-CA")}</span></>}
         </div>
-        {/* Barre de progression versements */}
-        {paye > 0 && (
+        {/* Barre progression */}
+        {!isActif && paye > 0 && (
           <div style={{ marginTop: "0.6rem" }}>
             <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 6, overflow: "hidden" }}>
               <div style={{ width: `${pct}%`, background: pct >= 100 ? GREEN : BLUE, height: "100%", borderRadius: 4, transition: "width 0.4s" }} />
@@ -5972,46 +6082,42 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
             </div>
           </div>
         )}
+        {/* Crédit utilisation */}
+        {e.limite_credit && e.limite_credit > 0 && (
+          <div style={{ marginTop: "0.5rem" }}>
+            <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 5, overflow: "hidden" }}>
+              <div style={{ width: `${Math.min(100, (e.montant / e.limite_credit) * 100)}%`, background: e.montant / e.limite_credit > 0.8 ? RED : ORANGE, height: "100%", borderRadius: 4 }} />
+            </div>
+          </div>
+        )}
       </div>
       {/* Montant */}
       <div style={{ textAlign: "right", minWidth: 90 }}>
-        <div style={{ color: e.type === "pret" ? BLUE : RED, fontWeight: 900, fontSize: "1.25rem" }}>
-          {e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
+        <div style={{ color: isActif ? "#a78bfa" : (e.type === "pret" ? BLUE : RED), fontWeight: 900, fontSize: "1.25rem" }}>
+          {isActif ? "" : e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
         </div>
-        {paye > 0 && restant < e.montant && (
-          <div style={{ color: GRAY_DIM, fontSize: "0.7rem", marginTop: "0.15rem" }}>
-            {Math.round(pct)}% payé
+        {!isActif && paye > 0 && restant < e.montant && (
+          <div style={{ color: GRAY_DIM, fontSize: "0.7rem", marginTop: "0.15rem" }}>{Math.round(pct)}% payé</div>
+        )}
+        {isActif && e.cout_achat && e.cout_achat !== e.montant && (
+          <div style={{ color: e.montant > e.cout_achat ? GREEN : RED, fontSize: "0.72rem", marginTop: "0.1rem" }}>
+            {e.montant > e.cout_achat ? "▲" : "▼"} {fmt$(Math.abs(e.montant - e.cout_achat))}
           </div>
         )}
       </div>
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 110 }}>
-        {e.statut === "actif" && (
-          <button onClick={() => onVersement(e)}
-            style={{ background: "rgba(109,212,0,0.15)", border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>
-            💳 Versement
-          </button>
+        {!isActif && e.statut === "actif" && (
+          <button onClick={() => onVersement(e)} style={{ background: "rgba(109,212,0,0.15)", border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>💳 Versement</button>
+        )}
+        {!isActif && e.statut === "actif" && (
+          <button onClick={() => onStatut(e.id, "rembourse")} style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 600 }}>✓ Remboursé</button>
         )}
         {e.statut === "actif" && (
-          <button onClick={() => onStatut(e.id, "rembourse")}
-            style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 600 }}>
-            ✓ Remboursé
-          </button>
+          <button onClick={() => onStatut(e.id, "annule")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: GRAY, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>Annuler</button>
         )}
-        {e.statut === "actif" && (
-          <button onClick={() => onStatut(e.id, "annule")}
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: GRAY, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>
-            Annuler
-          </button>
-        )}
-        <button onClick={onEdit}
-          style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)", color: BLUE, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>
-          ✎ Notes
-        </button>
-        <button onClick={() => onDel(e.id)}
-          style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", color: RED, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>
-          ✕ Suppr.
-        </button>
+        <button onClick={onEdit} style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)", color: BLUE, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>✎ Notes</button>
+        <button onClick={() => onDel(e.id)} style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", color: RED, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>✕ Suppr.</button>
       </div>
     </div>
   );

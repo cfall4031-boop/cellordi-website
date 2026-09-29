@@ -3,11 +3,8 @@ const bcrypt = require("bcryptjs");
 const path = require("path");
 const fs = require("fs");
 
-// En production Railway : DB_PATH=/data/cellordi.db (Volume persistant)
-// En développement      : fichier local backend/cellordi.db
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "cellordi.db");
 
-// Créer le répertoire parent si nécessaire (ex: /data sur Railway)
 const dbDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
@@ -110,20 +107,12 @@ db.exec(`
   );
 `);
 
-// Migration: add date_livraison if column is missing (existing databases)
 try { db.exec("ALTER TABLE tickets ADD COLUMN date_livraison TEXT"); } catch (_) {}
-
-// Migration: add reply fields to messages_contact (existing databases)
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN reply_text TEXT"); } catch (_) {}
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN replied_at DATETIME"); } catch (_) {}
-
-// Migration: add archived field to messages_contact
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 0"); } catch (_) {}
-
-// Migration: add telephone field to messages_contact
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN telephone TEXT"); } catch (_) {}
 
-// Migration: allow 'en_suspend' in tickets.statut CHECK constraint (SQLite requires table rebuild)
 try {
   const row = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='tickets'").get();
   if (row && row.sql && !row.sql.includes("'en_suspend'")) {
@@ -169,7 +158,6 @@ try {
   console.error("Migration CHECK tickets.statut échouée :", err?.message || err);
 }
 
-// ── MISES À JOUR TICKET (tracking updates) ────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS ticket_updates (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -179,7 +167,6 @@ db.exec(`
   );
 `);
 
-// ── PUSH SUBSCRIPTIONS (notifications PWA) ────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS push_subscriptions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -190,7 +177,6 @@ db.exec(`
   );
 `);
 
-// ── CALCULATEUR DE PRIX ────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS pieces_catalogue (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -225,17 +211,14 @@ db.exec(`
   );
 `);
 
-// ── MIGRATION pieces_catalogue ──────────────────────────────────────────────
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN cout_vente REAL").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN piece_detachee INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN nb_demandes INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN quantite_stock INTEGER DEFAULT 0").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN seuil_alerte INTEGER DEFAULT 1").run(); } catch {}
-// Ramener les pièces avec seuil par défaut (3) au nouveau minimum (1)
 try { db.prepare("UPDATE pieces_catalogue SET seuil_alerte = 1 WHERE seuil_alerte = 3").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN photos TEXT DEFAULT '[]'").run(); } catch {}
 
-// ── TABLE MOUVEMENTS STOCK ───────────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS mouvements_stock (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -249,7 +232,6 @@ db.exec(`
   );
 `);
 
-// ── NOTES ADMIN ──────────────────────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS notes_admin (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -289,6 +271,94 @@ db.exec(`
   );
 `);
 
+// ── MIGRATIONS REGISTRE FINANCIER : nouvelles colonnes ───────────────────────
+const _regCols = [
+  ["portee",           "TEXT DEFAULT 'entreprise'"],
+  ["limite_credit",    "REAL"],
+  ["paiement_minimum", "REAL"],
+  ["taux_interet",     "REAL"],
+  ["categorie_actif",  "TEXT"],
+  ["cout_achat",       "REAL"],
+  ["date_valeur",      "TEXT"],
+];
+_regCols.forEach(([col, def]) => {
+  try { db.prepare(`ALTER TABLE registre_financier ADD COLUMN ${col} ${def}`).run(); } catch {}
+});
+
+// ── MIGRATION CHECK registre_financier : ajouter type='actif' ────────────────
+(function () {
+  try {
+    const r = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='registre_financier'").get();
+    if (!r || !r.sql || r.sql.indexOf("'actif'") !== -1) return;
+    db.pragma("foreign_keys = OFF");
+    db.transaction(() => {
+      db.exec([
+        "CREATE TABLE registre_financier_v2 (",
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,",
+        "  type TEXT NOT NULL,",
+        "  personne TEXT NOT NULL,",
+        "  description TEXT DEFAULT '',",
+        "  montant REAL NOT NULL,",
+        "  date_echeance TEXT,",
+        "  statut TEXT DEFAULT 'actif',",
+        "  notes TEXT DEFAULT '',",
+        "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,",
+        "  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,",
+        "  portee TEXT DEFAULT 'entreprise',",
+        "  limite_credit REAL,",
+        "  paiement_minimum REAL,",
+        "  taux_interet REAL,",
+        "  categorie_actif TEXT,",
+        "  cout_achat REAL,",
+        "  date_valeur TEXT",
+        ")",
+      ].join(" "));
+      db.exec([
+        "INSERT INTO registre_financier_v2",
+        "(id,type,personne,description,montant,date_echeance,statut,notes,",
+        "created_at,updated_at,portee,limite_credit,paiement_minimum,",
+        "taux_interet,categorie_actif,cout_achat,date_valeur)",
+        "SELECT id,type,personne,description,montant,date_echeance,statut,notes,",
+        "created_at,updated_at,portee,limite_credit,paiement_minimum,",
+        "taux_interet,categorie_actif,cout_achat,date_valeur",
+        "FROM registre_financier",
+      ].join(" "));
+      db.exec("DROP TABLE registre_financier");
+      db.exec("ALTER TABLE registre_financier_v2 RENAME TO registre_financier");
+    })();
+    db.pragma("foreign_keys = ON");
+    console.log("Migration: registre_financier type=actif ajoute.");
+  } catch (e) {
+    try { db.pragma("foreign_keys = ON"); } catch {}
+    console.error("Migration registre_financier:", e && e.message);
+  }
+})();
+
+// ── HISTORIQUE VALEURS ACTIFS ─────────────────────────────────────────────────
+db.exec([
+  "CREATE TABLE IF NOT EXISTS actifs_historique (",
+  "  id INTEGER PRIMARY KEY AUTOINCREMENT,",
+  "  entree_id INTEGER NOT NULL REFERENCES registre_financier(id) ON DELETE CASCADE,",
+  "  valeur REAL NOT NULL,",
+  "  notes TEXT DEFAULT '',",
+  "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
+  ")",
+].join(" "));
+
+// ── BILANS NETS MENSUELS ──────────────────────────────────────────────────────
+db.exec([
+  "CREATE TABLE IF NOT EXISTS bilans_nets (",
+  "  id INTEGER PRIMARY KEY AUTOINCREMENT,",
+  "  date_bilan TEXT NOT NULL,",
+  "  total_actifs REAL NOT NULL,",
+  "  total_passifs REAL NOT NULL,",
+  "  valeur_nette REAL NOT NULL,",
+  "  portee TEXT DEFAULT 'tout',",
+  "  notes TEXT DEFAULT '',",
+  "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
+  ")",
+].join(" "));
+
 // ── TYPES DE FACTURES (personnalisables) ─────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS facture_types (
@@ -300,7 +370,6 @@ db.exec(`
   );
 `);
 
-// Seed des types par défaut si la table est vide
 (function seedFactureTypes() {
   const count = db.prepare("SELECT COUNT(*) as c FROM facture_types").get();
   if (count.c > 0) return;
@@ -317,7 +386,6 @@ db.exec(`
   console.log("✅ Types de factures initialisés.");
 })();
 
-// ── CALENDRIER FACTURES ───────────────────────────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS factures_calendrier (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -333,18 +401,16 @@ db.exec(`
   );
 `);
 
-// Table des disponibilités hebdomadaires (admin gère quels créneaux sont ouverts)
 db.exec(`
   CREATE TABLE IF NOT EXISTS horaires_dispo (
     id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    jour  INTEGER NOT NULL,   -- 1=Lun, 2=Mar, 3=Mer, 4=Jeu, 5=Ven, 6=Sam
-    heure TEXT    NOT NULL,   -- "09:00"
-    actif INTEGER DEFAULT 1,  -- 1=disponible, 0=fermé
+    jour  INTEGER NOT NULL,
+    heure TEXT    NOT NULL,
+    actif INTEGER DEFAULT 1,
     UNIQUE(jour, heure)
   );
 `);
 
-// Horaires officiels : Lun–Ven 11:00–18h, Sam 12:00–17h, Dim fermé
 function seedHoraires() {
   const count = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo").get();
   if (count.c > 0) return;
@@ -352,10 +418,10 @@ function seedHoraires() {
   const heuresSam = ["12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
   const insert = db.prepare("INSERT OR IGNORE INTO horaires_dispo (jour, heure, actif) VALUES (?, ?, ?)");
   const insertMany = db.transaction(() => {
-    for (let jour = 1; jour <= 5; jour++) {   // Lun–Ven actifs 10:30–18h
+    for (let jour = 1; jour <= 5; jour++) {
       for (const h of heuresLV) insert.run(jour, h, 1);
     }
-    for (const h of heuresSam) {              // Sam actifs 11:30–17h
+    for (const h of heuresSam) {
       insert.run(6, h, 1);
     }
   });
@@ -363,7 +429,6 @@ function seedHoraires() {
   console.log("✅ Horaires initialisés : Lun–Ven 10:30–18h, Sam 11:30–17h, Dim fermé.");
 }
 
-// Migration : si ancien schedule (ex: 09:00) détecté → tout effacer et re-seeder
 const hasOldSchedule = db.prepare("SELECT COUNT(*) as c FROM horaires_dispo WHERE heure = '09:00' AND actif = 1").get();
 if (hasOldSchedule.c > 0) {
   db.prepare("DELETE FROM horaires_dispo").run();
@@ -371,9 +436,7 @@ if (hasOldSchedule.c > 0) {
 }
 seedHoraires();
 
-// Supprimer tous les créneaux avant 11h (tous jours) — idempotent
 db.prepare("DELETE FROM horaires_dispo WHERE heure IN ('10:00','10:30')").run();
-// Supprimer créneaux tardifs hors-horaires
 db.prepare("DELETE FROM horaires_dispo WHERE jour BETWEEN 1 AND 5 AND heure IN ('18:30','19:00')").run();
 db.prepare("DELETE FROM horaires_dispo WHERE jour = 6 AND heure IN ('11:00','11:30','17:30','18:00')").run();
 

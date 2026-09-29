@@ -174,6 +174,9 @@ export const registreApi = {
     req<{ message: string; total_paye: number }>("POST", `/registre/${id}/versement`, data),
   deleteVersement:(entreeId: number, vid: number) =>
     req<{ message: string }>("DELETE", `/registre/${entreeId}/versement/${vid}`),
+  getBilans:      () => req<{ bilans: any[] }>("GET", "/registre/bilans"),
+  saveBilan:      (data: { date_bilan: string; total_actifs: number; total_passifs: number; valeur_nette: number; portee?: string; notes?: string }) =>
+    req<{ message: string; id: number }>("POST", "/registre/bilan", data),
 };
 
 // ── CALENDRIER FACTURES ─────────────────────────────────────
