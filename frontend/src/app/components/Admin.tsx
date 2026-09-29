@@ -5603,6 +5603,7 @@ function CarnetNotes() {
 type EntreeRegistre = {
   id: number; type: string; personne: string; description: string;
   montant: number; montant_paye: number; date_echeance: string | null; statut: string; notes: string; created_at: string;
+  dernier_versement: string | null;
 };
 type StatsRegistre = { total_prete: number; total_emprunte: number; total_rembourse_pret: number; total_rembourse_emprunt: number };
 
@@ -5953,6 +5954,11 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
         <div style={{ color: GRAY_DIM, fontSize: "0.72rem", marginTop: "0.4rem" }}>
           {new Date(e.created_at).toLocaleDateString("fr-CA")}
           {e.date_echeance && <> · Échéance : <span style={{ color: ORANGE }}>{e.date_echeance}</span></>}
+          {e.dernier_versement && (
+            <> · Dernier versement : <span style={{ color: GREEN }}>
+              {new Date(e.dernier_versement).toLocaleDateString("fr-CA")}
+            </span></>
+          )}
         </div>
         {/* Barre de progression versements */}
         {paye > 0 && (

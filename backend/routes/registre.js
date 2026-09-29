@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/", auth, (req, res) => {
   const entrees = db.prepare(`
-    SELECT r.*, COALESCE(SUM(v.montant), 0) AS montant_paye
+    SELECT r.*, COALESCE(SUM(v.montant), 0) AS montant_paye, MAX(v.created_at) AS dernier_versement
     FROM registre_financier r
     LEFT JOIN versements_registre v ON v.entree_id = r.id
     GROUP BY r.id
