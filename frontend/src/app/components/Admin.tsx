@@ -5097,6 +5097,7 @@ ${stats ? `<div class="kpis">
                 const groupPieces = groups[cat];
                 const totalStock  = groupPieces.reduce((s, p) => s + p.quantite_calculee, 0);
                 const coutTotal   = groupPieces.reduce((s, p) => s + (p.cout_fournisseur || 0) * Math.max(p.quantite_calculee, 0), 0);
+                const valeurTotal = groupPieces.reduce((s, p) => s + (p.cout_vente || 0) * Math.max(p.quantite_calculee, 0), 0);
                 const hasAlert    = groupPieces.some(p => p.quantite_calculee <= p.seuil_alerte);
 
                 return (
@@ -5143,6 +5144,11 @@ ${stats ? `<div class="kpis">
                           {coutTotal > 0 && (
                             <span style={{ background: "rgba(255,140,0,0.13)", color: "#f59e0b", borderRadius: 10, padding: "0.1rem 0.55rem", fontSize: "0.72rem", fontWeight: 600 }}>
                               Coût : {fmt$(coutTotal)}
+                            </span>
+                          )}
+                          {valeurTotal > 0 && (
+                            <span style={{ background: "rgba(109,212,0,0.13)", color: "#6dd400", borderRadius: 10, padding: "0.1rem 0.55rem", fontSize: "0.72rem", fontWeight: 600 }}>
+                              Valeur : {fmt$(valeurTotal)}
                             </span>
                           )}
                           {hasAlert && (
