@@ -245,6 +245,9 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushMsg, setPushMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [rdvSettingsOpen, setRdvSettingsOpen] = useState(false);
+  const [rdvSettings, setRdvSettings] = useState<{ actif: number; delai_1: number; delai_2: number }>({ actif: 1, delai_1: 60, delai_2: 30 });
+  const [rdvSettingsLoading, setRdvSettingsLoading] = useState(false);
 
   useEffect(() => {
     if (!pushSupported) return;
@@ -291,6 +294,28 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
       setPushMsg({ text: `Erreur: ${e.message || e}`, ok: false });
     }
     setPushLoading(false);
+  };
+
+  useEffect(() => {
+    notificationsApi.getRdvSettings().then(r => setRdvSettings(r.settings)).catch(() => {});
+  }, []);
+
+  const saveRdvSettings = async (patch: Partial<typeof rdvSettings>) => {
+    setRdvSettingsLoading(true);
+    try {
+      const r = await notificationsApi.saveRdvSettings(patch) as any;
+      setRdvSettings(r.settings);
+    } catch (_) {}
+    setRdvSettingsLoading(false);
+  };
+
+  const testRdvPush = async () => {
+    try {
+      await notificationsApi.testRdvRappel();
+      setPushMsg({ text: "Notification test RDV envoyée !", ok: true });
+    } catch (e: any) {
+      setPushMsg({ text: `Test RDV échoué: ${e.message || e}`, ok: false });
+    }
   };
 
   const testPush = async () => {
@@ -447,6 +472,59 @@ function Sidebar({ active, setActive, adminNom, onLogout, isMobile, sidebarOpen,
               )}
             </>
           )}
+
+          {/* ── Rappels RDV ──────────────────────────────────── */}
+          {pushSupported && pushEnabled && (
+            <div style={{ marginBottom:"0.5rem" }}>
+              <button onClick={() => setRdvSettingsOpen(v => !v)} style={{
+                width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between",
+                background:"transparent", border:`1px solid rgba(109,212,0,0.2)`,
+                color:GRAY, fontSize:"0.72rem", padding:"0.35rem 0.5rem", cursor:"pointer",
+                fontFamily:"'DM Sans',sans-serif"
+              }}>
+                <span>📱 Rappels RDV {rdvSettings.actif ? <span style={{color:GREEN}}>●</span> : <span style={{color:GRAY_DIM}}>○</span>}</span>
+                <span>{rdvSettingsOpen ? "▲" : "▼"}</span>
+              </button>
+              {rdvSettingsOpen && (
+                <div style={{ background:"rgba(0,0,0,0.3)", border:`1px solid rgba(109,212,0,0.15)`, borderTop:"none",
+                  padding:"0.6rem 0.5rem", display:"flex", flexDirection:"column", gap:"0.4rem" }}>
+                  <label style={{ display:"flex", alignItems:"center", gap:"0.5rem", fontSize:"0.72rem", color:GRAY, cursor:"pointer" }}>
+                    <input type="checkbox" checked={!!rdvSettings.actif} disabled={rdvSettingsLoading}
+                      onChange={e => saveRdvSettings({ actif: e.target.checked ? 1 : 0 })}
+                    />
+                    Activer les rappels
+                  </label>
+                  <div style={{ display:"flex", gap:"0.4rem", alignItems:"center" }}>
+                    <label style={{ fontSize:"0.7rem", color:GRAY_DIM, flex:1 }}>
+                      Rappel 1 (min)
+                      <input type="number" min={1} max={240} value={rdvSettings.delai_1} disabled={rdvSettingsLoading}
+                        onChange={e => setRdvSettings(s => ({ ...s, delai_1: Number(e.target.value) }))}
+                        onBlur={e => saveRdvSettings({ delai_1: Number(e.target.value) })}
+                        style={{ display:"block", width:"100%", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)",
+                          color:"#fff", padding:"0.2rem 0.4rem", fontSize:"0.72rem", marginTop:"0.2rem" }}
+                      />
+                    </label>
+                    <label style={{ fontSize:"0.7rem", color:GRAY_DIM, flex:1 }}>
+                      Rappel 2 (min)
+                      <input type="number" min={1} max={240} value={rdvSettings.delai_2} disabled={rdvSettingsLoading}
+                        onChange={e => setRdvSettings(s => ({ ...s, delai_2: Number(e.target.value) }))}
+                        onBlur={e => saveRdvSettings({ delai_2: Number(e.target.value) })}
+                        style={{ display:"block", width:"100%", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)",
+                          color:"#fff", padding:"0.2rem 0.4rem", fontSize:"0.72rem", marginTop:"0.2rem" }}
+                      />
+                    </label>
+                  </div>
+                  <button onClick={testRdvPush} style={{
+                    background:"transparent", border:`1px solid ${GRAY_DIM}`, color:GRAY,
+                    fontSize:"0.7rem", padding:"0.3rem", cursor:"pointer", fontFamily:"'DM Sans',sans-serif"
+                  }}>
+                    🧪 Test notification RDV
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ fontSize:"0.78rem", color:GRAY, marginBottom:"0.6rem" }}>
             Connecté : <strong style={{color:"#fff"}}>{adminNom}</strong>
           </div>

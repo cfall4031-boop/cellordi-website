@@ -224,6 +224,12 @@ export const notificationsApi = {
   test:         () => req<{ message: string; sent: number }>("POST", "/notifications/test"),
   testFactures: () => req<{ message: string }>("POST", "/notifications/test-factures"),
   purge:        () => req<{ message: string; deleted: number }>("DELETE", "/notifications/purge"),
+  // Rappels RDV
+  getRdvSettings:  () => req<{ settings: { actif: number; delai_1: number; delai_2: number } }>("GET", "/notifications/rdv-settings"),
+  saveRdvSettings: (data: { actif?: number; delai_1?: number; delai_2?: number }) =>
+    req<{ message: string; settings: any }>("POST", "/notifications/rdv-settings", data),
+  testRdvRappel:   () => req<{ message: string; subscribers: number }>("POST", "/notifications/test-rdv"),
+  resetRdvRappels: (rdvId: number) => req<{ message: string }>("POST", `/notifications/reset-rdv-rappels/${rdvId}`),
 };
 
 // ── HELPER ───────────────────────────────────────────────────

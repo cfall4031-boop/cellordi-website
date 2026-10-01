@@ -112,6 +112,9 @@ try { db.exec("ALTER TABLE messages_contact ADD COLUMN reply_text TEXT"); } catc
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN replied_at DATETIME"); } catch (_) {}
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN archived INTEGER DEFAULT 0"); } catch (_) {}
 try { db.exec("ALTER TABLE messages_contact ADD COLUMN telephone TEXT"); } catch (_) {}
+// ── Rappels RDV ───────────────────────────────────────────────────────────────
+try { db.exec("ALTER TABLE rendezvous ADD COLUMN rappel_60_envoye INTEGER DEFAULT 0"); } catch (_) {}
+try { db.exec("ALTER TABLE rendezvous ADD COLUMN rappel_30_envoye INTEGER DEFAULT 0"); } catch (_) {}
 
 try {
   const row = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='tickets'").get();
@@ -358,6 +361,18 @@ db.exec([
   "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP",
   ")",
 ].join(" "));
+
+// ── PARAMÈTRES RAPPELS RDV ────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS rdv_rappel_settings (
+    id      INTEGER PRIMARY KEY CHECK(id = 1),
+    actif   INTEGER DEFAULT 1,
+    delai_1 INTEGER DEFAULT 60,
+    delai_2 INTEGER DEFAULT 30
+  );
+`);
+// Initialiser la ligne de config si elle n'existe pas
+db.prepare("INSERT OR IGNORE INTO rdv_rappel_settings (id, actif, delai_1, delai_2) VALUES (1, 1, 60, 30)").run();
 
 // ── TYPES DE FACTURES (personnalisables) ─────────────────────────────────────
 db.exec(`

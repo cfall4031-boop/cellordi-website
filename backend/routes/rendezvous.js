@@ -219,6 +219,45 @@ router.patch("/:id/statut", auth, (req, res) => {
   res.json({ message: "Statut mis à jour.", statut });
 });
 
+// PATCH /api/rendezvous/:id — Modifier date/heure/infos d'un RDV (admin)
+// Réinitialise les rappels si date_rdv ou heure change.
+router.patch("/:id", auth, (req, res) => {
+  const rdv = db.prepare("SELECT * FROM rendezvous WHERE id = ?").get(req.params.id);
+  if (!rdv) return res.status(404).json({ erreur: "Rendez-vous introuvable." });
+
+  const { date_rdv, heure, prenom, nom, email, telephone, type_appareil, description } = req.body;
+
+  const dateChanged  = date_rdv !== undefined && date_rdv !== rdv.date_rdv;
+  const heureChanged = heure    !== undefined && heure    !== rdv.heure;
+  const resetRappels = dateChanged || heureChanged ? 1 : 0;
+
+  db.prepare(`
+    UPDATE rendezvous SET
+      date_rdv      = COALESCE(?, date_rdv),
+      heure         = COALESCE(?, heure),
+      prenom        = COALESCE(?, prenom),
+      nom           = COALESCE(?, nom),
+      email         = COALESCE(?, email),
+      telephone     = COALESCE(?, telephone),
+      type_appareil = COALESCE(?, type_appareil),
+      description   = COALESCE(?, description),
+      rappel_60_envoye = CASE WHEN ? = 1 THEN 0 ELSE rappel_60_envoye END,
+      rappel_30_envoye = CASE WHEN ? = 1 THEN 0 ELSE rappel_30_envoye END
+    WHERE id = ?
+  `).run(
+    date_rdv || null, heure || null,
+    prenom || null, nom || null, email || null, telephone || null,
+    type_appareil || null, description || null,
+    resetRappels, resetRappels,
+    req.params.id
+  );
+
+  if (resetRappels) {
+    console.log(`[RDV] RDV#${req.params.id} — date/heure modifiée, rappels réinitialisés.`);
+  }
+  res.json({ message: "Rendez-vous mis à jour.", rappels_reinitialises: !!resetRappels });
+});
+
 // DELETE /api/rendezvous/:id — Supprimer un RDV (admin)
 router.delete("/:id", auth, (req, res) => {
   const result = db.prepare("DELETE FROM rendezvous WHERE id = ?").run(req.params.id);

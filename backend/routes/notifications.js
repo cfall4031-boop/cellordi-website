@@ -6,11 +6,11 @@ const { sendPushToAll, isPushEnabled } = require("../utils/pushService");
 const router = express.Router();
 
 // GET /api/notifications/vapid-key — Clé publique VAPID (public)
-const HARDCODED_VAPID_PUB = "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
+const VAPID_PUB = process.env.VAPID_PUBLIC_KEY || "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
 
 router.get("/vapid-key", (req, res) => {
-  console.log("📤 VAPID key demandée, retourne:", HARDCODED_VAPID_PUB.slice(0, 12) + "...");
-  res.json({ publicKey: HARDCODED_VAPID_PUB });
+  console.log("📤 VAPID key demandée, retourne:", VAPID_PUB.slice(0, 12) + "...");
+  res.json({ publicKey: VAPID_PUB });
 });
 
 // POST /api/notifications/subscribe — Enregistrer un abonnement push (admin)
@@ -124,6 +124,60 @@ router.post("/test-factures", auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ erreur: err.message });
   }
+});
+
+// ── PARAMÈTRES RAPPELS RDV ─────────────────────────────────────────────────
+// GET /api/notifications/rdv-settings
+router.get("/rdv-settings", auth, (req, res) => {
+  const s = db.prepare("SELECT * FROM rdv_rappel_settings WHERE id = 1").get();
+  res.json({ settings: s || { actif: 1, delai_1: 60, delai_2: 30 } });
+});
+
+// POST /api/notifications/rdv-settings
+router.post("/rdv-settings", auth, (req, res) => {
+  const { actif, delai_1, delai_2 } = req.body;
+  db.prepare(`
+    UPDATE rdv_rappel_settings SET
+      actif   = COALESCE(?, actif),
+      delai_1 = COALESCE(?, delai_1),
+      delai_2 = COALESCE(?, delai_2)
+    WHERE id = 1
+  `).run(
+    actif   !== undefined ? (actif ? 1 : 0) : null,
+    delai_1 !== undefined ? Number(delai_1) : null,
+    delai_2 !== undefined ? Number(delai_2) : null,
+  );
+  const s = db.prepare("SELECT * FROM rdv_rappel_settings WHERE id = 1").get();
+  res.json({ message: "Paramètres mis à jour.", settings: s });
+});
+
+// POST /api/notifications/test-rdv — Notification test immédiate (RDV fictif)
+router.post("/test-rdv", auth, async (req, res) => {
+  if (!isPushEnabled()) {
+    return res.status(503).json({ erreur: "Push désactivé — clés VAPID invalides ou manquantes." });
+  }
+  const subs = db.prepare("SELECT COUNT(*) as c FROM push_subscriptions").get();
+  if (!subs.c) {
+    return res.status(404).json({ erreur: "Aucun abonnement push. Active les notifications sur ton téléphone d'abord." });
+  }
+  try {
+    await sendPushToAll({
+      title: "📱 Test rappel RDV — dans 60 min",
+      body:  "CLIENT TEST — Réparation cellulaire — 15:00 — 514-000-0000",
+      url:   "/admin?section=rendezvous",
+      tag:   "rdv-test",
+    });
+    res.json({ message: "Notification test RDV envoyée.", subscribers: subs.c });
+  } catch (err) {
+    res.status(500).json({ erreur: err.message });
+  }
+});
+
+// POST /api/notifications/reset-rdv-rappels — Réinitialiser les rappels d'un RDV (admin)
+router.post("/reset-rdv-rappels/:id", auth, (req, res) => {
+  const r = db.prepare("UPDATE rendezvous SET rappel_60_envoye = 0, rappel_30_envoye = 0 WHERE id = ?").run(req.params.id);
+  if (r.changes === 0) return res.status(404).json({ erreur: "Rendez-vous introuvable." });
+  res.json({ message: "Rappels réinitialisés." });
 });
 
 module.exports = router;
