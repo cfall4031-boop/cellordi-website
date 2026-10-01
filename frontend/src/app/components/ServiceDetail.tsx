@@ -1509,6 +1509,31 @@ export default function ServiceDetail() {
         </div>
       </div>
 
+      {/* Mobile sticky CTA bar */}
+      <style>{`
+        .svc-mobile-cta { display: none; }
+        @media (max-width: 768px) {
+          .svc-mobile-cta {
+            display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+            background: rgba(12,12,18,0.96); backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-top: 1px solid rgba(109,212,0,0.25); padding: 0.6rem 1rem; gap: 0.6rem;
+          }
+          .svc-mobile-cta a {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 0.4rem; padding: 0.7rem 0.5rem; border-radius: 6px; text-decoration: none;
+            font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+            font-size: 0.95rem; letter-spacing: 0.04em; text-transform: uppercase;
+          }
+          .svc-mobile-cta .cta-call { background: #6dd400; color: #0c0c12; box-shadow: 0 0 18px rgba(109,212,0,0.35); }
+          .svc-mobile-cta .cta-rdv { background: transparent; color: #6dd400; border: 1.5px solid rgba(109,212,0,0.5); }
+        }
+      `}</style>
+      <div className="svc-mobile-cta">
+        <a href="tel:5142375792" className="cta-call">📞 Appeler</a>
+        <a href="/#rendezvous" className="cta-rdv">📅 Prendre rendez-vous</a>
+      </div>
+
       <Footer />
     </motion.div>
   );
