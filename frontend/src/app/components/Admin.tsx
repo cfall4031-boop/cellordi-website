@@ -63,13 +63,17 @@ const globalStyles = `
 
   /* ── MOBILE RESPONSIVE ──────────────────────────────────── */
   @media (max-width: 768px) {
+    /* Fix iOS 100vh white-bar */
+    .admin-wrap { height: 100dvh !important; }
     .admin-wrap table { font-size: 0.8rem; }
-    .admin-wrap th, .admin-wrap td { padding: 0.5rem 0.6rem !important; font-size: 0.78rem !important; }
+    .admin-wrap th, .admin-wrap td { padding: 0.4rem 0.5rem !important; font-size: 0.76rem !important; }
     .admin-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    /* Hide horizontal scrollbar handles on iOS */
+    .admin-table-scroll::-webkit-scrollbar { height: 0 !important; }
     .admin-login-box { width: 92vw !important; max-width: 400px !important; }
     .admin-login-inner { padding: 1.5rem !important; }
-    .admin-content-pad { padding: 0.75rem 0.4rem !important; padding-bottom: 5rem !important; }
-    .admin-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    .admin-content-pad { padding: 0.6rem 0.4rem !important; padding-bottom: 5rem !important; }
+    .admin-grid-4 { grid-template-columns: repeat(2, 1fr) !important; gap: 0.6rem !important; }
     .admin-grid-2 { grid-template-columns: 1fr !important; }
     .admin-grid-3 { grid-template-columns: 1fr !important; }
     .admin-cal-grid { grid-template-columns: 1fr !important; }
@@ -84,12 +88,18 @@ const globalStyles = `
     .admin-wrap button { min-height: 44px; border-radius: 10px !important; }
     .admin-wrap select { border-radius: 10px !important; }
     .admin-wrap input, .admin-wrap textarea { border-radius: 10px !important; }
+    /* KPI card sizes */
+    .admin-kpi-val { font-size: 1.6rem !important; }
+    .admin-kpi-icon { font-size: 1.1rem !important; }
+    .admin-kpi-card { padding: 0.9rem 0.8rem !important; }
+    /* Table → Cards switching */
     .admin-mobile-hide-table { display: none !important; }
-    .admin-mobile-cards { display: flex !important; }
+    .admin-mobile-cards { display: flex !important; flex-direction: column !important; gap: 0.6rem !important; }
     .admin-desktop-only { display: none !important; }
     .admin-msg-list { width: 100% !important; border-right: none !important; }
     .admin-msg-detail { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: 90 !important; background: ${NAVY} !important; }
-    .admin-mobile-hide-table { border-radius: 14px !important; }
+    .admin-msg-detail-hidden { display: none !important; }
+    .admin-mobile-only { display: block !important; }
   }
   @media (min-width: 769px) {
     .admin-mobile-cards { display: none !important; }
@@ -633,12 +643,12 @@ function Overview() {
         </div>
         <div className="admin-grid-4" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"1rem", marginBottom:"2rem" }}>
           {statCards.map((s,i) => (
-            <div key={i} style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)",
+            <div key={i} className="admin-kpi-card" style={{ background:NAVY_MID, border:"1px solid rgba(109,212,0,0.12)",
               borderTop:`3px solid ${s.color}`, padding:"1.4rem" }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"0.8rem" }}>
-                <span style={{fontSize:"1.6rem"}}>{s.icon}</span>
+                <span className="admin-kpi-icon" style={{fontSize:"1.6rem"}}>{s.icon}</span>
               </div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2.5rem", fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
+              <div className="admin-kpi-val" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:"2.5rem", fontWeight:900, color:s.color, lineHeight:1 }}>{s.value}</div>
               <div style={{ fontSize:"0.8rem", color:GRAY, marginTop:"0.3rem" }}>{s.label}</div>
             </div>
           ))}
@@ -1139,41 +1149,100 @@ function CalMonthView({ events, refDate, onSelect }: { events: CalEvent[]; refDa
 }
 
 // ── MOBILE BOTTOM NAV ─────────────────────────────────────────
-const BOTTOM_NAV_ITEMS = [
-  { id: "overview",  icon: "📆", label: "Calendrier" },
-  { id: "rdvs",      icon: "📅", label: "RDV"        },
-  { id: "tickets",   icon: "🎫", label: "Tickets"    },
-  { id: "messages",  icon: "✉️",  label: "Messages"  },
-  { id: "decharges", icon: "📋", label: "Décharges"  },
+// SVG icons for the 4 primary tabs + "More" button
+const NAV_SVGS: Record<string, React.ReactNode> = {
+  overview: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  rdvs:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  tickets:  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  messages: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+  more:     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="22" height="22"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>,
+};
+
+const MORE_ITEMS = [
+  { id: "clients",     icon: "👤", label: "Clients"     },
+  { id: "decharges",   icon: "📋", label: "Décharges"   },
+  { id: "calculateur", icon: "🧮", label: "Calculateur" },
+  { id: "stock",       icon: "📦", label: "Stock"       },
+  { id: "notes",       icon: "📝", label: "Notes"       },
+  { id: "registre",    icon: "💰", label: "Registre"    },
+  { id: "factures",    icon: "🧾", label: "Factures"    },
 ];
 
 function MobileBottomNav({ active, setActive }: { active: string; setActive: (s: string) => void }) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const primaryIds = ["overview", "rdvs", "tickets", "messages"];
+  const primaryLabels: Record<string, string> = { overview: "Calendrier", rdvs: "RDV", tickets: "Tickets", messages: "Messages" };
+  const isMoreActive = !primaryIds.includes(active);
+
   return (
-    <nav style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: NAVY_MID, borderTop: "1px solid rgba(255,255,255,0.12)",
-      display: "flex", height: 58,
-    }}>
-      {BOTTOM_NAV_ITEMS.map(item => {
-        const isActive = active === item.id;
-        return (
-          <button key={item.id} onClick={() => setActive(item.id)} style={{
-            flex: 1, display: "flex", flexDirection: "column" as const,
-            alignItems: "center", justifyContent: "center", gap: 2,
-            border: "none", background: "transparent", cursor: "pointer",
-            color: isActive ? GREEN : GRAY_DIM, padding: "4px 0",
-            borderTop: isActive ? `2px solid ${GREEN}` : "2px solid transparent",
-            transition: "color 0.15s, border-color 0.15s",
+    <>
+      {/* More drawer overlay */}
+      {moreOpen && (
+        <div onClick={() => setMoreOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 198 }}/>
+      )}
+      {/* More drawer */}
+      <div style={{
+        position: "fixed", bottom: 58, left: 0, right: 0, zIndex: 199,
+        background: NAVY_MID, borderTop: "1px solid rgba(255,255,255,0.1)",
+        transform: moreOpen ? "translateY(0)" : "translateY(100%)",
+        transition: "transform 0.22s ease",
+        padding: "0.8rem 0.6rem",
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem",
+      }}>
+        {MORE_ITEMS.map(item => (
+          <button key={item.id} onClick={() => { setActive(item.id); setMoreOpen(false); }} style={{
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "0.3rem",
+            background: active === item.id ? GREEN_DIM : "rgba(255,255,255,0.04)",
+            border: `1px solid ${active === item.id ? GREEN : "rgba(255,255,255,0.1)"}`,
+            borderRadius: 10, padding: "0.65rem 0.4rem", cursor: "pointer",
+            color: active === item.id ? GREEN : GRAY,
           }}>
-            <span style={{ fontSize: "1.15rem", lineHeight: 1 }}>{item.icon}</span>
-            <span style={{ fontSize: "0.52rem", fontWeight: isActive ? 700 : 400,
-              letterSpacing: "0.03em", marginTop: 1 }}>
-              {item.label}
-            </span>
+            <span style={{ fontSize: "1.3rem", lineHeight: 1 }}>{item.icon}</span>
+            <span style={{ fontSize: "0.6rem", fontWeight: active === item.id ? 700 : 400, letterSpacing: "0.02em" }}>{item.label}</span>
           </button>
-        );
-      })}
-    </nav>
+        ))}
+      </div>
+
+      {/* Bottom nav bar */}
+      <nav style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
+        background: NAVY_MID, borderTop: "1px solid rgba(255,255,255,0.12)",
+        display: "flex", height: 56,
+      }}>
+        {primaryIds.map(id => {
+          const isActive = active === id;
+          return (
+            <button key={id} onClick={() => { setMoreOpen(false); setActive(id); }} style={{
+              flex: 1, display: "flex", flexDirection: "column" as const,
+              alignItems: "center", justifyContent: "center", gap: 2,
+              border: "none", background: "transparent", cursor: "pointer",
+              color: isActive ? GREEN : GRAY_DIM, padding: "4px 0",
+              borderTop: isActive ? `2px solid ${GREEN}` : "2px solid transparent",
+              transition: "color 0.15s, border-color 0.15s",
+            }}>
+              {NAV_SVGS[id]}
+              <span style={{ fontSize: "0.56rem", fontWeight: isActive ? 700 : 400, letterSpacing: "0.02em", marginTop: 1 }}>
+                {primaryLabels[id]}
+              </span>
+            </button>
+          );
+        })}
+        {/* More button */}
+        <button onClick={() => setMoreOpen(v => !v)} style={{
+          flex: 1, display: "flex", flexDirection: "column" as const,
+          alignItems: "center", justifyContent: "center", gap: 2,
+          border: "none", background: "transparent", cursor: "pointer",
+          color: isMoreActive || moreOpen ? GREEN : GRAY_DIM, padding: "4px 0",
+          borderTop: isMoreActive || moreOpen ? `2px solid ${GREEN}` : "2px solid transparent",
+          transition: "color 0.15s, border-color 0.15s",
+        }}>
+          {NAV_SVGS["more"]}
+          <span style={{ fontSize: "0.56rem", fontWeight: isMoreActive || moreOpen ? 700 : 400, letterSpacing: "0.02em", marginTop: 1 }}>
+            Plus
+          </span>
+        </button>
+      </nav>
+    </>
   );
 }
 
@@ -4185,13 +4254,13 @@ function Messages() {
       </div>
 
       {/* ── Panneau de détail + réponse ── */}
-      <div className="admin-msg-detail" style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div className={`admin-msg-detail${!selected ? " admin-msg-detail-hidden" : ""}`} style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         {selected ? (
           <>
           {/* Mobile back button */}
           <button className="admin-mobile-only" onClick={()=>setSelected(null)} style={{
             background:"transparent", border:"none", color:GREEN, fontSize:"0.9rem", padding:"0.8rem 1rem",
-            cursor:"pointer", textAlign:"left", fontFamily:"'DM Sans',sans-serif", display:"none"
+            cursor:"pointer", textAlign:"left", fontFamily:"'DM Sans',sans-serif"
           }}>← Retour aux messages</button>
             {/* En-tête */}
             <div style={{ padding:"1.5rem 2rem", borderBottom:"1px solid rgba(109,212,0,0.1)", flexShrink:0 }}>
@@ -4555,10 +4624,10 @@ type StockStats = {
 
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
   return (
-    <div style={{ background: NAVY_MID, border: `1px solid ${color}33`, borderRadius: 8, padding: "1.4rem 1.6rem", flex: 1, minWidth: 160 }}>
+    <div className="admin-kpi-card" style={{ background: NAVY_MID, border: `1px solid ${color}33`, borderRadius: 8, padding: "1.4rem 1.6rem" }}>
       <div style={{ color: GRAY, fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "0.5rem" }}>{label}</div>
-      <div style={{ color, fontSize: "1.9rem", fontWeight: 800, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ color: GRAY_DIM, fontSize: "0.78rem", marginTop: "0.4rem" }}>{sub}</div>}
+      <div className="admin-kpi-val" style={{ color, fontSize: "1.9rem", fontWeight: 800, lineHeight: 1 }}>{value}</div>
+      {sub && <div style={{ color: GRAY_DIM, fontSize: "0.75rem", marginTop: "0.3rem" }}>{sub}</div>}
     </div>
   );
 }
@@ -5081,31 +5150,33 @@ ${stats ? `<div class="kpis">
     setTimeout(() => w.print(), 500);
   };
 
+  const { isMobile } = React.useContext(MobileCtx);
+
   return (
-    <div style={{ padding: "1.5rem", maxWidth: 1100 }}>
-      <h2 style={{ color: "#fff", fontWeight: 800, fontSize: "1.4rem", marginBottom: "1.5rem", letterSpacing: "0.02em", display: "flex", alignItems: "center", gap: "1rem" }}>
-        📦 Gestion de Stock
+    <div style={{ padding: isMobile ? "0.75rem 0.5rem" : "1.5rem", maxWidth: 1100 }}>
+      <h2 style={{ color: "#fff", fontWeight: 800, fontSize: isMobile ? "1.1rem" : "1.4rem", marginBottom: isMobile ? "0.75rem" : "1.5rem", letterSpacing: "0.02em", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        📦 Stock
         <button onClick={exportPDF}
           style={{ marginLeft: "auto", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.18)", color: "#e2e8f0", borderRadius: 7, padding: "0.38rem 0.9rem", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "0.4rem", letterSpacing: "0.02em" }}>
-          📄 Exporter PDF
+          📄 PDF
         </button>
       </h2>
 
       {/* ── KPI CARDS ── */}
       {stats && (
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          <StatCard label="Coût d'achat total" value={fmt$(stats.total_investi)} sub="COGS cumulé (entrées)"  color={ORANGE} />
-          <StatCard label="Revenus réels"       value={fmt$(stats.total_revenus)} sub="Sorties facturées"      color={BLUE}   />
-          <StatCard label="Valeur du stock"
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(5,1fr)", gap: isMobile ? "0.5rem" : "1rem", marginBottom: isMobile ? "0.75rem" : "1.5rem" }}>
+          <StatCard label="Coût achat" value={fmt$(stats.total_investi)} sub="COGS"  color={ORANGE} />
+          <StatCard label="Revenus"       value={fmt$(stats.total_revenus)} sub="Sorties"      color={BLUE}   />
+          <StatCard label="Valeur stock"
             value={fmt$(pieces.reduce((s, p) => s + ((p.cout_vente || 0) * Math.max(p.quantite_calculee, 0)), 0))}
-            sub="Stock × prix de vente" color={"#a78bfa"} />
-          <StatCard label="Profit réalisé"      value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
+            sub="Stock × vente" color={"#a78bfa"} />
+          <StatCard label="Profit"      value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
           <StatCard label="Pièces écoulées"     value={String(stats.total_pieces_vendues)} sub="Total sorties" color={GRAY} />
         </div>
       )}
 
-      {/* ── GRAPHIQUES ── */}
-      <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "1.2rem 1.4rem", marginBottom: "1.5rem" }}>
+      {/* ── GRAPHIQUES (desktop only) ── */}
+      {!isMobile && <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "1.2rem 1.4rem", marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1rem" }}>
           {(["mensuel", "top"] as const).map(t => (
             <button key={t} onClick={() => setChartTab(t)} style={{
@@ -5144,18 +5215,79 @@ ${stats ? `<div class="kpis">
                 </BarChart>
               </ResponsiveContainer>
         )}
-      </div>
+      </div>}
 
-      {/* ── TABLEAU STOCK (groupé par catégorie) ── */}
+      {/* ── CATALOGUE (recherche partagée) ── */}
       <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden" }}>
-        <div style={{ padding: "0.9rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: "0.8rem", alignItems: "center" }}>
+        <div style={{ padding: "0.9rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: "0.8rem", alignItems: "center", flexWrap: "wrap" }}>
           <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>Catalogue de pièces</span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
             style={{ marginLeft: "auto", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#fff", padding: "0.35rem 0.8rem", fontSize: "0.82rem", outline: "none", width: 200 }} />
         </div>
 
-        {/* En-têtes colonnes */}
-        <div style={{ overflowX: "auto" }}>
+        {/* ── MOBILE CARD VIEW ── */}
+        <div className="admin-mobile-cards" style={{ display: "none", flexDirection: "column", gap: "0.6rem", padding: "0.6rem" }}>
+          {groupKeys.length === 0 && <div style={{ padding: "1.5rem", textAlign: "center", color: GRAY_DIM }}>Aucune pièce trouvée.</div>}
+          {groupKeys.map(cat => {
+            const isCollapsed = collapsed[cat];
+            const groupPieces = groups[cat];
+            const hasAlert = groupPieces.some(p => p.quantite_calculee <= p.seuil_alerte);
+            return (
+              <div key={cat}>
+                {/* Catégorie header */}
+                <button onClick={() => setCollapsed(c => ({ ...c, [cat]: !c[cat] }))}
+                  style={{ width: "100%", background: "rgba(109,212,0,0.07)", border: "1px solid rgba(109,212,0,0.2)", borderRadius: 8, padding: "0.6rem 0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.6rem", textAlign: "left" }}>
+                  <span style={{ color: GREEN, fontSize: "0.85rem" }}>{isCollapsed ? "▶" : "▼"}</span>
+                  <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", flex: 1 }}>{cat}</span>
+                  <span style={{ background: "rgba(255,255,255,0.07)", color: GRAY, borderRadius: 8, padding: "0.1rem 0.45rem", fontSize: "0.7rem" }}>{groupPieces.length}</span>
+                  {hasAlert && <span style={{ color: RED, fontSize: "0.75rem" }}>⚠</span>}
+                  <button title={`Ajouter dans "${cat}"`}
+                    onClick={e => { e.stopPropagation(); setAddModal({ cat }); setNewPiece({ ...EMPTY_NEW_PIECE, type_piece: cat }); setAddErr(""); }}
+                    style={{ background: GREEN_DIM, border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 6, padding: "0.15rem 0.5rem", fontSize: "0.76rem", cursor: "pointer", fontWeight: 800 }}>
+                    +
+                  </button>
+                </button>
+                {/* Pieces in category */}
+                {!isCollapsed && groupPieces.map(p => {
+                  const badge = stockBadge(p);
+                  return (
+                    <div key={p.id} onClick={() => openDetail(p)}
+                      style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "0.7rem 0.8rem", marginTop: "0.4rem", cursor: "pointer" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.4rem" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: "#fff", fontWeight: 600, fontSize: "0.88rem" }}>{p.type_appareil}{p.modele ? ` — ${p.modele}` : ""}</div>
+                        </div>
+                        <span style={{ background: badge.bg, color: badge.color, borderRadius: 4, padding: "0.18rem 0.55rem", fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap" }}>{badge.label}</span>
+                        <span style={{ color: "#fff", fontWeight: 800, fontSize: "1rem", minWidth: 24, textAlign: "right" }}>{p.quantite_calculee}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.8rem", fontSize: "0.74rem", color: GRAY, marginBottom: "0.5rem" }}>
+                        {p.cout_fournisseur ? <span style={{ color: ORANGE }}>Achat {fmt$(p.cout_fournisseur)}</span> : null}
+                        {p.cout_vente ? <span style={{ color: BLUE }}>Vente {fmt$(p.cout_vente)}</span> : null}
+                      </div>
+                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }} onClick={e => e.stopPropagation()}>
+                        <button onClick={e => { e.stopPropagation(); setModalPiece(p); setForm({ type: "entree", quantite: "", cout_unitaire: String(p.cout_fournisseur || ""), prix_unitaire: String(p.cout_vente || ""), notes: "" }); }}
+                          style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 6, padding: "0.3rem 0.7rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                          + Mvt
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); openEdit(p); }}
+                          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: GRAY, borderRadius: 6, padding: "0.3rem 0.7rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                          ✎ Modifier
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); setConfirmDel(p); }}
+                          style={{ background: "rgba(255,77,77,0.1)", border: "1px solid rgba(255,77,77,0.3)", color: RED, borderRadius: 6, padding: "0.3rem 0.55rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── DESKTOP TABLE VIEW ── */}
+        <div className="admin-mobile-hide-table" style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem" }}>
             <thead>
               <tr style={{ background: "rgba(255,255,255,0.03)" }}>
@@ -5321,7 +5453,7 @@ ${stats ? `<div class="kpis">
               })}
             </tbody>
           </table>
-        </div>
+        </div>{/* end admin-mobile-hide-table */}
       </div>
 
       {/* ── PANNEAU DÉTAIL PIÈCE ── */}
@@ -6458,11 +6590,11 @@ function CalendrierFactures() {
         </button>
       </div>
 
-      {/* Grille calendrier */}
+      {/* Grille calendrier — masquée sur mobile, remplacée par la liste ci-dessous */}
       {loading ? (
         <div style={{ textAlign:"center", color:GRAY, padding:"2rem" }}>Chargement…</div>
       ) : (
-        <div style={{ overflowX:"auto" }}>
+        <div className="admin-desktop-only" style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", borderCollapse:"collapse", tableLayout:"fixed" }}>
             <thead>
               <tr>
@@ -6766,12 +6898,12 @@ export default function Admin() {
 
   return (
     <MobileCtx.Provider value={{ isMobile, openSidebar: () => setSidebarOpen(true) }}>
-      <div className="admin-wrap" style={{ display:"flex", height:"100vh", overflow:"hidden" }}>
+      <div className="admin-wrap" style={{ display:"flex", height: isMobile ? "100dvh" : "100vh", overflow:"hidden", background: NAVY }}>
         <style>{globalStyles}</style>
         <Sidebar active={active} setActive={setActive} adminNom={adminNom} onLogout={handleLogout}
           isMobile={isMobile} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}/>
         <main style={{ flex:1, marginLeft: isMobile ? 0 : 240, display:"flex", flexDirection:"column",
-          overflow:"auto", background:NAVY, paddingBottom: isMobile ? 58 : 0 }}>
+          overflow:"auto", background:NAVY, paddingBottom: isMobile ? 56 : 0 }}>
           {sections[active]}
         </main>
       </div>
