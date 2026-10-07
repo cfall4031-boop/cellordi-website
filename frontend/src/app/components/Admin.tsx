@@ -6395,6 +6395,9 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
         {e.statut === "actif" && (
           <button onClick={() => onStatut(e.id, "annule")} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: GRAY, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>Annuler</button>
         )}
+        {(e.statut === "rembourse" || e.statut === "annule") && (
+          <button onClick={() => onStatut(e.id, "actif")} style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", color: BLUE, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 600 }}>↩ Réactiver</button>
+        )}
         <button onClick={onEdit} style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)", color: BLUE, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>✎ Notes</button>
         <button onClick={() => onDel(e.id)} style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", color: RED, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer" }}>✕ Suppr.</button>
       </div>
