@@ -5858,6 +5858,8 @@ function RegistreFinancier() {
   const [versementNotes, setVersementNotes]     = useState("");
   const [versementSaving, setVersementSaving]   = useState(false);
   const [versementErreur, setVersementErreur]   = useState("");
+  const [versementHistory, setVersementHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading]     = useState(false);
   const [bilanSaving, setBilanSaving] = useState(false);
   const [showChart, setShowChart]     = useState(false);
 
@@ -5872,6 +5874,15 @@ function RegistreFinancier() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!versementModal) { setVersementHistory([]); return; }
+    setHistoryLoading(true);
+    registreApi.getVersements(versementModal.id)
+      .then(d => setVersementHistory(d.versements || []))
+      .catch(() => {})
+      .finally(() => setHistoryLoading(false));
+  }, [versementModal?.id]);
 
   const submit = async () => {
     setErreur("");
@@ -5909,9 +5920,20 @@ function RegistreFinancier() {
       const montant = Number(versementMontant.replace(",", "."));
       if (!montant || montant <= 0) throw new Error("Montant invalide.");
       await registreApi.addVersement(versementModal.id, { montant, notes: versementNotes.trim() });
-      setVersementModal(null); setVersementMontant(""); setVersementNotes(""); load();
+      setVersementMontant(""); setVersementNotes("");
+      const [d] = await Promise.all([registreApi.getVersements(versementModal.id), load()]);
+      setVersementHistory(d.versements || []);
     } catch (e: any) { setVersementErreur(e?.message || "Erreur lors de l'enregistrement."); }
     setVersementSaving(false);
+  };
+
+  const deleteVers = async (vid: number) => {
+    if (!versementModal) return;
+    const [d] = await Promise.all([
+      registreApi.deleteVersement(versementModal.id, vid).then(() => registreApi.getVersements(versementModal.id)),
+      load(),
+    ]);
+    setVersementHistory(d.versements || []);
   };
 
   const saveNotes = async (id: number) => { await registreApi.update(id, { notes: editNotes }); setDetailId(null); load(); };
@@ -6206,15 +6228,56 @@ function RegistreFinancier() {
 
       {/* ── MODAL VERSEMENT ────────────────────────────────────── */}
       {versementModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: NAVY_MID, border: "1px solid rgba(109,212,0,0.2)", borderRadius: 12, padding: "1.8rem", width: 400, maxWidth: "92vw" }}>
-            <h3 style={{ color: "#fff", margin: "0 0 0.3rem", fontWeight: 800 }}>💳 Versement</h3>
-            <div style={{ color: GRAY, fontSize: "0.82rem", marginBottom: "1.2rem" }}>{versementModal.personne}</div>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}
+          onClick={() => { setVersementModal(null); setVersementMontant(""); setVersementNotes(""); setVersementErreur(""); }}>
+          <div style={{ background: NAVY_MID, border: "1px solid rgba(109,212,0,0.2)", borderRadius: 12, padding: "1.8rem", width: 460, maxWidth: "96vw", maxHeight: "90vh", overflowY: "auto" }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: "#fff", margin: "0 0 0.2rem", fontWeight: 800 }}>💳 Versement — {versementModal.personne}</h3>
+
+            {/* Résumé */}
             <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 7, padding: "0.75rem 1rem", marginBottom: "1.1rem", display: "flex", justifyContent: "space-between" }}>
               <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Total</div><div style={{ color: "#fff", fontWeight: 800 }}>{fmt$(versementModal.montant)}</div></div>
               <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Déjà payé</div><div style={{ color: GREEN, fontWeight: 800 }}>{fmt$(versementModal.montant_paye || 0)}</div></div>
               <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Restant</div><div style={{ color: RED, fontWeight: 800 }}>{fmt$(versementModal.montant - (versementModal.montant_paye || 0))}</div></div>
             </div>
+
+            {/* Historique */}
+            <div style={{ marginBottom: "1.1rem" }}>
+              <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.5rem", fontWeight: 700 }}>
+                Historique des versements ({versementHistory.length})
+              </div>
+              {historyLoading ? (
+                <div style={{ color: GRAY, fontSize: "0.82rem", padding: "0.5rem 0" }}>Chargement…</div>
+              ) : versementHistory.length === 0 ? (
+                <div style={{ color: GRAY_DIM, fontSize: "0.82rem", fontStyle: "italic", padding: "0.4rem 0" }}>Aucun versement enregistré.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", maxHeight: 220, overflowY: "auto" }}>
+                  {versementHistory.map((v: any) => (
+                    <div key={v.id} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 6, padding: "0.5rem 0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ color: GREEN, fontWeight: 700, fontSize: "0.95rem" }}>+{fmt$(v.montant)}</span>
+                        {v.notes && <span style={{ color: GRAY, fontSize: "0.78rem", marginLeft: "0.6rem" }}>{v.notes}</span>}
+                        <div style={{ color: GRAY_DIM, fontSize: "0.7rem", marginTop: "0.1rem" }}>
+                          {new Date(v.created_at).toLocaleDateString("fr-CA", { day: "2-digit", month: "short", year: "numeric" })}
+                          {" · "}{new Date(v.created_at).toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                      </div>
+                      <button onClick={() => deleteVers(v.id)} title="Supprimer ce versement"
+                        style={{ background: "transparent", border: "none", color: "rgba(255,100,100,0.5)", cursor: "pointer", fontSize: "1rem", padding: "0.2rem 0.4rem", borderRadius: 4, lineHeight: 1 }}
+                        onMouseEnter={e => (e.currentTarget.style.color = "#f87171")}
+                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,100,100,0.5)")}>
+                        🗑
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Séparateur */}
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", marginBottom: "1rem" }} />
+
+            {/* Formulaire nouveau versement */}
             <div style={{ marginBottom: "0.9rem" }}>
               <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Montant du versement *</label>
               <input type="text" value={versementMontant} onChange={e => setVersementMontant(e.target.value)} placeholder={`ex: ${fmt$(versementModal.montant - (versementModal.montant_paye || 0))}`}
@@ -6227,8 +6290,8 @@ function RegistreFinancier() {
             </div>
             {versementErreur && <div style={{ background: "rgba(255,77,77,0.15)", border: "1px solid rgba(255,77,77,0.4)", borderRadius: 6, padding: "0.5rem 0.8rem", color: RED, fontSize: "0.82rem", marginBottom: "0.8rem" }}>⚠ {versementErreur}</div>}
             <div style={{ display: "flex", gap: "0.8rem" }}>
-              <button onClick={submitVersement} disabled={versementSaving} style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, cursor: versementSaving ? "wait" : "pointer" }}>{versementSaving ? "Envoi…" : "Enregistrer"}</button>
-              <button onClick={() => { setVersementModal(null); setVersementMontant(""); setVersementNotes(""); setVersementErreur(""); }} style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem", fontWeight: 700, cursor: "pointer" }}>Annuler</button>
+              <button onClick={submitVersement} disabled={versementSaving} style={{ flex: 1, background: GREEN, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, cursor: versementSaving ? "wait" : "pointer" }}>{versementSaving ? "Envoi…" : "Ajouter versement"}</button>
+              <button onClick={() => { setVersementModal(null); setVersementMontant(""); setVersementNotes(""); setVersementErreur(""); }} style={{ background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem 1rem", fontWeight: 700, cursor: "pointer" }}>Fermer</button>
             </div>
           </div>
         </div>
