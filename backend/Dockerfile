@@ -9,12 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copier et installer les dépendances
-COPY package*.json ./
+# Copier et installer les dépendances (depuis backend/ si contexte = repo root)
+COPY backend/package*.json ./
 RUN npm ci
 
-# Copier le code source
-COPY . .
+# Copier le code source du backend
+COPY backend/ .
 
 # Créer le dossier /data pour la base de données (Volume Railway)
 RUN mkdir -p /data
