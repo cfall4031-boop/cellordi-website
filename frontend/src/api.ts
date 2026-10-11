@@ -232,6 +232,50 @@ export const notificationsApi = {
   resetRdvRappels: (rdvId: number) => req<{ message: string }>("POST", `/notifications/reset-rdv-rappels/${rdvId}`),
 };
 
+// ── BIBLIOTHÈQUE ─────────────────────────────────────────────
+async function reqUpload<T = unknown>(path: string, formData: FormData): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res  = await fetch(`${BASE}${path}`, { method: "POST", headers, body: formData });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data as any).erreur || `Erreur ${res.status}`);
+  return data as T;
+}
+
+export const biblioApi = {
+  // Dossiers
+  getDossiers:    () => req<{ dossiers: any[] }>("GET", "/biblio/dossiers"),
+  createDossier:  (data: { nom: string; parent_id?: number | null }) => req<{ id: number }>("POST", "/biblio/dossiers", data),
+  renameDossier:  (id: number, nom: string) => req<{ message: string }>("PATCH", `/biblio/dossiers/${id}`, { nom }),
+  deleteDossier:  (id: number) => req<{ message: string }>("DELETE", `/biblio/dossiers/${id}`),
+  // Tags
+  getTags:        () => req<{ tags: any[] }>("GET", "/biblio/tags"),
+  createTag:      (data: { label: string; couleur: string }) => req<{ id: number }>("POST", "/biblio/tags", data),
+  updateTag:      (id: number, data: { label?: string; couleur?: string }) => req<{ message: string }>("PATCH", `/biblio/tags/${id}`, data),
+  deleteTag:      (id: number) => req<{ message: string }>("DELETE", `/biblio/tags/${id}`),
+  // Docs — liste / recherche / récents
+  getDocs:        (params: Record<string, string> = {}) => req<{ docs: any[] }>("GET", "/biblio/docs" + toQuery(params)),
+  getRecents:     () => req<{ docs: any[] }>("GET", "/biblio/recents"),
+  search:         (params: Record<string, string>) => req<{ docs: any[] }>("GET", "/biblio/search" + toQuery(params)),
+  // Docs — CRUD
+  getDoc:         (id: number) => req<{ doc: any }>("GET", `/biblio/docs/${id}`),
+  createTexte:    (data: Record<string, unknown>) => req<{ id: number }>("POST", "/biblio/docs/texte", data),
+  uploadFichier:  (formData: FormData) => reqUpload<{ id: number }>("/biblio/docs/upload", formData),
+  updateDoc:      (id: number, data: Record<string, unknown>) => req<{ message: string }>("PATCH", `/biblio/docs/${id}`, data),
+  deleteDoc:      (id: number) => req<{ message: string }>("DELETE", `/biblio/docs/${id}`),
+  restaurerDoc:   (id: number) => req<{ message: string }>("POST", `/biblio/docs/${id}/restaurer`),
+  supprimerDef:   (id: number) => req<{ message: string }>("DELETE", `/biblio/docs/${id}/definitif`),
+  // Versions
+  getVersions:    (id: number) => req<{ versions: any[] }>("GET", `/biblio/docs/${id}/versions`),
+  restaurerVer:   (docId: number, verId: number) => req<{ message: string }>("POST", `/biblio/docs/${docId}/versions/${verId}/restaurer`),
+  // Notes
+  getNotes:       (id: number) => req<{ notes: any[] }>("GET", `/biblio/docs/${id}/notes`),
+  addNote:        (id: number, contenu: string) => req<{ id: number }>("POST", `/biblio/docs/${id}/notes`, { contenu }),
+  updateNote:     (docId: number, nid: number, contenu: string) => req<{ message: string }>("PATCH", `/biblio/docs/${docId}/notes/${nid}`, { contenu }),
+  deleteNote:     (docId: number, nid: number) => req<{ message: string }>("DELETE", `/biblio/docs/${docId}/notes/${nid}`),
+};
+
 // ── HELPER ───────────────────────────────────────────────────
 function toQuery(params: Record<string, string>): string {
   const q = new URLSearchParams(

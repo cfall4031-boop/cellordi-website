@@ -474,4 +474,59 @@ function genererNumeroTicket() {
   return `RCO-${rand}`;
 }
 
+// ── BIBLIOTHÈQUE DE DOCUMENTS ────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS biblio_dossiers (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER REFERENCES biblio_dossiers(id) ON DELETE SET NULL,
+    nom       TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS biblio_docs (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    dossier_id   INTEGER REFERENCES biblio_dossiers(id) ON DELETE SET NULL,
+    titre        TEXT NOT NULL,
+    description  TEXT DEFAULT '',
+    type_fichier TEXT NOT NULL DEFAULT 'autre',
+    nom_fichier  TEXT,
+    taille       INTEGER DEFAULT 0,
+    chemin       TEXT,
+    contenu      TEXT,
+    supprime_at  DATETIME,
+    ouvert_at    DATETIME,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS biblio_tags (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    label   TEXT NOT NULL UNIQUE,
+    couleur TEXT NOT NULL DEFAULT '#6B7280'
+  );
+
+  CREATE TABLE IF NOT EXISTS biblio_doc_tags (
+    doc_id INTEGER NOT NULL REFERENCES biblio_docs(id) ON DELETE CASCADE,
+    tag_id INTEGER NOT NULL REFERENCES biblio_tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (doc_id, tag_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS biblio_versions (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id     INTEGER NOT NULL REFERENCES biblio_docs(id) ON DELETE CASCADE,
+    chemin     TEXT,
+    contenu    TEXT,
+    taille     INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS biblio_notes (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id     INTEGER NOT NULL REFERENCES biblio_docs(id) ON DELETE CASCADE,
+    contenu    TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 module.exports = { db, initAdmin, genererNumeroTicket };

@@ -7,6 +7,7 @@ import {
   authApi, rdvApi, ticketsApi, clientsApi,
   messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, notesApi, registreApi, facturesApi, setToken, removeToken, getToken
 } from "../../api";
+import Bibliotheque from "./Bibliotheque";
 
 // ── MOBILE CONTEXT ───────────────────────────────────────────
 const MobileCtx = React.createContext<{ isMobile: boolean; openSidebar: () => void }>({ isMobile: false, openSidebar: () => {} });
@@ -233,6 +234,7 @@ const NAV_ITEMS = [
   { id:"notes",       icon:"📝", label:"Notes"          },
   { id:"registre",    icon:"💰", label:"Registre"       },
   { id:"factures",    icon:"🧾", label:"Factures"       },
+  { id:"biblio",      icon:"📚", label:"Bibliothèque"   },
 ];
 
 // ── Helpers pour push notifications ──────────────────────────
@@ -1166,6 +1168,7 @@ const MORE_ITEMS = [
   { id: "notes",       icon: "📝", label: "Notes"       },
   { id: "registre",    icon: "💰", label: "Registre"    },
   { id: "factures",    icon: "🧾", label: "Factures"    },
+  { id: "biblio",      icon: "📚", label: "Bibliothèque" },
 ];
 
 function MobileBottomNav({ active, setActive }: { active: string; setActive: (s: string) => void }) {
@@ -6946,6 +6949,7 @@ export default function Admin() {
     notes:     <CarnetNotes/>,
     registre:  <RegistreFinancier/>,
     factures:  <CalendrierFactures/>,
+    biblio:    <Bibliotheque/>,
   };
 
   if (checking) return (
