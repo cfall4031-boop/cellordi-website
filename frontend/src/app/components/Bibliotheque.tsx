@@ -51,6 +51,21 @@ const BTN: React.CSSProperties = {
   fontSize: '0.8rem', padding: '0.4rem 0.8rem',
 };
 
+function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ background: NAVY_M, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: '100%', maxWidth: 480, maxHeight: '90vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '1rem 1.2rem', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <span style={{ flex: 1, fontWeight: 700, color: '#fff' }}>{title}</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: GRAY, fontSize: '1.1rem' }}>✕</button>
+        </div>
+        <div style={{ padding: '1.2rem' }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function Bibliotheque() {
   // ── View state ────────────────────────────────────────────
   const [view, setView]         = useState<{ type: string; id?: number }>({ type: 'all' });
@@ -78,6 +93,7 @@ export default function Bibliotheque() {
   const [noteInput, setNI]      = useState('');
   const [editNoteId, setENId]   = useState<number | null>(null);
   const [editNoteTxt, setENT]   = useState('');
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
 
   // ── Modals ────────────────────────────────────────────────
   const [uploadMod, setUpMod]   = useState(false);
@@ -136,6 +152,26 @@ export default function Bibliotheque() {
 
   useEffect(() => { loadMeta(); }, [loadMeta]);
   useEffect(() => { loadDocs(); }, [loadDocs]);
+
+  useEffect(() => {
+    if (docTab !== 'apercu' || !detail || detail.type_fichier !== 'pdf') {
+      setPdfBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = getToken();
+        const res = await fetch(`${API_BASE}/biblio/docs/${detail.id}/file`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!res.ok || cancelled) return;
+        const blob = await res.blob();
+        if (!cancelled) setPdfBlobUrl(URL.createObjectURL(blob));
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [detail?.id, docTab]);
 
   const openDoc = useCallback(async (id: number) => {
     if (detail?.id === id) return;
@@ -367,7 +403,7 @@ export default function Bibliotheque() {
   }
 
   // ── Detail panel content ──────────────────────────────────
-  function DetailPanel() {
+  const renderDetailPanel = () => {
     if (dlLoad) return <div style={{ padding: 32, color: GRAY, textAlign: 'center' }}>Chargement…</div>;
     if (!detail) return <div style={{ padding: 32, color: GRAY_D, textAlign: 'center', fontSize: '0.85rem' }}>Sélectionnez un document pour l'afficher.</div>;
 
@@ -434,7 +470,9 @@ export default function Bibliotheque() {
                 <pre style={{ color: GRAY, fontSize: '0.84rem', whiteSpace: 'pre-wrap', margin: 0 }}>{detail.contenu}</pre>
               )}
               {detail.type_fichier === 'pdf' && detail.nom_fichier && (
-                <iframe src={fileUrl(detail.id)} style={{ width: '100%', height: 480, border: 'none', borderRadius: 6 }} title={detail.titre} />
+                pdfBlobUrl
+                  ? <iframe src={pdfBlobUrl} style={{ width: '100%', height: 480, border: 'none', borderRadius: 6 }} title={detail.titre} />
+                  : <div style={{ textAlign: 'center', padding: 32, color: GRAY, fontSize: '0.85rem' }}>Chargement du PDF…</div>
               )}
               {detail.type_fichier === 'image' && detail.nom_fichier && (
                 <img src={fileUrl(detail.id)} alt={detail.titre} style={{ maxWidth: '100%', borderRadius: 6 }} />
@@ -515,22 +553,6 @@ export default function Bibliotheque() {
     );
   }
 
-  // ── Modal overlay wrapper ─────────────────────────────────
-  function Modal({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
-    return (
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: '1rem' }}
-        onClick={e => e.target === e.currentTarget && onClose()}>
-        <div style={{ background: NAVY_M, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, width: '100%', maxWidth: 480, maxHeight: '90vh', overflow: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '1rem 1.2rem', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-            <span style={{ flex: 1, fontWeight: 700, color: '#fff' }}>{title}</span>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: GRAY, fontSize: '1.1rem' }}>✕</button>
-          </div>
-          <div style={{ padding: '1.2rem' }}>{children}</div>
-        </div>
-      </div>
-    );
-  }
-
   const inputStyle: React.CSSProperties = {
     width: '100%', background: NAVY_L, border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 6, color: '#fff', padding: '0.5rem 0.8rem', fontSize: '0.85rem', boxSizing: 'border-box',
@@ -540,14 +562,14 @@ export default function Bibliotheque() {
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: NAVY, position: 'relative' }}>
       <style>{`
-        .biblio-md { color: #cdd6e8; font-size: 0.88rem; line-height: 1.7; }
+        .biblio-md { color: #cdd6e8; font-size: 0.88rem; line-height: 1.7; word-break: break-word; overflow-wrap: anywhere; }
         .biblio-md h1,.biblio-md h2,.biblio-md h3 { color: #fff; margin: 1em 0 0.4em; }
         .biblio-md h1 { font-size: 1.3em; } .biblio-md h2 { font-size: 1.1em; } .biblio-md h3 { font-size: 1em; }
         .biblio-md p { margin: 0 0 0.8em; }
         .biblio-md code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
         .biblio-md pre { background: rgba(255,255,255,0.06); padding: 0.8rem; border-radius: 6px; overflow-x: auto; margin-bottom: 1em; }
         .biblio-md pre code { background: none; padding: 0; }
-        .biblio-md a { color: #38bdf8; }
+        .biblio-md a { color: #38bdf8; word-break: break-all; }
         .biblio-md ul,.biblio-md ol { padding-left: 1.5em; margin-bottom: 0.8em; }
         .biblio-md blockquote { border-left: 3px solid rgba(56,189,248,0.4); padding-left: 0.8em; color: #8899aa; margin: 0 0 0.8em; }
         .biblio-md table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
@@ -640,7 +662,7 @@ export default function Bibliotheque() {
       {/* Detail panel */}
       {(detail || dlLoad) && (
         <div className="biblio-detail" style={{ width: 380, minWidth: 320, background: NAVY_M, borderLeft: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <DetailPanel />
+          {renderDetailPanel()}
         </div>
       )}
 
