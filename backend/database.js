@@ -474,6 +474,17 @@ function genererNumeroTicket() {
   return `RCO-${rand}`;
 }
 
+// ── ABSENCES (périodes de fermeture) ─────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS absences (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    date_debut TEXT NOT NULL,
+    date_fin   TEXT NOT NULL,
+    motif      TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // ── BIBLIOTHÈQUE DE DOCUMENTS ────────────────────────────────
 db.exec(`
   CREATE TABLE IF NOT EXISTS biblio_dossiers (

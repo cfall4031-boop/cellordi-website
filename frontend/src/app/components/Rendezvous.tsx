@@ -8,7 +8,7 @@ import {
   WHITE, GRAY, GRAY_DIM, FONT_DISPLAY, FONT_BODY,
   btn, inputStyle, labelStyle,
 } from "../tokens";
-import { rdvApi, messagesApi } from "../../api";
+import { rdvApi, absencesApi, messagesApi } from "../../api";
 import { loadClient, saveClient } from "../utils/clientStorage";
 
 // ── Heures d'ouverture (fuseau Montréal) ─────────────────────────────────────
@@ -64,16 +64,30 @@ export function Rendezvous() {
   const [calMonth, setCalMonth] = useState(today.getMonth());
   const [selDate, setSelDate] = useState("");
 
+  // Absences publiques
+  const [publicAbsences, setPublicAbsences] = useState<{ id: number; date_debut: string; date_fin: string }[]>([]);
+  useEffect(() => {
+    absencesApi.getPublic().then((d: any) => setPublicAbsences(d.absences || [])).catch(() => {});
+  }, []);
+
+  const isInAbsence = (ds: string) =>
+    publicAbsences.some(a => ds >= a.date_debut && ds <= a.date_fin);
+
   // Créneaux
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selHeure, setSelHeure] = useState("");
+  const [absenceInfo, setAbsenceInfo] = useState<{ date_debut: string; date_fin: string } | null>(null);
   useEffect(() => {
-    if (!selDate) { setSlots([]); setSelHeure(""); return; }
+    if (!selDate) { setSlots([]); setSelHeure(""); setAbsenceInfo(null); return; }
     setSlotsLoading(true);
     setSelHeure("");
+    setAbsenceInfo(null);
     rdvApi.getSlots(selDate)
-      .then((d: any) => setSlots(d.slots || []))
+      .then((d: any) => {
+        if (d.absence) { setAbsenceInfo(d.absence); setSlots([]); }
+        else setSlots(d.slots || []);
+      })
       .catch(() => setSlots([]))
       .finally(() => setSlotsLoading(false));
   }, [selDate]);
@@ -153,6 +167,10 @@ export function Rendezvous() {
   const isDisabled = (d: number) => {
     const ds = toDateStr(calYear, calMonth, d);
     return ds < todayStr || new Date(calYear, calMonth, d).getDay() === 0;
+  };
+  const isAbsenceDay = (d: number) => {
+    const ds = toDateStr(calYear, calMonth, d);
+    return !isDisabled(d) && isInAbsence(ds);
   };
   const monthLabel = (() => {
     const raw = new Intl.DateTimeFormat(lang === "fr" ? "fr-CA" : "en-CA", {
@@ -428,6 +446,7 @@ export function Rendezvous() {
                       if (day === null) return <div key={`e-${idx}`} />;
                       const ds = toDateStr(calYear, calMonth, day);
                       const disabled = isDisabled(day);
+                      const absDay = isAbsenceDay(day);
                       const isToday = ds === todayStr;
                       const isSelected = ds === selDate;
                       const isSat = new Date(calYear, calMonth, day).getDay() === 6;
@@ -437,20 +456,27 @@ export function Rendezvous() {
                           type="button"
                           disabled={disabled}
                           onClick={() => !disabled && setSelDate(ds)}
+                          title={absDay ? (lang === "fr" ? "Absent ce jour" : "Unavailable") : undefined}
                           style={{
                             background: isSelected
-                              ? GREEN
+                              ? (absDay ? "rgba(255,77,77,0.35)" : GREEN)
+                              : absDay
+                              ? "rgba(255,77,77,0.12)"
                               : isToday
                               ? "rgba(109,212,0,0.12)"
                               : "transparent",
                             color: disabled
                               ? "rgba(144,144,168,0.25)"
                               : isSelected
-                              ? NAVY
+                              ? (absDay ? "#ff6b6b" : NAVY)
+                              : absDay
+                              ? "#ff6b6b"
                               : isSat
                               ? "rgba(109,212,0,0.75)"
                               : WHITE,
-                            border: isToday && !isSelected
+                            border: absDay && !isSelected
+                              ? "1px solid rgba(255,77,77,0.25)"
+                              : isToday && !isSelected
                               ? "1px solid rgba(109,212,0,0.4)"
                               : "1px solid transparent",
                             borderRadius: "8px",
@@ -461,6 +487,7 @@ export function Rendezvous() {
                             cursor: disabled ? "not-allowed" : "pointer",
                             textAlign: "center",
                             transition: "all 0.1s",
+                            textDecoration: absDay ? "line-through" : "none",
                           }}
                         >
                           {day}
@@ -483,6 +510,12 @@ export function Rendezvous() {
                     {slotsLoading ? (
                       <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY }}>
                         {lang === "fr" ? "Chargement…" : "Loading…"}
+                      </p>
+                    ) : absenceInfo ? (
+                      <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: "#ff6b6b", background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", borderRadius: 8, padding: "0.6rem 0.8rem", margin: 0 }}>
+                        🚫 {lang === "fr"
+                          ? `Absent — aucun rendez-vous disponible du ${absenceInfo.date_debut} au ${absenceInfo.date_fin}.`
+                          : `Unavailable — no appointments from ${absenceInfo.date_debut} to ${absenceInfo.date_fin}.`}
                       </p>
                     ) : slots.length === 0 ? (
                       <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: "#f59e0b" }}>

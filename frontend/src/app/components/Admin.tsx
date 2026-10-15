@@ -4,7 +4,7 @@ import {
   LineChart, Line
 } from "recharts";
 import {
-  authApi, rdvApi, ticketsApi, clientsApi,
+  authApi, rdvApi, absencesApi, ticketsApi, clientsApi,
   messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, notesApi, registreApi, facturesApi, setToken, removeToken, getToken
 } from "../../api";
 import Bibliotheque from "./Bibliotheque";
@@ -1445,10 +1445,22 @@ function Rendez_vous() {
   // ── Tableau dispo ───────────────────────────────────────────────────────────
   const [showDispo, setShowDispo] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  // ── Absences ────────────────────────────────────────────────────────────────
+  const [absences, setAbsences]           = useState<any[]>([]);
+  const [absForm, setAbsForm]             = useState({ date_debut: "", date_fin: "", motif: "" });
+  const [absLoading, setAbsLoading]       = useState(false);
+  const [absErr, setAbsErr]               = useState<string | null>(null);
+  const [absConflicts, setAbsConflicts]   = useState<any[]>([]);
+  const [absPending, setAbsPending]       = useState<{ date_debut: string; date_fin: string; motif: string } | null>(null);
   const HEURES = ["11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
   const JOURS_DISPO = [1,2,3,4,5,6]; // Lun–Sam
 
   // ── Chargement ──────────────────────────────────────────────────────────────
+  const loadAbsences = useCallback(() => {
+    absencesApi.getAll().then((d: any) => setAbsences(d.absences || [])).catch(() => {});
+  }, []);
+
   const load = useCallback(() => {
     setLoading(true);
     Promise.all([
@@ -1458,7 +1470,8 @@ function Rendez_vous() {
       setRdvs((rdvData as any).rendezvous || []);
       setDispos((dispoData as any).disponibilites || []);
     }).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    loadAbsences();
+  }, [loadAbsences]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -1968,6 +1981,142 @@ function Rendez_vous() {
           </div>
         </div>
       </div>
+
+        {/* ── Périodes d'absence ── */}
+        <div style={{ marginTop:"2rem", background:NAVY_MID, border:"1px solid rgba(255,77,77,0.18)", borderRadius:16, padding:"1.25rem" }}>
+          <div style={{ fontWeight:700, color:"#fff", fontSize:"0.95rem", fontFamily:"'DM Sans',sans-serif", marginBottom:"1rem" }}>
+            🚫 Périodes d'absence
+          </div>
+
+          {/* Formulaire */}
+          <div style={{ display:"flex", flexWrap:"wrap", gap:"0.6rem", alignItems:"flex-end", marginBottom:"1rem" }}>
+            <div style={{ display:"flex", flexDirection:"column", gap:"0.25rem" }}>
+              <label style={{ fontSize:"0.75rem", color:GRAY, fontFamily:"'DM Sans',sans-serif" }}>Début</label>
+              <input type="date" value={absForm.date_debut}
+                onChange={e => setAbsForm(f => ({ ...f, date_debut: e.target.value }))}
+                min={new Date().toISOString().slice(0,10)}
+                style={{ background:NAVY, border:"1px solid rgba(255,255,255,0.12)", color:"#fff", borderRadius:8, padding:"0.45rem 0.7rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif" }} />
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:"0.25rem" }}>
+              <label style={{ fontSize:"0.75rem", color:GRAY, fontFamily:"'DM Sans',sans-serif" }}>Fin</label>
+              <input type="date" value={absForm.date_fin}
+                onChange={e => setAbsForm(f => ({ ...f, date_fin: e.target.value }))}
+                min={absForm.date_debut || new Date().toISOString().slice(0,10)}
+                style={{ background:NAVY, border:"1px solid rgba(255,255,255,0.12)", color:"#fff", borderRadius:8, padding:"0.45rem 0.7rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif" }} />
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:"0.25rem", flex:1, minWidth:160 }}>
+              <label style={{ fontSize:"0.75rem", color:GRAY, fontFamily:"'DM Sans',sans-serif" }}>Motif (optionnel)</label>
+              <input type="text" value={absForm.motif} placeholder="ex. Voyage d'affaires"
+                onChange={e => setAbsForm(f => ({ ...f, motif: e.target.value }))}
+                style={{ background:NAVY, border:"1px solid rgba(255,255,255,0.12)", color:"#fff", borderRadius:8, padding:"0.45rem 0.7rem", fontSize:"0.85rem", fontFamily:"'DM Sans',sans-serif" }} />
+            </div>
+            <button disabled={absLoading} onClick={async () => {
+              setAbsErr(null);
+              if (!absForm.date_debut || !absForm.date_fin) { setAbsErr("Dates requises."); return; }
+              if (absForm.date_fin < absForm.date_debut) { setAbsErr("La date de fin doit être ≥ à la date de début."); return; }
+              const today2 = new Date().toISOString().slice(0,10);
+              if (absForm.date_fin < today2) { setAbsErr("Impossible d'ajouter une absence entièrement passée."); return; }
+              setAbsLoading(true);
+              try {
+                const res = await absencesApi.check(absForm) as any;
+                if (res.conflicts && res.conflicts.length > 0) {
+                  setAbsConflicts(res.conflicts);
+                  setAbsPending({ ...absForm });
+                } else {
+                  setAbsForm({ date_debut:"", date_fin:"", motif:"" });
+                  loadAbsences();
+                }
+              } catch(e: any) {
+                setAbsErr(e.message || "Erreur");
+              }
+              setAbsLoading(false);
+            }} style={{ background:"rgba(255,77,77,0.15)", border:"1px solid rgba(255,77,77,0.35)", color:"#ff6b6b",
+              borderRadius:8, padding:"0.5rem 1.1rem", fontFamily:"'DM Sans',sans-serif", fontWeight:700,
+              cursor:"pointer", fontSize:"0.84rem", whiteSpace:"nowrap" as const }}>
+              {absLoading ? "…" : "+ Ajouter"}
+            </button>
+          </div>
+
+          {absErr && <div style={{ color:"#ff6b6b", fontSize:"0.82rem", marginBottom:"0.75rem", fontFamily:"'DM Sans',sans-serif" }}>{absErr}</div>}
+
+          {/* Modal confirmation conflits */}
+          {absConflicts.length > 0 && absPending && (
+            <div style={{ background:"rgba(255,77,77,0.08)", border:"1px solid rgba(255,77,77,0.3)", borderRadius:10, padding:"1rem", marginBottom:"1rem" }}>
+              <div style={{ fontWeight:700, color:"#ff6b6b", fontFamily:"'DM Sans',sans-serif", marginBottom:"0.5rem" }}>
+                ⚠ {absConflicts.length} rendez-vous seront annulés
+              </div>
+              <div style={{ marginBottom:"0.75rem" }}>
+                {absConflicts.map((c:any) => (
+                  <div key={c.id} style={{ fontSize:"0.82rem", color:"#cdd6e8", fontFamily:"'DM Sans',sans-serif", padding:"0.25rem 0", borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+                    {c.prenom} {c.nom} — {c.date_rdv}{c.heure ? " à " + c.heure : ""}{c.email ? ` (${c.email})` : ""}
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize:"0.82rem", color:GRAY, fontFamily:"'DM Sans',sans-serif", margin:"0 0 0.75rem" }}>
+                Ces rendez-vous passeront au statut <strong style={{color:"#ff6b6b"}}>Annulé</strong> et les clients seront notifiés par email/SMS.
+              </p>
+              <div style={{ display:"flex", gap:"0.6rem" }}>
+                <button onClick={async () => {
+                  setAbsLoading(true);
+                  try {
+                    await absencesApi.createForce(absPending);
+                    setAbsConflicts([]); setAbsPending(null);
+                    setAbsForm({ date_debut:"", date_fin:"", motif:"" });
+                    load();
+                  } catch(e:any) { setAbsErr(e.message || "Erreur"); }
+                  setAbsLoading(false);
+                }} style={{ background:"rgba(255,77,77,0.2)", border:"1px solid rgba(255,77,77,0.5)", color:"#ff6b6b",
+                  borderRadius:8, padding:"0.45rem 1rem", fontFamily:"'DM Sans',sans-serif", fontWeight:700, cursor:"pointer", fontSize:"0.83rem" }}>
+                  ✓ Confirmer et annuler les RDVs
+                </button>
+                <button onClick={() => { setAbsConflicts([]); setAbsPending(null); }}
+                  style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.12)", color:GRAY,
+                    borderRadius:8, padding:"0.45rem 1rem", fontFamily:"'DM Sans',sans-serif", cursor:"pointer", fontSize:"0.83rem" }}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Liste des absences */}
+          {absences.length === 0 ? (
+            <div style={{ color:GRAY_DIM, fontSize:"0.83rem", fontFamily:"'DM Sans',sans-serif" }}>Aucune période d'absence enregistrée.</div>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:"0.5rem" }}>
+              {absences.map((a:any) => {
+                const fmtD = (d: string) => {
+                  const [y,m,j] = d.split("-");
+                  const mois = ["jan","fév","mars","avr","mai","juin","juil","août","sep","oct","nov","déc"];
+                  return `${parseInt(j)} ${mois[parseInt(m)-1]} ${y}`;
+                };
+                const isPast = a.date_fin < new Date().toISOString().slice(0,10);
+                return (
+                  <div key={a.id} style={{ display:"flex", alignItems:"center", gap:"0.75rem", padding:"0.6rem 0.8rem",
+                    background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8,
+                    opacity: isPast ? 0.5 : 1 }}>
+                    <span style={{ fontSize:"1rem", flexShrink:0 }}>🚫</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:"0.85rem", fontWeight:700, color: isPast ? GRAY : "#fff", fontFamily:"'DM Sans',sans-serif" }}>
+                        {fmtD(a.date_debut)} → {fmtD(a.date_fin)}
+                        {a.date_debut === a.date_fin && " (1 jour)"}
+                      </div>
+                      {a.motif && <div style={{ fontSize:"0.76rem", color:GRAY, fontFamily:"'DM Sans',sans-serif", marginTop:2 }}>{a.motif}</div>}
+                      {isPast && <div style={{ fontSize:"0.72rem", color:GRAY_DIM, fontFamily:"'DM Sans',sans-serif" }}>Passée</div>}
+                    </div>
+                    <button onClick={async () => {
+                      if (!window.confirm("Supprimer cette période d'absence ?")) return;
+                      await absencesApi.delete(a.id).catch(console.error);
+                      loadAbsences();
+                    }} style={{ background:"rgba(255,77,77,0.08)", border:"1px solid rgba(255,77,77,0.2)", color:"#ff6b6b",
+                      borderRadius:6, padding:"0.3rem 0.6rem", cursor:"pointer", fontSize:"0.8rem", fontFamily:"'DM Sans',sans-serif" }}>
+                      Supprimer
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
       <style>{`
         @media (max-width: 700px) {

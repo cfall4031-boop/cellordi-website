@@ -60,9 +60,23 @@ export const rdvApi = {
   toggleSlot:        (jour: number, heure: string) =>
     req<{ slot: { jour: number; heure: string; actif: number } }>("POST", "/rendezvous/disponibilites", { jour, heure }),
   getSlots:          (date: string) =>
-    req<{ slots: string[] }>("GET", `/rendezvous/slots?date=${date}`),
+    req<{ slots: string[]; absence?: { date_debut: string; date_fin: string } }>("GET", `/rendezvous/slots?date=${date}`),
   resetDisponibilites: () =>
     req<{ message: string; disponibilites: any[] }>("POST", "/rendezvous/disponibilites/reset"),
+};
+
+// ── ABSENCES ─────────────────────────────────────────────────
+export const absencesApi = {
+  getAll:      () =>
+    req<{ absences: any[] }>("GET", "/absences"),
+  getPublic:   () =>
+    req<{ absences: { id: number; date_debut: string; date_fin: string }[] }>("GET", "/absences/public", null, true),
+  check:       (data: { date_debut: string; date_fin: string; motif?: string }) =>
+    req<{ conflicts?: any[]; id?: number; annules?: number }>("POST", "/absences", data),
+  createForce: (data: { date_debut: string; date_fin: string; motif?: string }) =>
+    req<{ id: number; annules: number }>("POST", "/absences?force=1", data),
+  delete:      (id: number) =>
+    req<{ message: string }>("DELETE", `/absences/${id}`),
 };
 
 // ── TICKETS ──────────────────────────────────────────────────

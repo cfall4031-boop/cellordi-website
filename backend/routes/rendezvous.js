@@ -16,6 +16,14 @@ router.post("/", (req, res) => {
     return res.status(400).json({ erreur: "Champs obligatoires manquants (prenom, nom, type_appareil, date_rdv)." });
   }
 
+  // Garde serveur : refuser si la date est dans une période d'absence
+  const absenceBloc = db.prepare(
+    "SELECT id FROM absences WHERE ? BETWEEN date_debut AND date_fin LIMIT 1"
+  ).get(date_rdv);
+  if (absenceBloc) {
+    return res.status(409).json({ erreur: "Aucun rendez-vous disponible à cette date (période d'absence)." });
+  }
+
   // Chercher ou créer le client (par email si fourni, sinon par téléphone)
   let client = null;
   if (email) {
@@ -149,6 +157,15 @@ router.post("/disponibilites/reset", auth, (req, res) => {
 router.get("/slots", (req, res) => {
   const { date } = req.query;
   if (!date) return res.status(400).json({ erreur: "date requise (YYYY-MM-DD)." });
+
+  // Vérifier si la date est dans une période d'absence
+  const absence = db.prepare(
+    "SELECT date_debut, date_fin FROM absences WHERE ? BETWEEN date_debut AND date_fin LIMIT 1"
+  ).get(date);
+  if (absence) {
+    return res.json({ slots: [], absence: { date_debut: absence.date_debut, date_fin: absence.date_fin } });
+  }
+
   const d = new Date(date + "T12:00:00");
   // getDay(): 0=Sun,1=Mon...6=Sat → map to our 1=Lun...6=Sam
   const dayJs = d.getDay(); // 0=Sun

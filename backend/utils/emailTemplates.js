@@ -395,6 +395,35 @@ function rappelAdmin({ telephone, created_at }) {
   return wrap(content);
 }
 
+// ── Annulation RDV suite à une absence ───────────────────────
+function annulationRdvAbsence({ prenom, nom, date_rdv, heure, date_debut, date_fin }) {
+  const fmtDate = (d) => {
+    const [y, m, j] = d.split("-");
+    const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+    return `${parseInt(j)} ${mois[parseInt(m) - 1]} ${y}`;
+  };
+  const dateDisplay = `${date_rdv}${heure ? " à " + heure : ""}`;
+  return wrap(`
+    <h2 style="color:#ff6b6b;font-size:20px;margin:0 0 20px;">Annulation de votre rendez-vous</h2>
+    <p style="color:#cdd6e8;line-height:1.7;">Bonjour <strong>${prenom} ${nom}</strong>,</p>
+    <p style="color:#cdd6e8;line-height:1.7;">
+      Nous sommes désolés de vous informer que votre rendez-vous du
+      <strong style="color:#fff;">${dateDisplay}</strong> doit être annulé
+      en raison d'une période d'absence du technicien
+      (du <strong style="color:#fff;">${fmtDate(date_debut)}</strong>
+      au <strong style="color:#fff;">${fmtDate(date_fin)}</strong>).
+    </p>
+    <p style="color:#cdd6e8;line-height:1.7;">
+      Nous vous invitons à reprendre rendez-vous dès la fin de cette période.
+      Toutes nos excuses pour la gêne occasionnée.
+    </p>
+    ${btnVert("Reprendre un rendez-vous", SITE_URL + "/#rendezvous")}
+    <p style="color:#8899aa;font-size:13px;margin-top:24px;">
+      Des questions ? Appelez-nous au <strong style="color:#6dd400;">(514) 237-5792</strong>.
+    </p>
+  `);
+}
+
 // ─────────────────────────────────────────────────────────────
 module.exports = {
   rdvClient,
@@ -404,4 +433,5 @@ module.exports = {
   dechargeClient,
   replyToContact,
   rappelAdmin,
+  annulationRdvAbsence,
 };
