@@ -511,13 +511,20 @@ export function Rendezvous() {
                       <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: GRAY }}>
                         {lang === "fr" ? "Chargement…" : "Loading…"}
                       </p>
-                    ) : absenceInfo ? (
-                      <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: "#ff6b6b", background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", borderRadius: 8, padding: "0.6rem 0.8rem", margin: 0 }}>
-                        🚫 {lang === "fr"
-                          ? `Absent — aucun rendez-vous disponible du ${absenceInfo.date_debut} au ${absenceInfo.date_fin}.`
-                          : `Unavailable — no appointments from ${absenceInfo.date_debut} to ${absenceInfo.date_fin}.`}
-                      </p>
-                    ) : slots.length === 0 ? (
+                    ) : absenceInfo ? (() => {
+                      const retour = new Date(absenceInfo.date_fin + "T12:00:00");
+                      retour.setDate(retour.getDate() + 1);
+                      const retourLabel = retour.toLocaleDateString(lang === "fr" ? "fr-CA" : "en-CA", {
+                        weekday: "long", day: "numeric", month: "long",
+                      });
+                      return (
+                        <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: "#ff6b6b", background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", borderRadius: 8, padding: "0.6rem 0.8rem", margin: 0 }}>
+                          🚫 {lang === "fr"
+                            ? `Absent pour le moment — de retour le ${retourLabel}.`
+                            : `Currently unavailable — back on ${retourLabel}.`}
+                        </p>
+                      );
+                    })() : slots.length === 0 ? (
                       <p style={{ fontFamily: FONT_BODY, fontSize: "0.82rem", color: "#f59e0b" }}>
                         {lang === "fr"
                           ? "⚠ Aucun créneau disponible ce jour."
