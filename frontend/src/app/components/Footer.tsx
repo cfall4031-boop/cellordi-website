@@ -26,10 +26,10 @@ export function Footer() {
       { label: t("footer.links.cloud"), href: "/services/cloud" },
     ],
     [t("footer.sections.info")]: [
-      { label: t("footer.links.about"),   href: "/#about" },
+      { label: t("footer.links.about"),   href: "/avis" },
       { label: t("footer.links.blog"),    href: "/blog" },
+      { label: t("footer.links.faq"),     href: "/faq" },
       { label: t("footer.links.privacy"), href: "#" },
-      { label: t("footer.links.cgv"),     href: "#" },
     ],
     [t("footer.sections.contact")]: [
       { label: "(514) 237-5792",                              href: "tel:+15142375792" },

@@ -51,20 +51,22 @@ export function Navbar() {
     { label: t("nav.rdv"),       href: "/#rendezvous" },
     { label: t("nav.suivi"),     href: "/#suivi" },
     { label: t("nav.blog"),      href: "/blog" },
-    { label: t("nav.contact"),   href: "/#contact" },
-    { label: t("nav.decharge"),  href: "/#decharge" },
+    { label: t("nav.contact"),   href: "/contact" },
+    { label: t("nav.decharge"),  href: "/decharge" },
   ];
 
   // ── Données recherche ──────────────────────────────────────────────────────
   const isFR = i18n.language === "fr";
 
   const SECTIONS: SearchItem[] = [
-    { label: isFR ? "Services"         : "Services",        href: "/#services",    cat: isFR ? "Section" : "Section" },
-    { label: isFR ? "Rendez-vous"      : "Appointment",     href: "/#rendezvous",  cat: isFR ? "Section" : "Section" },
-    { label: isFR ? "Suivi réparation" : "Repair tracking", href: "/#suivi",       cat: isFR ? "Section" : "Section" },
-    { label: isFR ? "Fiche de décharge": "Drop-off form",   href: "/#decharge",    cat: isFR ? "Section" : "Section" },
-    { label: isFR ? "Contact"          : "Contact",         href: "/#contact",     cat: isFR ? "Section" : "Section" },
-    { label: isFR ? "Blog"             : "Blog",            href: "/blog",         cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Services"         : "Services",        href: "/#services",   cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Rendez-vous"      : "Appointment",     href: "/#rendezvous", cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Suivi réparation" : "Repair tracking", href: "/#suivi",      cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Fiche de décharge": "Drop-off form",   href: "/decharge",    cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Contact"          : "Contact",         href: "/contact",     cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Avis clients"     : "Customer reviews",href: "/avis",        cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "FAQ"              : "FAQ",             href: "/faq",         cat: isFR ? "Section" : "Section" },
+    { label: isFR ? "Blog"             : "Blog",            href: "/blog",        cat: isFR ? "Section" : "Section" },
   ];
 
   const SERVICE_KEYS = ["cellulaires", "ordinateurs", "informatique", "web", "cloud", "entretien"];

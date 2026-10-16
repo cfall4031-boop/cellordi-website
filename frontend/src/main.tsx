@@ -8,6 +8,10 @@ import BlogListing from "./app/components/BlogListing.tsx";
 import BlogArticle from "./app/components/BlogArticle.tsx";
 import ServiceDetail from "./app/components/ServiceDetail.tsx";
 import NotFound from "./app/components/NotFound.tsx";
+import ContactPage from "./app/components/ContactPage.tsx";
+import DechargePage from "./app/components/DechargePage.tsx";
+import AvisPage from "./app/components/AvisPage.tsx";
+import FAQPage from "./app/components/FAQPage.tsx";
 import { ScrollRestoration } from "./app/components/ScrollRestoration.tsx";
 import "./styles/index.css";
 
@@ -17,6 +21,10 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<App />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/decharge" element={<DechargePage />} />
+        <Route path="/avis" element={<AvisPage />} />
+        <Route path="/faq" element={<FAQPage />} />
         <Route path="/services/:slug" element={<ServiceDetail />} />
         <Route path="/blog" element={<BlogListing />} />
         <Route path="/blog/:slug" element={<BlogArticle />} />
