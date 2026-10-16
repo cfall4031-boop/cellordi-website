@@ -189,10 +189,9 @@
 
 
   /* ══════════════════════════════════════════════════════
-     SERVICES — Liste éditoriale numérotée, fond clair
+     SERVICES — Liste éditoriale numérotée, fond sombre
   ══════════════════════════════════════════════════════ */
   #services {
-    background: var(--mob-light) !important;
     padding: 5rem var(--mob-pad) !important;
     position: relative !important;
   }
@@ -206,13 +205,8 @@
     font-weight: 900;
     font-size: 0.7rem;
     letter-spacing: 0.2em;
-    color: rgba(109,212,0,0.5);
+    color: rgba(109,212,0,0.35);
   }
-
-  /* Couleurs sur fond clair */
-  .services-tag { color: var(--mob-green-dark) !important; }
-  .services-title { color: var(--mob-light-text) !important; }
-  .services-subtitle { color: var(--mob-light-sub) !important; }
 
   /* Masquer la grille desktop */
   .services-grid { display: none !important; }
@@ -229,15 +223,15 @@
     align-items: center !important;
     gap: 1rem !important;
     padding: 1.4rem 0 !important;
-    border-bottom: 1px solid rgba(0,0,0,0.09) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.07) !important;
     text-decoration: none !important;
-    color: var(--mob-light-text) !important;
+    color: #ffffff !important;
     transition: opacity 0.15s !important;
     min-height: 72px !important;
   }
 
   .services-mobile-item:first-child {
-    border-top: 1px solid rgba(0,0,0,0.09) !important;
+    border-top: 1px solid rgba(255,255,255,0.07) !important;
   }
 
   .services-mobile-item:active { opacity: 0.7 !important; }
@@ -246,7 +240,7 @@
     font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 900 !important;
     font-size: 1.6rem !important;
-    color: rgba(61,118,0,0.35) !important;
+    color: rgba(109,212,0,0.25) !important;
     line-height: 1 !important;
     flex-shrink: 0 !important;
     width: 40px !important;
@@ -262,7 +256,7 @@
     font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 700 !important;
     font-size: 1.05rem !important;
-    color: var(--mob-light-text) !important;
+    color: #ffffff !important;
     margin: 0 0 0.25rem !important;
     letter-spacing: 0.01em !important;
     text-transform: uppercase !important;
@@ -279,7 +273,7 @@
   .services-mobile-content p {
     font-family: 'Space Grotesk', sans-serif !important;
     font-size: 0.85rem !important;
-    color: var(--mob-light-sub) !important;
+    color: rgba(255,255,255,0.45) !important;
     line-height: 1.5 !important;
     margin: 0 !important;
     display: -webkit-box !important;
