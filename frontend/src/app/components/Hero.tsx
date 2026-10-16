@@ -110,7 +110,7 @@ export function Hero() {
         }}
       >
         {/* Badge diagnostic gratuit */}
-        <div style={{
+        <div className="hero-badge" style={{
           display: "inline-flex",
           alignItems: "center",
           gap: "0.55rem",
@@ -187,7 +187,7 @@ export function Hero() {
         </p>
 
         {/* CTAs */}
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" as const }}>
+        <div className="hero-ctas" style={{ display: "flex", gap: "1rem", flexWrap: "wrap" as const }}>
           <a
             href="tel:5142375792"
             style={{

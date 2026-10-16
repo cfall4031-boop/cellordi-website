@@ -94,7 +94,7 @@ export function Contact() {
             </div>
 
             {/* Map */}
-            <div style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.1)", height: "180px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "0.75rem" }}>
+            <div className="contact-map-section" style={{ background: NAVY, border: "1px solid rgba(109,212,0,0.1)", height: "180px", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "0.75rem" }}>
               <IconMapSvg />
               <span style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY_DIM, textAlign: "center", padding: "0 1rem" }}>
                 5050 QC-132 #203, Sainte-Catherine

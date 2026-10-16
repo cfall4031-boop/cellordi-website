@@ -88,19 +88,38 @@ export function Services() {
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         <FadeUp>
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+            <span className="services-tag" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
               {t("services.tag")}
             </span>
-            <h2 style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
+            <h2 className="services-title" style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
               <TypewriterTitle text={t("services.title")} />
             </h2>
-            <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", maxWidth: "520px", margin: "0 auto" }}>
+            <p className="services-subtitle" style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", maxWidth: "520px", margin: "0 auto" }}>
               {t("services.subtitle")}
             </p>
           </div>
         </FadeUp>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
+        {/* Liste éditoriale numérotée — mobile uniquement */}
+        <div className="services-mobile-list" style={{ display: "none" }}>
+          {SERVICE_SLUGS.map(({ slug }, i) => (
+            <a
+              key={slug}
+              href={`/services/${slug}`}
+              className="services-mobile-item"
+              style={{ display: "flex" }}
+            >
+              <span className="services-mobile-num">{String(i + 1).padStart(2, "0")}</span>
+              <div className="services-mobile-content">
+                <h3>{t(`services.items.${slug}.title`)}</h3>
+                <p>{t(`services.items.${slug}.desc`)}</p>
+              </div>
+              <span className="services-mobile-arrow">→</span>
+            </a>
+          ))}
+        </div>
+
+        <div className="services-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
           {SERVICE_SLUGS.map(({ slug, Icon }, i) => {
             const items = t(`services.items.${slug}.items`, { returnObjects: true }) as string[];
             return (

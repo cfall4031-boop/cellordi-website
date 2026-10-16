@@ -65,12 +65,15 @@ export function Suivi() {
             <p style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem" }}>
               {t("suivi.subtitle")}
             </p>
+            <p style={{ fontFamily: FONT_BODY, color: GRAY_DIM, fontSize: "0.88rem", marginTop: "0.75rem", lineHeight: 1.6 }}>
+              {t("suivi.reassurance")}
+            </p>
           </div>
         </FadeUp>
 
         <FadeUp delay={0.1}>
           <form onSubmit={handleSearch} style={{ marginBottom: "2rem" }}>
-            <div style={{ display: "flex", gap: "0.8rem", alignItems: "flex-start" }}>
+            <div className="suivi-form-row" style={{ display: "flex", gap: "0.8rem", alignItems: "flex-start" }}>
               <FloatingInput
                 label={t("suivi.label")}
                 value={ticket}

@@ -13,6 +13,7 @@ import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 
 import "../styles/fonts.css";
+import "../styles/mobile.css";
 
 export default function App() {
   return (
@@ -26,9 +27,9 @@ export default function App() {
     >
       <Navbar />
       <Hero />
+      <Suivi />
       <Services />
       <Rendezvous />
-      <Suivi />
       <Decharge />
       <Testimonials />
       <FAQ />

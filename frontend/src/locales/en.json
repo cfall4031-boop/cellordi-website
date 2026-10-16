@@ -243,7 +243,7 @@
       "ticket_hint": "Keep this number to track your repair",
       "suivi_hint": "Use the",
       "suivi_link": "Ticket tracking",
-      "suivi_suffix": "section below to follow the progress.",
+      "suivi_suffix": "section to track your repair progress.",
       "new": "New request"
     }
   },
@@ -251,6 +251,7 @@
     "tag": "Your repair",
     "title": "Real-Time Tracking",
     "subtitle": "Enter your ticket number to track your repair progress.",
+    "reassurance": "Every device dropped off receives a unique ticket number: track each repair step, from diagnosis to return.",
     "label": "Ticket number",
     "placeholder": "e.g. REP-2024-001",
     "btn": "Search",

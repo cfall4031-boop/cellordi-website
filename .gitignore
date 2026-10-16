@@ -25,3 +25,11 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Fichiers sensibles — NE JAMAIS PUBLIER
+frontend/public/efx-creditreport_20260925*
+frontend/public/Relevé de paie.pdf
+frontend/public/Rapport de stock*
+frontend/public/Affiche Promotionnelle*
+frontend/public/11e12dfb68bad9f24b8b77bd9be02ccf.jpg
+frontend/public/825259948_1694386678912838_6232293375007840111_n.jpg

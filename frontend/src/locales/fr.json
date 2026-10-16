@@ -243,7 +243,7 @@
       "ticket_hint": "Conservez ce numéro pour suivre votre réparation",
       "suivi_hint": "Utilisez la section",
       "suivi_link": "Suivi de ticket",
-      "suivi_suffix": "ci-dessous pour suivre l'avancement.",
+      "suivi_suffix": "pour suivre l'avancement de votre réparation.",
       "new": "Nouvelle demande"
     }
   },
@@ -251,6 +251,7 @@
     "tag": "Votre réparation",
     "title": "Suivi en Temps Réel",
     "subtitle": "Entrez votre numéro de ticket pour suivre l'avancement de votre réparation.",
+    "reassurance": "Chaque appareil déposé reçoit un numéro de ticket unique : suivez chaque étape de la réparation, du diagnostic à la remise.",
     "label": "Numéro de ticket",
     "placeholder": "Ex: REP-2024-001",
     "btn": "Rechercher",
