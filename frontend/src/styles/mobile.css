@@ -317,7 +317,7 @@
   }
 
   /* Masquer le panneau gauche (Prix rapide / Appel) */
-  .rdv-main-grid > *:first-child { display: none !important; }
+  .rdv-call-panel { display: none !important; }
 
 
   /* ══════════════════════════════════════════════════════

@@ -73,6 +73,10 @@ export function Rendezvous() {
   const isInAbsence = (ds: string) =>
     publicAbsences.some(a => ds >= a.date_debut && ds <= a.date_fin);
 
+  // Si aujourd'hui est une période d'absence, forcer "fermé" dans le badge
+  const isTodayAbsent = publicAbsences.some(a => todayStr >= a.date_debut && todayStr <= a.date_fin);
+  const effectivelyOpen = open && !isTodayAbsent;
+
   // Créneaux
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -273,11 +277,12 @@ export function Rendezvous() {
             alignItems: "start",
           }}>
 
-            {/* ── GAUCHE : Bloc appel ── */}
+            {/* ── GAUCHE : Bloc appel (masqué sur mobile) ── */}
+            <div className="rdv-call-panel">
             <FadeUp delay={0}>
               <div style={{
                 background: "linear-gradient(160deg, rgba(109,212,0,0.07) 0%, rgba(12,12,18,0) 70%)",
-                border: `1px solid ${open ? "rgba(109,212,0,0.2)" : "rgba(144,144,168,0.15)"}`,
+                border: `1px solid ${effectivelyOpen ? "rgba(109,212,0,0.2)" : "rgba(144,144,168,0.15)"}`,
                 borderRadius: "16px",
                 padding: "1.8rem",
                 position: "sticky",
@@ -286,21 +291,21 @@ export function Rendezvous() {
                 {/* Badge */}
                 <div style={{
                   display: "inline-flex", alignItems: "center", gap: "0.4rem",
-                  background: open ? "rgba(109,212,0,0.1)" : "rgba(144,144,168,0.08)",
-                  border: `1px solid ${open ? "rgba(109,212,0,0.25)" : "rgba(144,144,168,0.2)"}`,
+                  background: effectivelyOpen ? "rgba(109,212,0,0.1)" : "rgba(144,144,168,0.08)",
+                  border: `1px solid ${effectivelyOpen ? "rgba(109,212,0,0.25)" : "rgba(144,144,168,0.2)"}`,
                   borderRadius: "50px", padding: "0.25rem 0.75rem", marginBottom: "1.1rem",
                 }}>
                   <span style={{
                     width: "6px", height: "6px", borderRadius: "50%", display: "inline-block",
-                    background: open ? GREEN : "#9090a8",
-                    animation: open ? "pulse-dot 1.5s ease-in-out infinite" : "none",
+                    background: effectivelyOpen ? GREEN : "#9090a8",
+                    animation: effectivelyOpen ? "pulse-dot 1.5s ease-in-out infinite" : "none",
                   }} />
                   <span style={{
                     fontFamily: FONT_BODY, fontSize: "0.68rem",
-                    color: open ? GREEN : "#9090a8",
+                    color: effectivelyOpen ? GREEN : "#9090a8",
                     letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 700,
                   }}>
-                    {open ? t("rdv.call.badge_open") : t("rdv.call.badge_closed")}
+                    {effectivelyOpen ? t("rdv.call.badge_open") : t("rdv.call.badge_closed")}
                   </span>
                 </div>
 
@@ -324,7 +329,7 @@ export function Rendezvous() {
                 </div>
 
                 {/* CTA */}
-                {open ? (
+                {effectivelyOpen ? (
                   <a
                     href="tel:5142375792"
                     style={{
@@ -378,6 +383,7 @@ export function Rendezvous() {
                 </div>
               </div>
             </FadeUp>
+            </div>{/* /rdv-call-panel */}
 
             {/* ── DROITE : Calendrier + Formulaire ── */}
             <FadeUp delay={0.1}>
