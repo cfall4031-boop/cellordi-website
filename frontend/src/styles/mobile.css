@@ -114,8 +114,8 @@
     width: 100% !important;
   }
 
-  /* Masquer le CTA secondaire "Suivre ma réparation" */
-  .hero-ctas > a:last-child { display: none !important; }
+  /* Masquer tous les CTAs du hero */
+  .hero-ctas { display: none !important; }
 
   .hero-ctas > a,
   .hero-ctas > button {
