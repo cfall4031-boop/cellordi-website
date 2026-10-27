@@ -24,24 +24,28 @@ router.post("/", (req, res) => {
     return res.status(409).json({ erreur: "Aucun rendez-vous disponible à cette date (période d'absence)." });
   }
 
-  // Chercher ou créer le client (par email si fourni, sinon par téléphone)
-  let client = null;
+  // Chercher ou créer le client (seulement si email fourni — NOT NULL sur clients.email)
+  let clientId = null;
   if (email) {
-    client = db.prepare("SELECT id FROM clients WHERE email = ?").get(email);
+    let client = db.prepare("SELECT id FROM clients WHERE email = ?").get(email);
+    if (!client) {
+      const ins = db.prepare(
+        "INSERT INTO clients (prenom, nom, email, telephone) VALUES (?, ?, ?, ?)"
+      ).run(prenom, nom, email, telephone || null);
+      clientId = ins.lastInsertRowid;
+    } else {
+      clientId = client.id;
+    }
   } else if (telephone) {
-    client = db.prepare("SELECT id FROM clients WHERE telephone = ?").get(telephone);
-  }
-  if (!client) {
-    const ins = db.prepare(
-      "INSERT INTO clients (prenom, nom, email, telephone) VALUES (?, ?, ?, ?)"
-    ).run(prenom, nom, email || null, telephone || null);
-    client = { id: ins.lastInsertRowid };
+    const client = db.prepare("SELECT id FROM clients WHERE telephone = ?").get(telephone);
+    if (client) clientId = client.id;
+    // Pas de création sans email (contrainte NOT NULL)
   }
 
   const rdvResult = db.prepare(`
     INSERT INTO rendezvous (client_id, prenom, nom, email, telephone, type_appareil, date_rdv, heure, description)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(client.id, prenom, nom, email, telephone || null, type_appareil, date_rdv, heure || null, description || null);
+  `).run(clientId, prenom, nom, email || null, telephone || null, type_appareil, date_rdv, heure || null, description || null);
 
   const rdvId = rdvResult.lastInsertRowid;
 
@@ -55,11 +59,11 @@ router.post("/", (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'recu')
     `).run(
       numero_ticket,
-      client.id,
+      clientId,
       rdvId,
       prenom,
       nom,
-      email,
+      email || "—",
       telephone || null,
       type_appareil,
       description || "Non précisé"
