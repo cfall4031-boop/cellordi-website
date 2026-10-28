@@ -4786,7 +4786,7 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
 
 function fmt$(n: number) { return n.toLocaleString("fr-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }); }
 
-const EMPTY_NEW_PIECE = { type_appareil: "", modele: "", type_piece: "", cout_fournisseur: "", cout_vente: "", fournisseur: "Tan Star Trade", notes: "", photos: [] as string[] };
+const EMPTY_NEW_PIECE = { type_appareil: "", modele: "", type_piece: "", cout_fournisseur: "", cout_vente: "", fournisseur: "Tan Star Trade", notes: "", photos: [] as string[], seuil_alerte: "1" };
 
 function DetailPieceModal({ piece, badge, photos, mouvements, onClose, onEdit, onMouvement }: {
   piece: Piece;
@@ -5083,6 +5083,7 @@ function GestionStock() {
       fournisseur:      p.fournisseur || "Tan Star Trade",
       notes:            p.notes || "",
       photos:           existingPhotos,
+      seuil_alerte:     String(p.seuil_alerte ?? 1),
     });
     setEditErr("");
   };
@@ -5103,6 +5104,7 @@ function GestionStock() {
         fournisseur:      editForm.fournisseur.trim() || "Tan Star Trade",
         notes:            editForm.notes.trim() || null,
       });
+      await stockApi.updateSeuil(editPiece.id, Number(editForm.seuil_alerte) || 0);
       await stockApi.updatePhotos(editPiece.id, editForm.photos);
       setEditPiece(null);
       load(true);
@@ -5691,6 +5693,12 @@ ${stats ? `<div class="kpis">
                     style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
                 </div>
               ))}
+              <div style={{ marginBottom: "0.85rem" }}>
+                <label style={{ display: "block", color: ORANGE, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Seuil d'alerte (0 = désactivé)</label>
+                <input type="number" min="0" value={editForm.seuil_alerte}
+                  onChange={e => setEditForm(f => ({ ...f, seuil_alerte: e.target.value }))}
+                  style={{ width: "100%", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 6, color: "#fff", padding: "0.45rem 0.7rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
+              </div>
               {/* Zone photos */}
               <PhotoUploadZone
                 photos={editForm.photos}
