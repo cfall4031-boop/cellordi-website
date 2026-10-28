@@ -4763,6 +4763,7 @@ type Piece = {
   quantite_calculee: number; total_investi: number; total_revenus: number;
   fournisseur?: string | null; notes?: string | null;
   photos?: string; // JSON string: string[]
+  masque?: number;
 };
 type Mouvement = {
   id: number; piece_id: number; type: string; quantite: number;
@@ -4958,6 +4959,7 @@ function GestionStock() {
   const [saving, setSaving]           = useState(false);
   const [err, setErr]                 = useState("");
   const [search, setSearch]           = useState("");
+  const [afficherMasques, setAfficherMasques] = useState(false);
   const [chartTab, setChartTab]       = useState<"mensuel"|"top">("mensuel");
   // Catégories
   const [collapsed, setCollapsed]     = useState<Record<string, boolean>>({});
@@ -5149,8 +5151,10 @@ function GestionStock() {
   }));
 
   // Groupement par type_piece
+  const estActif = (p: Piece) => !p.masque;
   const filtered = pieces.filter(p =>
-    `${p.type_appareil} ${p.modele || ""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase())
+    `${p.type_appareil} ${p.modele || ""} ${p.type_piece}`.toLowerCase().includes(search.toLowerCase()) &&
+    (afficherMasques || estActif(p))
   );
   const allCats = Array.from(new Set(pieces.map(p => p.type_piece))).sort();
   const groups: Record<string, Piece[]> = {};
@@ -5158,6 +5162,7 @@ function GestionStock() {
     (groups[p.type_piece] = groups[p.type_piece] || []).push(p);
   }
   const groupKeys = Object.keys(groups).sort();
+  const nbMasques = pieces.filter(p => p.masque).length;
 
   if (loading) return <div style={{ padding: "3rem", color: GRAY, textAlign: "center" }}>Chargement…</div>;
 
@@ -5322,7 +5327,7 @@ ${stats ? `<div class="kpis">
           <StatCard label="Coût achat" value={fmt$(stats.total_investi)} sub="COGS"  color={ORANGE} />
           <StatCard label="Revenus"       value={fmt$(stats.total_revenus)} sub="Sorties"      color={BLUE}   />
           <StatCard label="Valeur stock"
-            value={fmt$(pieces.reduce((s, p) => s + ((p.cout_vente || 0) * Math.max(p.quantite_calculee, 0)), 0))}
+            value={fmt$(pieces.filter(p => estActif(p)).reduce((s, p) => s + ((p.cout_vente || 0) * Math.max(p.quantite_calculee, 0)), 0))}
             sub="Stock × vente" color={"#a78bfa"} />
           <StatCard label="Profit"      value={fmt$(stats.profit)}        sub={stats.profit >= 0 ? "Positif ✓" : "Déficit"} color={stats.profit >= 0 ? GREEN : RED} />
           <StatCard label="Pièces écoulées"     value={String(stats.total_pieces_vendues)} sub="Total sorties" color={GRAY} />
@@ -5375,6 +5380,12 @@ ${stats ? `<div class="kpis">
       <div style={{ background: NAVY_MID, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden" }}>
         <div style={{ padding: "0.9rem 1.2rem", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: "0.8rem", alignItems: "center", flexWrap: "wrap" }}>
           <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>Catalogue de pièces</span>
+          {nbMasques > 0 && (
+            <button onClick={() => setAfficherMasques(v => !v)}
+              style={{ background: afficherMasques ? "rgba(148,163,184,0.15)" : "transparent", border: `1px solid ${afficherMasques ? "rgba(148,163,184,0.4)" : "rgba(255,255,255,0.1)"}`, color: afficherMasques ? "#94a3b8" : GRAY_DIM, borderRadius: 6, padding: "0.28rem 0.7rem", fontSize: "0.75rem", cursor: "pointer", fontWeight: 600 }}>
+              {afficherMasques ? `👁 Masqués visibles (${nbMasques})` : `🚫 ${nbMasques} masqué${nbMasques > 1 ? "s" : ""}`}
+            </button>
+          )}
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
             style={{ marginLeft: "auto", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 6, color: "#fff", padding: "0.35rem 0.8rem", fontSize: "0.82rem", outline: "none", width: 200 }} />
         </div>
@@ -5385,7 +5396,7 @@ ${stats ? `<div class="kpis">
           {groupKeys.map(cat => {
             const isCollapsed = collapsed[cat];
             const groupPieces = groups[cat];
-            const hasAlert = groupPieces.some(p => p.quantite_calculee <= p.seuil_alerte);
+            const hasAlert = groupPieces.some(p => estActif(p) && p.quantite_calculee <= p.seuil_alerte);
             return (
               <div key={cat}>
                 {/* Catégorie header */}
@@ -5459,10 +5470,11 @@ ${stats ? `<div class="kpis">
                 const isCollapsed = collapsed[cat];
                 const isRenaming  = renamingCat?.old === cat;
                 const groupPieces = groups[cat];
-                const totalStock  = groupPieces.reduce((s, p) => s + p.quantite_calculee, 0);
-                const coutTotal   = groupPieces.reduce((s, p) => s + (p.cout_fournisseur || 0) * Math.max(p.quantite_calculee, 0), 0);
-                const valeurTotal = groupPieces.reduce((s, p) => s + (p.cout_vente || 0) * Math.max(p.quantite_calculee, 0), 0);
-                const hasAlert    = groupPieces.some(p => p.quantite_calculee <= p.seuil_alerte);
+                const actifs      = groupPieces.filter(p => estActif(p));
+                const totalStock  = actifs.reduce((s, p) => s + p.quantite_calculee, 0);
+                const coutTotal   = actifs.reduce((s, p) => s + (p.cout_fournisseur || 0) * Math.max(p.quantite_calculee, 0), 0);
+                const valeurTotal = actifs.reduce((s, p) => s + (p.cout_vente || 0) * Math.max(p.quantite_calculee, 0), 0);
+                const hasAlert    = actifs.some(p => p.seuil_alerte > 0 && p.quantite_calculee <= p.seuil_alerte);
 
                 return (
                   <React.Fragment key={cat}>
@@ -5534,9 +5546,10 @@ ${stats ? `<div class="kpis">
                     {!isCollapsed && groupPieces.map(p => {
                       const badge = stockBadge(p);
                       const isRecat = recatPiece?.piece.id === p.id;
+                      const isMasque = !!p.masque;
                       return (
                         <tr key={p.id} onClick={() => openDetail(p)}
-                          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "background 0.12s" }}
+                          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", transition: "background 0.12s", opacity: isMasque ? 0.38 : 1, filter: isMasque ? "grayscale(0.6)" : "none" }}
                           onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
                           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                           <td style={{ padding: "0.65rem 0.9rem", color: "#fff" }}>{p.type_appareil}</td>
@@ -5561,6 +5574,11 @@ ${stats ? `<div class="kpis">
                               <button title="Modifier la pièce" onClick={e => { e.stopPropagation(); openEdit(p); }}
                                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: GRAY, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
                                 ✎ Modifier
+                              </button>
+                              {/* Masquer / Démasquer */}
+                              <button title={isMasque ? "Démasquer" : "Masquer"} onClick={async e => { e.stopPropagation(); await stockApi.toggleMasque(p.id); load(true); }}
+                                style={{ background: isMasque ? "rgba(148,163,184,0.12)" : "rgba(255,255,255,0.05)", border: `1px solid ${isMasque ? "rgba(148,163,184,0.35)" : "rgba(255,255,255,0.1)"}`, color: isMasque ? "#94a3b8" : GRAY_DIM, borderRadius: 5, padding: "0.25rem 0.5rem", fontSize: "0.76rem", cursor: "pointer" }}>
+                                {isMasque ? "👁 Voir" : "🚫"}
                               </button>
                               {/* Supprimer */}
                               <button title="Supprimer la pièce" onClick={e => { e.stopPropagation(); setConfirmDel(p); }}

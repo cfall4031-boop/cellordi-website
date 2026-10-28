@@ -89,7 +89,7 @@ router.post("/:id/mouvement", auth, (req, res) => {
   res.status(201).json({ message: "Mouvement enregistré.", id: result.lastInsertRowid });
 });
 
-// ── PUT /api/stock/:id — mettre à jour seuil_alerte et/ou type_piece ────────
+// ── PUT /api/stock/:id — mettre à jour seuil_alerte / type_piece / photos ───
 router.put("/:id", auth, (req, res) => {
   const { seuil_alerte, type_piece, photos } = req.body;
   const piece = db.prepare("SELECT id FROM pieces_catalogue WHERE id = ?").get(req.params.id);
@@ -106,6 +106,15 @@ router.put("/:id", auth, (req, res) => {
     db.prepare("UPDATE pieces_catalogue SET photos = ? WHERE id = ?").run(photosJson, req.params.id);
   }
   res.json({ message: "Pièce mise à jour." });
+});
+
+// ── PATCH /api/stock/:id/masque — basculer masque ON/OFF ────────────────────
+router.patch("/:id/masque", auth, (req, res) => {
+  const piece = db.prepare("SELECT id, masque FROM pieces_catalogue WHERE id = ?").get(req.params.id);
+  if (!piece) return res.status(404).json({ erreur: "Pièce introuvable." });
+  const newMasque = piece.masque ? 0 : 1;
+  db.prepare("UPDATE pieces_catalogue SET masque = ? WHERE id = ?").run(newMasque, req.params.id);
+  res.json({ masque: newMasque });
 });
 
 // ── PATCH /api/stock/categorie — renommer une catégorie (toutes les pièces) ─

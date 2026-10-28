@@ -221,6 +221,7 @@ try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN quantite_stock INTEGER
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN seuil_alerte INTEGER DEFAULT 1").run(); } catch {}
 try { db.prepare("UPDATE pieces_catalogue SET seuil_alerte = 1 WHERE seuil_alerte = 3").run(); } catch {}
 try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN photos TEXT DEFAULT '[]'").run(); } catch {}
+try { db.prepare("ALTER TABLE pieces_catalogue ADD COLUMN masque INTEGER DEFAULT 0").run(); } catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS mouvements_stock (
