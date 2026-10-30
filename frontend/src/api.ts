@@ -291,6 +291,24 @@ export const biblioApi = {
   deleteNote:     (docId: number, nid: number) => req<{ message: string }>("DELETE", `/biblio/docs/${docId}/notes/${nid}`),
 };
 
+// ── CELL CARE ────────────────────────────────────────────────
+export const cellCareApi = {
+  getParametres:   () => req<any>("GET", "/cellcare/parametres"),
+  saveParametres:  (data: any) => req<any>("PUT", "/cellcare/parametres", data),
+  checkImei:       (imei: string) => req<any>("GET", `/cellcare/check-imei/${encodeURIComponent(imei)}`),
+  inscrire:        (data: any) => req<any>("POST", "/cellcare/inscrire", data),
+  getMembres:      (params?: { q?: string; statut?: string; formule?: string }) => req<any>("GET", `/cellcare/membres${params ? "?" + new URLSearchParams(Object.entries(params).filter(([,v])=>!!v) as [string,string][]).toString() : ""}`),
+  getMembre:       (id: number) => req<any>("GET", `/cellcare/membres/${id}`),
+  updateMembre:    (id: number, data: any) => req<any>("PUT", `/cellcare/membres/${id}`, data),
+  anonymiserMembre:(id: number, motif?: string) => req<any>("DELETE", `/cellcare/membres/${id}`, { motif }),
+  annuler:         (souId: number, motif?: string) => req<any>("POST", `/cellcare/souscriptions/${souId}/annuler`, { motif }),
+  reclamation:     (souId: number, data: any) => req<any>("POST", `/cellcare/souscriptions/${souId}/reclamation`, data),
+  parrainage:      (souId: number, data: any) => req<any>("POST", `/cellcare/souscriptions/${souId}/parrainage`, data),
+  stats:           () => req<any>("GET", "/cellcare/stats"),
+  journal:         () => req<any>("GET", "/cellcare/journal"),
+  exportMembres:   () => `${(import.meta.env.VITE_API_URL as string)||"/api"}/cellcare/export/membres`,
+};
+
 // ── HELPER ───────────────────────────────────────────────────
 function toQuery(params: Record<string, string>): string {
   const q = new URLSearchParams(

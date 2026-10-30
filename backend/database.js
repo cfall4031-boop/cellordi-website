@@ -541,4 +541,102 @@ db.exec(`
   );
 `);
 
+// ── CELL CARE ─────────────────────────────────────────────────────────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS cc_parametres (
+    id                      INTEGER PRIMARY KEY CHECK(id=1),
+    plans_config            TEXT    NOT NULL DEFAULT '{}',
+    offres_config           TEXT    NOT NULL DEFAULT '{}',
+    conditions_text         TEXT    DEFAULT '',
+    avis_garantie_text      TEXT    DEFAULT '',
+    conditions_version      TEXT    DEFAULT '1.0',
+    duree_conservation_mois INTEGER DEFAULT 60,
+    updated_at              DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS cc_membres (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    numero                TEXT    UNIQUE NOT NULL,
+    prenom                TEXT    NOT NULL,
+    nom                   TEXT    NOT NULL,
+    telephone             TEXT    NOT NULL,
+    email                 TEXT,
+    consentement_sms      INTEGER DEFAULT 0,
+    consentement_sms_date DATETIME,
+    code_parrainage       TEXT    UNIQUE NOT NULL,
+    created_at            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at            DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS cc_appareils (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    membre_id     INTEGER NOT NULL REFERENCES cc_membres(id) ON DELETE CASCADE,
+    marque        TEXT    NOT NULL,
+    modele        TEXT    NOT NULL,
+    couleur       TEXT,
+    imei          TEXT    NOT NULL,
+    photo_avant   TEXT,
+    photo_arriere TEXT,
+    inspecte      INTEGER DEFAULT 0,
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS cc_souscriptions (
+    id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+    membre_id               INTEGER NOT NULL REFERENCES cc_membres(id),
+    appareil_id             INTEGER NOT NULL REFERENCES cc_appareils(id),
+    formule                 TEXT    NOT NULL CHECK(formule IN ('essentiel','plus')),
+    prix_paye               REAL    NOT NULL,
+    offres_appliquees       TEXT    DEFAULT '[]',
+    technicien_vendeur      TEXT,
+    date_carence_fin        TEXT    NOT NULL,
+    date_annulation_limite  TEXT    NOT NULL,
+    date_fin                TEXT    NOT NULL,
+    vitres_restantes        INTEGER NOT NULL DEFAULT 2,
+    statut                  TEXT    DEFAULT 'en_carence'
+                            CHECK(statut IN ('en_carence','actif','vitres_epuisees','expire','annule')),
+    annulation_date         DATETIME,
+    annulation_motif        TEXT,
+    version_conditions      TEXT    NOT NULL,
+    signature               TEXT    NOT NULL,
+    signature_date          DATETIME NOT NULL,
+    created_at              DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS cc_reclamations (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    souscription_id INTEGER NOT NULL REFERENCES cc_souscriptions(id),
+    type            TEXT    NOT NULL CHECK(type IN ('vitre_avant','vitre_arriere','ecran_complet','batterie')),
+    photos          TEXT    DEFAULT '[]',
+    technicien      TEXT,
+    cout_pieces     REAL    DEFAULT 0,
+    temps_minutes   INTEGER DEFAULT 0,
+    rabais_applique REAL    DEFAULT 0,
+    montant_client  REAL    DEFAULT 0,
+    notes           TEXT,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS cc_parrainages (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    membre_parrain_id   INTEGER NOT NULL REFERENCES cc_membres(id),
+    souscription_id     INTEGER NOT NULL REFERENCES cc_souscriptions(id),
+    filleul_nom         TEXT    NOT NULL,
+    filleul_telephone   TEXT    NOT NULL,
+    date_parrainage     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    rabais_accorde      REAL    NOT NULL,
+    reparation_id       INTEGER REFERENCES tickets(id) ON DELETE SET NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS cc_journal (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    action           TEXT    NOT NULL,
+    table_cible      TEXT,
+    enregistrement_id INTEGER,
+    details          TEXT,
+    utilisateur      TEXT,
+    created_at       DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 module.exports = { db, initAdmin, genererNumeroTicket };

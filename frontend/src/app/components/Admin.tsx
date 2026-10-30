@@ -8,6 +8,7 @@ import {
   messagesApi, dechargesApi, prixApi, notificationsApi, stockApi, notesApi, registreApi, facturesApi, setToken, removeToken, getToken
 } from "../../api";
 import Bibliotheque from "./Bibliotheque";
+import CellCare from "./CellCare";
 
 // ── MOBILE CONTEXT ───────────────────────────────────────────
 const MobileCtx = React.createContext<{ isMobile: boolean; openSidebar: () => void }>({ isMobile: false, openSidebar: () => {} });
@@ -231,6 +232,7 @@ const NAV_ITEMS = [
   { id:"decharges", icon:"📋", label:"Décharges"       },
   { id:"calculateur", icon:"🧮", label:"Calculateur"   },
   { id:"stock",       icon:"📦", label:"Stock"          },
+  { id:"cellcare",    icon:"🛡️", label:"Cell Care"      },
   { id:"notes",       icon:"📝", label:"Notes"          },
   { id:"registre",    icon:"💰", label:"Registre"       },
   { id:"factures",    icon:"🧾", label:"Factures"       },
@@ -7121,6 +7123,7 @@ export default function Admin() {
     decharges: <Decharges/>,
     calculateur: <Calculateur/>,
     stock:     <GestionStock/>,
+    cellcare:  <CellCare/>,
     notes:     <CarnetNotes/>,
     registre:  <RegistreFinancier/>,
     factures:  <CalendrierFactures/>,

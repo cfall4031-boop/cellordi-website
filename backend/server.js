@@ -86,6 +86,7 @@ app.use("/api/registre",      require("./routes/registre"));
 app.use("/api/factures",      require("./routes/factures"));
 app.use("/api/biblio",        require("./routes/bibliotheque"));
 app.use("/api/absences",      require("./routes/absences"));
+app.use("/api/cellcare",      require("./routes/cellcare"));
 
 // ── SANTÉ ────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
