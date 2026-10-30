@@ -1,5 +1,5 @@
 const express = require("express");
-const { db }  = require("../database");
+const { db, genererNumeroTicket } = require("../database");
 const auth    = require("../middleware/auth");
 const { sendEmail } = require("../utils/mailer");
 const { sendSMS }   = require("../utils/smsService");
@@ -71,6 +71,59 @@ router.post("/", (req, res) => {
     rep_val,
     signature || null
   );
+
+  // ── Création automatique du ticket lié ───────────────────────────────────────
+  const dechargeId = result.lastInsertRowid;
+  try {
+    // Vérifier qu'un ticket n'existe pas déjà pour cette décharge
+    const dechargeRow = db.prepare("SELECT ticket_id FROM decharges WHERE id = ?").get(dechargeId);
+    if (!dechargeRow?.ticket_id) {
+      // Générer numéro unique
+      let numero;
+      let attempts = 0;
+      do {
+        numero = genererNumeroTicket();
+        attempts++;
+        if (attempts > 10) throw new Error("Impossible de générer un numéro unique.");
+      } while (db.prepare("SELECT id FROM tickets WHERE numero = ?").get(numero));
+
+      // Séparer type_appareil et modele ("Téléphone — iPhone 14" → type="Téléphone", modele="iPhone 14")
+      const [typeOnly, ...modeleParts] = appareil_final.split(" — ");
+      const modeleOnly = modeleParts.join(" — ") || null;
+
+      // Chercher client existant par téléphone
+      let client_id = null;
+      if (telephone) {
+        const clientExistant = db.prepare("SELECT id FROM clients WHERE telephone = ?").get(telephone);
+        if (clientExistant) client_id = clientExistant.id;
+      }
+
+      const notes_ticket = `Créé automatiquement depuis décharge #${dechargeId}\nAutorisation diagnostic: ${diag_val}\nAutorisation réparation: ${rep_val}`;
+
+      // Transaction atomique : créer ticket + lier la décharge
+      const creerTicket = db.transaction(() => {
+        const ticketResult = db.prepare(`
+          INSERT INTO tickets (
+            numero, client_id, prenom, nom, email, telephone,
+            type_appareil, modele, probleme, notes_internes
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          numero, client_id,
+          prenom_final, nom_final, email || "",
+          telephone || null,
+          typeOnly.trim(), modeleOnly,
+          probleme_final,
+          notes_ticket
+        );
+        db.prepare("UPDATE decharges SET ticket_id = ? WHERE id = ?").run(ticketResult.lastInsertRowid, dechargeId);
+        return ticketResult.lastInsertRowid;
+      });
+
+      creerTicket();
+    }
+  } catch (ticketErr) {
+    console.error(`[decharges] Impossible de créer le ticket pour décharge #${dechargeId}:`, ticketErr?.message || ticketErr);
+  }
 
   // ── Email de confirmation (fire-and-forget, seulement si email fourni) ──
   if (email) {
