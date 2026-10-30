@@ -2,6 +2,7 @@ import React from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { PageWrapper } from "./components/PageWrapper";
 import { Hero } from "./components/Hero";
+import { Services } from "./components/Services";
 import { Rendezvous } from "./components/Rendezvous";
 import { Suivi } from "./components/Suivi";
 
@@ -14,6 +15,7 @@ export default function App() {
       >
         <Hero />
         <Suivi />
+        <Services />
         <Rendezvous />
       </PageWrapper>
       <Analytics />

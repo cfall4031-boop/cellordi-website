@@ -31,38 +31,6 @@ const IconShield = () => (
   </svg>
 );
 
-// Signal bars — Forfaits Cellulaires
-const IconSignal = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="16" width="3" height="5" rx="0.5"/>
-    <rect x="7.5" y="11" width="3" height="10" rx="0.5"/>
-    <rect x="13" y="6" width="3" height="15" rx="0.5"/>
-    <rect x="18.5" y="1" width="3" height="20" rx="0.5"/>
-  </svg>
-);
-
-// Wifi + maison — Internet Résidentiel
-const IconWifiHome = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1.5 8.5C5 5 9.3 3 12 3s7 2 10.5 5.5" strokeOpacity="0.45"/>
-    <path d="M4.5 11.5C7 9 9.7 8 12 8s5 1 7.5 3.5" strokeOpacity="0.7"/>
-    <path d="M7.5 14.5C9 13 10.5 12.5 12 12.5s3 .5 4.5 2"/>
-    <circle cx="12" cy="18" r="1.2" fill={GREEN} stroke="none"/>
-    <path d="M10 21h4" strokeOpacity="0.5"/>
-  </svg>
-);
-
-// Casque + étoile — Conseiller Télécom
-const IconHeadsetStar = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 11a9 9 0 0 1 18 0"/>
-    <rect x="2" y="11" width="3" height="5" rx="1.5"/>
-    <rect x="19" y="11" width="3" height="5" rx="1.5"/>
-    <path d="M21 16v1a4 4 0 0 1-4 4h-2" strokeOpacity="0.6"/>
-    <polygon points="12,13 12.9,15.5 15.5,15.5 13.4,17 14.1,19.5 12,18 9.9,19.5 10.6,17 8.5,15.5 11.1,15.5" fill={GREEN} fillOpacity="0.25" stroke={GREEN} strokeWidth="1"/>
-  </svg>
-);
-
 const IconArrow = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="5" y1="12" x2="19" y2="12"/>
@@ -74,9 +42,6 @@ const SERVICE_SLUGS = [
   { slug: "cellulaires", Icon: IconPhone },
   { slug: "ordinateurs", Icon: IconLaptop },
   { slug: "informatique", Icon: IconShield },
-  { slug: "forfait",     Icon: IconSignal },
-  { slug: "internet",   Icon: IconWifiHome },
-  { slug: "telecom",    Icon: IconHeadsetStar },
 ];
 
 export function Services() {
