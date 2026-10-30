@@ -8,6 +8,7 @@ import BlogListing from "./app/components/BlogListing.tsx";
 import BlogArticle from "./app/components/BlogArticle.tsx";
 import ServiceDetail from "./app/components/ServiceDetail.tsx";
 import NotFound from "./app/components/NotFound.tsx";
+import PortailCellCare from "./app/components/PortailCellCare.tsx";
 import ContactPage from "./app/components/ContactPage.tsx";
 import DechargePage from "./app/components/DechargePage.tsx";
 import AvisPage from "./app/components/AvisPage.tsx";
@@ -28,6 +29,7 @@ function AnimatedRoutes() {
         <Route path="/services/:slug" element={<ServiceDetail />} />
         <Route path="/blog" element={<BlogListing />} />
         <Route path="/blog/:slug" element={<BlogArticle />} />
+        <Route path="/mon-cell-care" element={<PortailCellCare />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/*" element={<Admin />} />
         <Route path="*" element={<NotFound />} />

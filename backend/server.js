@@ -66,10 +66,11 @@ const limiterLogin = rateLimit({
 });
 
 // Appliquer avant les routes
-app.use("/api/auth/login",  limiterLogin);
-app.use("/api/rendezvous",  limiterPublic);
-app.use("/api/messages",    limiterPublic);
-app.use("/api/decharges",   limiterPublic);
+app.use("/api/auth/login",           limiterLogin);
+app.use("/api/cellcare-portal/login", limiterLogin);
+app.use("/api/rendezvous",           limiterPublic);
+app.use("/api/messages",             limiterPublic);
+app.use("/api/decharges",            limiterPublic);
 
 // ── ROUTES ──────────────────────────────────────────────────
 app.use("/api/auth",       require("./routes/auth"));
@@ -86,7 +87,8 @@ app.use("/api/registre",      require("./routes/registre"));
 app.use("/api/factures",      require("./routes/factures"));
 app.use("/api/biblio",        require("./routes/bibliotheque"));
 app.use("/api/absences",      require("./routes/absences"));
-app.use("/api/cellcare",      require("./routes/cellcare"));
+app.use("/api/cellcare",        require("./routes/cellcare"));
+app.use("/api/cellcare-portal", require("./routes/cellcare-portal"));
 
 // ── SANTÉ ────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
