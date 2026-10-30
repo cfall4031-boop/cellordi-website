@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { cellCareApi } from "../../../api";
+import { cellCareApi } from "../../api";
 
 // ── Constantes visuelles ──────────────────────────────────────────────────────
 const NAVY     = "#0a1628";
