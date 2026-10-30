@@ -307,6 +307,7 @@ export const cellCareApi = {
   stats:           () => req<any>("GET", "/cellcare/stats"),
   journal:         () => req<any>("GET", "/cellcare/journal"),
   exportMembres:   () => `${(import.meta.env.VITE_API_URL as string)||"/api"}/cellcare/export/membres`,
+  contratPdfUrl:   (souId: number) => `${(import.meta.env.VITE_API_URL as string)||"/api"}/cellcare/souscriptions/${souId}/pdf`,
 };
 
 // ── HELPER ───────────────────────────────────────────────────

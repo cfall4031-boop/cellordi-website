@@ -393,6 +393,15 @@ function PortailInfo({ token, prenom, onLogout }: { token: string; prenom: strin
                   </Card>
                 )}
 
+                {/* Télécharger contrat */}
+                <a
+                  href={`${BASE}/api/cellcare-portal/contrat`}
+                  onClick={e => { e.preventDefault(); fetch(`${BASE}/api/cellcare-portal/contrat`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.blob()).then(blob => { const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `contrat-cellcare-${membre?.numero}.pdf`; a.click(); URL.revokeObjectURL(url); }); }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.65rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: GRAY, textDecoration: "none", fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  📄 Télécharger mon contrat signé (PDF)
+                </a>
+
                 {/* Conditions */}
                 <div>
                   <button onClick={() => setShowConditions(!showConditions)} style={{ background: "none", border: "none", color: BLUE, fontSize: "0.8rem", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "0.3rem" }}>

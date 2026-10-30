@@ -1,6 +1,7 @@
 const express = require("express");
 const { db } = require("../database");
 const auth = require("../middleware/auth");
+const { generateContratPdf } = require("../utils/generateContratPdf");
 
 const router = express.Router();
 router.use(auth);
@@ -436,6 +437,38 @@ router.get("/stats", (req, res) => {
 router.get("/journal", (req, res) => {
   const rows = db.prepare("SELECT * FROM cc_journal ORDER BY created_at DESC LIMIT 200").all();
   res.json({ journal: rows });
+});
+
+// ── PDF CONTRAT ───────────────────────────────────────────────────────────────
+
+router.get("/souscriptions/:id/pdf", async (req, res) => {
+  const s = db.prepare(`
+    SELECT s.*, a.marque, a.modele, a.couleur, a.imei, a.inspecte
+    FROM cc_souscriptions s JOIN cc_appareils a ON a.id=s.appareil_id
+    WHERE s.id=?
+  `).get(req.params.id);
+  if (!s) return res.status(404).json({ erreur: "Souscription introuvable." });
+
+  const membre = db.prepare("SELECT * FROM cc_membres WHERE id=?").get(s.membre_id);
+  if (!membre) return res.status(404).json({ erreur: "Membre introuvable." });
+
+  const params = getParametres();
+
+  try {
+    const pdfBuf = await generateContratPdf({
+      membre,
+      souscription: { ...s, offres_appliquees: JSON.parse(s.offres_appliquees || "[]") },
+      appareil: { marque: s.marque, modele: s.modele, couleur: s.couleur, imei: s.imei, inspecte: s.inspecte },
+      params,
+    });
+    const filename = `contrat-cellcare-${membre.numero}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(pdfBuf);
+  } catch (err) {
+    console.error("Erreur génération PDF:", err);
+    res.status(500).json({ erreur: "Impossible de générer le PDF." });
+  }
 });
 
 // ── EXPORT CSV ────────────────────────────────────────────────────────────────

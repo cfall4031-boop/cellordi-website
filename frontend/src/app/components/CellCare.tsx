@@ -611,6 +611,19 @@ function FicheMembre({ membreId, params, onBack, onRefresh }: { membreId: number
           </div>
         )}
 
+        {/* Bouton PDF contrat */}
+        {souActif && (
+          <div style={{ padding:"0 0 0.5rem" }}>
+            <a
+              href={cellCareApi.contratPdfUrl(souActif.id)}
+              target="_blank" rel="noreferrer"
+              style={{ display:"inline-flex", alignItems:"center", gap:"0.4rem", padding:"0.5rem 1rem", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:8, color:GRAY, textDecoration:"none", fontSize:"0.82rem" }}
+            >
+              📄 Télécharger le contrat signé (PDF)
+            </a>
+          </div>
+        )}
+
         {/* Tab Réclamations */}
         {tab === "reclamation" && (
           <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem" }}>

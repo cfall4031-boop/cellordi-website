@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt     = require("jsonwebtoken");
 const { db }  = require("../database");
+const { generateContratPdf } = require("../utils/generateContratPdf");
 
 const router = express.Router();
 
@@ -192,6 +193,42 @@ router.get("/info", portalAuth, (req, res) => {
     conditions_text: params.conditions_text || null,
     conditions_version: params.conditions_version || "1.0",
   });
+});
+
+// ── TÉLÉCHARGEMENT PDF CONTRAT ────────────────────────────────────────────────
+// GET /api/cellcare-portal/contrat
+router.get("/contrat", portalAuth, async (req, res) => {
+  const membre = db.prepare("SELECT * FROM cc_membres WHERE id=?").get(req.portal.membre_id);
+  if (!membre) return res.status(404).json({ erreur: "Membre introuvable." });
+
+  const s = db.prepare(`
+    SELECT s.*, a.marque, a.modele, a.couleur, a.imei, a.inspecte
+    FROM cc_souscriptions s JOIN cc_appareils a ON a.id=s.appareil_id
+    WHERE s.membre_id=? ORDER BY s.created_at DESC LIMIT 1
+  `).get(req.portal.membre_id);
+  if (!s) return res.status(404).json({ erreur: "Aucune souscription trouvée." });
+
+  const params = (() => {
+    const row = db.prepare("SELECT * FROM cc_parametres WHERE id=1").get();
+    if (!row) return {};
+    return { ...row, plans_config: JSON.parse(row.plans_config || "{}"), offres_config: JSON.parse(row.offres_config || "{}") };
+  })();
+
+  try {
+    const pdfBuf = await generateContratPdf({
+      membre,
+      souscription: { ...s, offres_appliquees: JSON.parse(s.offres_appliquees || "[]") },
+      appareil: { marque: s.marque, modele: s.modele, couleur: s.couleur, imei: s.imei, inspecte: s.inspecte },
+      params,
+    });
+    journal("PORTAL_DOWNLOAD_PDF", "cc_souscriptions", s.id, {}, `portail:${req.portal.numero}`);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="contrat-cellcare-${membre.numero}.pdf"`);
+    res.send(pdfBuf);
+  } catch (err) {
+    console.error("Erreur PDF portail:", err);
+    res.status(500).json({ erreur: "Impossible de générer le PDF." });
+  }
 });
 
 // ── DEMANDE DE MISE À NIVEAU EN BOUTIQUE ─────────────────────────────────────
