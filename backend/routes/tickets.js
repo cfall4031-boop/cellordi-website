@@ -70,7 +70,7 @@ router.post("/", auth, (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     numero, client_id || null, rendezvous_id || null,
-    prenom, nom, email || null, telephone || null,
+    prenom, nom, email || "", telephone || null,
     type_appareil, marque || null, modele || null, probleme,
     diagnostic || null, pieces || null,
     cout_estime || 0, date_estimee || null, notes_internes || null
