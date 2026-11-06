@@ -188,6 +188,11 @@ export const registreApi = {
     req<{ message: string; total_paye: number }>("POST", `/registre/${id}/versement`, data),
   deleteVersement:(entreeId: number, vid: number) =>
     req<{ message: string }>("DELETE", `/registre/${entreeId}/versement/${vid}`),
+  getAjouts:      (id: number) => req<{ ajouts: any[] }>("GET", `/registre/${id}/ajouts`),
+  addAjout:       (id: number, data: { montant: number; description?: string }) =>
+    req<{ message: string; total_ajoute: number }>("POST", `/registre/${id}/ajout`, data),
+  deleteAjout:    (entreeId: number, aid: number) =>
+    req<{ message: string }>("DELETE", `/registre/${entreeId}/ajout/${aid}`),
   getBilans:      () => req<{ bilans: any[] }>("GET", "/registre/bilans"),
   saveBilan:      (data: { date_bilan: string; total_actifs: number; total_passifs: number; valeur_nette: number; portee?: string; notes?: string }) =>
     req<{ message: string; id: number }>("POST", "/registre/bilan", data),

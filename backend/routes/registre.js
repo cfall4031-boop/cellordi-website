@@ -8,9 +8,12 @@ router.get("/", auth, (req, res) => {
   const entrees = db.prepare(`
     SELECT r.*,
       COALESCE(SUM(v.montant), 0) AS montant_paye,
-      MAX(v.created_at)           AS dernier_versement
+      MAX(v.created_at)           AS dernier_versement,
+      COALESCE(SUM(a.montant), 0) AS montant_ajoute,
+      MAX(a.created_at)           AS dernier_ajout
     FROM registre_financier r
     LEFT JOIN versements_registre v ON v.entree_id = r.id
+    LEFT JOIN ajouts_registre a     ON a.entree_id = r.id
     GROUP BY r.id
     ORDER BY r.statut ASC, r.created_at DESC
   `).all();
@@ -212,6 +215,40 @@ router.delete("/:id/versement/:vid", auth, (req, res) => {
     .run(req.params.vid, req.params.id);
   if (r.changes === 0) return res.status(404).json({ erreur: "Versement introuvable." });
   res.json({ message: "Versement supprimé." });
+});
+
+// ── AJOUTS DE MONTANT ─────────────────────────────────────────────────────────
+router.get("/:id/ajouts", auth, (req, res) => {
+  const ajouts = db.prepare(
+    "SELECT * FROM ajouts_registre WHERE entree_id = ? ORDER BY created_at DESC"
+  ).all(req.params.id);
+  res.json({ ajouts });
+});
+
+router.post("/:id/ajout", auth, (req, res) => {
+  const entry = db.prepare("SELECT * FROM registre_financier WHERE id = ?").get(req.params.id);
+  if (!entry) return res.status(404).json({ erreur: "Entrée introuvable." });
+
+  const { montant, description } = req.body;
+  if (!montant || isNaN(Number(montant)) || Number(montant) <= 0) {
+    return res.status(400).json({ erreur: "Montant invalide." });
+  }
+
+  db.prepare("INSERT INTO ajouts_registre (entree_id, montant, description) VALUES (?, ?, ?)")
+    .run(entry.id, Number(montant), description || "");
+
+  const { total_ajoute } = db.prepare(
+    "SELECT COALESCE(SUM(montant), 0) AS total_ajoute FROM ajouts_registre WHERE entree_id = ?"
+  ).get(entry.id);
+
+  res.status(201).json({ message: "Montant ajouté.", total_ajoute });
+});
+
+router.delete("/:id/ajout/:aid", auth, (req, res) => {
+  const r = db.prepare("DELETE FROM ajouts_registre WHERE id = ? AND entree_id = ?")
+    .run(req.params.aid, req.params.id);
+  if (r.changes === 0) return res.status(404).json({ erreur: "Ajout introuvable." });
+  res.json({ message: "Ajout supprimé." });
 });
 
 // ── BILANS NETS ───────────────────────────────────────────────────────────────

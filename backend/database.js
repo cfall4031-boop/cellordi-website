@@ -275,6 +275,17 @@ db.exec(`
   );
 `);
 
+// ── AJOUTS DE MONTANT AU REGISTRE (augmentation de la dette/prêt) ─────────────
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ajouts_registre (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    entree_id   INTEGER NOT NULL REFERENCES registre_financier(id) ON DELETE CASCADE,
+    montant     REAL    NOT NULL,
+    description TEXT    DEFAULT '',
+    created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
 // ── MIGRATIONS REGISTRE FINANCIER : nouvelles colonnes ───────────────────────
 const _regCols = [
   ["portee",           "TEXT DEFAULT 'entreprise'"],

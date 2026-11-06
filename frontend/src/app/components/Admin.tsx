@@ -4427,6 +4427,7 @@ type EntreeRegistre = {
   montant: number; montant_paye: number; date_echeance: string | null;
   statut: string; notes: string; created_at: string;
   dernier_versement: string | null;
+  montant_ajoute: number; dernier_ajout: string | null;
   portee: string; limite_credit: number | null;
   paiement_minimum: number | null; taux_interet: number | null;
   categorie_actif: string | null; cout_achat: number | null; date_valeur: string | null;
@@ -4465,6 +4466,13 @@ function RegistreFinancier() {
   const [versementErreur, setVersementErreur]   = useState("");
   const [versementHistory, setVersementHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading]     = useState(false);
+  const [ajoutModal, setAjoutModal]             = useState<EntreeRegistre | null>(null);
+  const [ajoutMontant, setAjoutMontant]         = useState("");
+  const [ajoutDesc, setAjoutDesc]               = useState("");
+  const [ajoutSaving, setAjoutSaving]           = useState(false);
+  const [ajoutErreur, setAjoutErreur]           = useState("");
+  const [ajoutHistory, setAjoutHistory]         = useState<any[]>([]);
+  const [ajoutHistLoading, setAjoutHistLoading] = useState(false);
   const [bilanSaving, setBilanSaving] = useState(false);
   const [showChart, setShowChart]     = useState(false);
 
@@ -4488,6 +4496,15 @@ function RegistreFinancier() {
       .catch(() => {})
       .finally(() => setHistoryLoading(false));
   }, [versementModal?.id]);
+
+  useEffect(() => {
+    if (!ajoutModal) { setAjoutHistory([]); return; }
+    setAjoutHistLoading(true);
+    registreApi.getAjouts(ajoutModal.id)
+      .then(d => setAjoutHistory(d.ajouts || []))
+      .catch(() => {})
+      .finally(() => setAjoutHistLoading(false));
+  }, [ajoutModal?.id]);
 
   const submit = async () => {
     setErreur("");
@@ -4517,6 +4534,26 @@ function RegistreFinancier() {
   };
 
   const changeStatut = async (id: number, statut: string) => { await registreApi.update(id, { statut }); load(); };
+
+  const submitAjout = async () => {
+    if (!ajoutModal || !ajoutMontant.trim()) return;
+    setAjoutSaving(true); setAjoutErreur("");
+    try {
+      const montant = Number(ajoutMontant.replace(",", "."));
+      if (!montant || montant <= 0) throw new Error("Montant invalide.");
+      await registreApi.addAjout(ajoutModal.id, { montant, description: ajoutDesc.trim() });
+      setAjoutMontant(""); setAjoutDesc("");
+      const [d] = await Promise.all([registreApi.getAjouts(ajoutModal.id), load()]);
+      setAjoutHistory(d.ajouts || []);
+    } catch (e: any) { setAjoutErreur(e?.message || "Erreur lors de l'enregistrement."); }
+    setAjoutSaving(false);
+  };
+
+  const deleteAjoutEntry = async (aid: number) => {
+    if (!ajoutModal) return;
+    const [d] = await Promise.all([registreApi.deleteAjout(ajoutModal.id, aid).then(() => registreApi.getAjouts(ajoutModal.id)), load()]);
+    setAjoutHistory((d as any).ajouts || []);
+  };
 
   const submitVersement = async () => {
     if (!versementModal || !versementMontant.trim()) return;
@@ -4671,7 +4708,7 @@ function RegistreFinancier() {
             <div style={{ marginBottom: "1.5rem" }}>
               <SectionHeader label="Actifs" count={actifs.length} color="#a78bfa" icon="🏦" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {actifs.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
+                {actifs.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} onAjout={setAjoutModal} />)}
               </div>
             </div>
           )}
@@ -4680,7 +4717,7 @@ function RegistreFinancier() {
             <div style={{ marginBottom: "1.5rem" }}>
               <SectionHeader label="Prêts actifs" count={prets.length} color={BLUE} icon="💸" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {prets.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
+                {prets.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} onAjout={setAjoutModal} />)}
               </div>
             </div>
           )}
@@ -4689,7 +4726,7 @@ function RegistreFinancier() {
             <div style={{ marginBottom: "1.5rem" }}>
               <SectionHeader label="Dettes (emprunts)" count={dettes.length} color={RED} icon="📋" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {dettes.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
+                {dettes.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} onAjout={setAjoutModal} />)}
               </div>
             </div>
           )}
@@ -4698,7 +4735,7 @@ function RegistreFinancier() {
             <div style={{ marginBottom: "1.5rem" }}>
               <SectionHeader label="Autres" count={autres.length} color={GRAY} icon="📄" />
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {autres.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
+                {autres.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} onAjout={setAjoutModal} />)}
               </div>
             </div>
           )}
@@ -4707,7 +4744,7 @@ function RegistreFinancier() {
             <div>
               <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.7rem" }}>Archivés ({archivees.length})</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", opacity: 0.55 }}>
-                {archivees.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} />)}
+                {archivees.map(e => <EntreeCard key={e.id} e={e} typeBadge={typeBadge} statutBadge={statutBadge} onStatut={changeStatut} onEdit={() => { setDetailId(e.id); setEditNotes(e.notes || ""); }} onDel={del} onVersement={setVersementModal} onAjout={setAjoutModal} />)}
               </div>
             </div>
           )}
@@ -4901,6 +4938,62 @@ function RegistreFinancier() {
           </div>
         </div>
       )}
+
+      {/* ── MODAL AJOUT MONTANT ────────────────────────────────── */}
+      {ajoutModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}
+          onClick={() => { setAjoutModal(null); setAjoutMontant(""); setAjoutDesc(""); setAjoutErreur(""); }}>
+          <div style={{ background: NAVY_MID, border: `1px solid ${ORANGE}44`, borderRadius: 12, padding: "1.8rem", width: 460, maxWidth: "96vw", maxHeight: "90vh", overflowY: "auto" }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ color: "#fff", margin: "0 0 0.2rem", fontWeight: 800 }}>➕ Ajouter montant — {ajoutModal.personne}</h3>
+            <p style={{ color: GRAY, fontSize: "0.82rem", marginBottom: "1rem" }}>Augmente le montant total de cette {ajoutModal.type === "pret" ? "prêt" : "dette"}.</p>
+
+            <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 7, padding: "0.75rem 1rem", marginBottom: "1.1rem", display: "flex", justifyContent: "space-between" }}>
+              <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Montant initial</div><div style={{ color: "#fff", fontWeight: 800 }}>{fmt$(ajoutModal.montant)}</div></div>
+              <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Déjà ajouté</div><div style={{ color: ORANGE, fontWeight: 800 }}>{fmt$(ajoutModal.montant_ajoute || 0)}</div></div>
+              <div><div style={{ color: GRAY_DIM, fontSize: "0.7rem", textTransform: "uppercase" }}>Total actuel</div><div style={{ color: RED, fontWeight: 800 }}>{fmt$((ajoutModal.montant || 0) + (ajoutModal.montant_ajoute || 0))}</div></div>
+            </div>
+
+            <div style={{ marginBottom: "0.8rem" }}>
+              <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Montant à ajouter *</label>
+              <input type="text" value={ajoutMontant} onChange={e => setAjoutMontant(e.target.value)} placeholder="ex: 500"
+                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, color: "#fff", padding: "0.65rem 0.9rem", fontSize: "0.95rem", boxSizing: "border-box" }}
+                onKeyDown={e => e.key === "Enter" && submitAjout()} />
+            </div>
+            <div style={{ marginBottom: "1.2rem" }}>
+              <label style={{ display: "block", color: GRAY, fontSize: "0.76rem", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Description (optionnel)</label>
+              <input type="text" value={ajoutDesc} onChange={e => setAjoutDesc(e.target.value)} placeholder="ex: Emprunt supplémentaire le 5 nov."
+                style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, color: "#fff", padding: "0.65rem 0.9rem", fontSize: "0.88rem", boxSizing: "border-box" }} />
+            </div>
+            {ajoutErreur && <div style={{ color: RED, fontSize: "0.82rem", marginBottom: "0.7rem" }}>{ajoutErreur}</div>}
+            <div style={{ display: "flex", gap: "0.6rem", marginBottom: "1.5rem" }}>
+              <button onClick={submitAjout} disabled={ajoutSaving} style={{ flex: 1, background: ORANGE, color: "#000", border: "none", borderRadius: 7, padding: "0.7rem", fontWeight: 800, cursor: ajoutSaving ? "wait" : "pointer" }}>{ajoutSaving ? "Envoi…" : "Ajouter le montant"}</button>
+              <button onClick={() => { setAjoutModal(null); setAjoutMontant(""); setAjoutDesc(""); setAjoutErreur(""); }} style={{ background: "rgba(255,255,255,0.06)", color: GRAY, border: "1px solid rgba(255,255,255,0.12)", borderRadius: 7, padding: "0.7rem 1rem", fontWeight: 700, cursor: "pointer" }}>Fermer</button>
+            </div>
+
+            {/* Historique des ajouts */}
+            {ajoutHistLoading ? (
+              <div style={{ color: GRAY_DIM, fontSize: "0.8rem" }}>Chargement…</div>
+            ) : ajoutHistory.length > 0 && (
+              <div>
+                <div style={{ color: GRAY_DIM, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.5rem" }}>Historique des ajouts</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  {ajoutHistory.map((a: any) => (
+                    <div key={a.id} style={{ background: "rgba(255,255,255,0.03)", borderRadius: 6, padding: "0.5rem 0.8rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+                      <div>
+                        <span style={{ color: ORANGE, fontWeight: 700, fontSize: "0.9rem" }}>+{fmt$(a.montant)}</span>
+                        {a.description && <span style={{ color: GRAY_DIM, fontSize: "0.78rem", marginLeft: "0.6rem" }}>{a.description}</span>}
+                        <div style={{ color: GRAY_DIM, fontSize: "0.7rem" }}>{new Date(a.created_at).toLocaleDateString("fr-CA")}</div>
+                      </div>
+                      <button onClick={() => deleteAjoutEntry(a.id)} style={{ background: "rgba(255,77,77,0.08)", border: "1px solid rgba(255,77,77,0.2)", color: RED, borderRadius: 4, padding: "0.2rem 0.5rem", fontSize: "0.72rem", cursor: "pointer" }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4915,7 +5008,7 @@ function SectionHeader({ label, count, color, icon }: { label: string; count: nu
   );
 }
 
-function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVersement }: {
+function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVersement, onAjout }: {
   e: EntreeRegistre;
   typeBadge: (t: string) => { label: string; color: string; bg: string };
   statutBadge: (s: string) => { label: string; color: string; bg: string };
@@ -4923,12 +5016,14 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
   onEdit: () => void;
   onDel: (id: number) => void;
   onVersement: (e: EntreeRegistre) => void;
+  onAjout: (e: EntreeRegistre) => void;
 }) {
   const tb = typeBadge(e.type);
   const sb = statutBadge(e.statut);
+  const montantTotal = (e.montant || 0) + (e.montant_ajoute || 0);
   const paye    = e.montant_paye || 0;
-  const restant = Math.max(0, e.montant - paye);
-  const pct     = e.montant > 0 ? Math.min(100, (paye / e.montant) * 100) : 0;
+  const restant = Math.max(0, montantTotal - paye);
+  const pct     = montantTotal > 0 ? Math.min(100, (paye / montantTotal) * 100) : 0;
   const isActif = e.type === "actif";
   const porteeLabel = (e.portee || "entreprise") === "personnel" ? "👤" : "🏢";
 
@@ -4978,9 +5073,12 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
       {/* Montant */}
       <div style={{ textAlign: "right", minWidth: 90 }}>
         <div style={{ color: isActif ? "#a78bfa" : (e.type === "pret" ? BLUE : RED), fontWeight: 900, fontSize: "1.25rem" }}>
-          {isActif ? "" : e.type === "emprunt" ? "-" : "+"}{fmt$(e.montant)}
+          {isActif ? "" : e.type === "emprunt" ? "-" : "+"}{fmt$(montantTotal)}
         </div>
-        {!isActif && paye > 0 && restant < e.montant && (
+        {!isActif && (e.montant_ajoute || 0) > 0 && (
+          <div style={{ color: ORANGE, fontSize: "0.68rem", marginTop: "0.1rem" }}>initial {fmt$(e.montant)} +{fmt$(e.montant_ajoute)}</div>
+        )}
+        {!isActif && paye > 0 && restant < montantTotal && (
           <div style={{ color: GRAY_DIM, fontSize: "0.7rem", marginTop: "0.15rem" }}>{Math.round(pct)}% payé</div>
         )}
         {isActif && e.cout_achat && e.cout_achat !== e.montant && (
@@ -4993,6 +5091,9 @@ function EntreeCard({ e, typeBadge, statutBadge, onStatut, onEdit, onDel, onVers
       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 110 }}>
         {!isActif && e.statut === "actif" && (
           <button onClick={() => onVersement(e)} style={{ background: "rgba(109,212,0,0.15)", border: `1px solid ${GREEN}55`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>💳 Versement</button>
+        )}
+        {!isActif && e.statut === "actif" && (
+          <button onClick={() => onAjout(e)} style={{ background: "rgba(251,146,60,0.12)", border: `1px solid ${ORANGE}55`, color: ORANGE, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 700 }}>➕ Ajouter</button>
         )}
         {!isActif && e.statut === "actif" && (
           <button onClick={() => onStatut(e.id, "rembourse")} style={{ background: GREEN_DIM, border: `1px solid ${GREEN}44`, color: GREEN, borderRadius: 5, padding: "0.3rem 0.5rem", fontSize: "0.74rem", cursor: "pointer", fontWeight: 600 }}>✓ Remboursé</button>
