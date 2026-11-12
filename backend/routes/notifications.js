@@ -6,7 +6,7 @@ const { sendPushToAll, isPushEnabled } = require("../utils/pushService");
 const router = express.Router();
 
 // GET /api/notifications/vapid-key — Clé publique VAPID (public)
-const VAPID_PUB = process.env.VAPID_PUBLIC_KEY || "BMSOCoqZFLh0geT_428FcfQ8w7etUM5vDJ46CNRiLdebFgptxTo9iRob6pAmYNoZhZAe13EndWhP5KhWIXEIVSs";
+const VAPID_PUB = process.env.VAPID_PUBLIC_KEY || "BLkzN0bX5jH075bpXVpnb9-lcnt86ZwK9YEPBf_K_e5WxOrRrd1qoubV5lnHfG_QKBEYsrpfzpN5KvQeMglXVvA";
 
 router.get("/vapid-key", (req, res) => {
   console.log("📤 VAPID key demandée, retourne:", VAPID_PUB.slice(0, 12) + "...");

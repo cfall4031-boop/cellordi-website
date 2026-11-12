@@ -1,20 +1,31 @@
 // ── Service Worker — Réparation CeLL&Ordi Admin PWA ──────────
+// Compatible iOS 16.4+ (PWA ajoutée à l'écran d'accueil)
 
 // Push notification reçue
 self.addEventListener('push', function(event) {
-  if (!event.data) return;
+  var data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      // Fallback si le payload est du texte brut (certains proxies iOS)
+      data = { title: event.data.text() };
+    }
+  }
 
-  var data = event.data.json();
+  var title = data.title || 'CeLL&Ordi';
+  var options = {
+    body:    data.body  || '',
+    icon:    '/android-chrome-192x192.png',
+    badge:   '/favicon-48x48.png',
+    tag:     data.tag   || 'general',
+    // renotify: true permet de remplacer une notification avec le même tag sur iOS
+    renotify: true,
+    data:    { url: data.url || '/admin' }
+  };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'CeLL&Ordi', {
-      body: data.body || '',
-      icon: '/android-chrome-192x192.png',
-      badge: '/favicon-48x48.png',
-      tag: data.tag || 'general',
-      data: { url: data.url || '/admin' }
-    }).then(function() {
-      // Badge +1 sur l'icône de l'app
+    self.registration.showNotification(title, options).then(function() {
       if (self.navigator && self.navigator.setAppBadge) {
         self.navigator.setAppBadge(1);
       }
@@ -26,7 +37,6 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
-  // Effacer le badge quand on clique sur la notification
   if (self.navigator && self.navigator.clearAppBadge) {
     self.navigator.clearAppBadge();
   }
@@ -36,16 +46,23 @@ self.addEventListener('notificationclick', function(event) {
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
       for (var i = 0; i < windowClients.length; i++) {
-        if (windowClients[i].url.indexOf('/admin') !== -1) {
-          return windowClients[i].focus();
+        var client = windowClients[i];
+        if (client.url.indexOf('/admin') !== -1 && 'focus' in client) {
+          return client.focus();
         }
       }
-      return self.clients.openWindow(url);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(url);
+      }
     })
   );
 });
 
-// Activation immédiate
+// Activation immédiate — prend le contrôle de tous les onglets ouverts
+self.addEventListener('install', function(event) {
+  self.skipWaiting();
+});
+
 self.addEventListener('activate', function(event) {
   event.waitUntil(self.clients.claim());
 });
