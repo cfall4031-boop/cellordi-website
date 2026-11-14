@@ -3418,6 +3418,16 @@ function GestionStock() {
     setHistPiece({ piece: p, mouvements: res.mouvements || [] });
   };
 
+  const deleteMouvement = async (mvtId: number, pieceId: number) => {
+    if (!window.confirm("Supprimer ce mouvement ? Cette action est irréversible.")) return;
+    try {
+      await stockApi.deleteMouvement(mvtId);
+      const res = await stockApi.mouvements(pieceId);
+      setHistPiece(prev => prev ? { ...prev, mouvements: res.mouvements || [] } : null);
+      load(true);
+    } catch { alert("Erreur lors de la suppression."); }
+  };
+
   const submitMouvement = async () => {
     if (!modalPiece) return;
     if (!form.quantite) { setErr("La quantité est requise."); return; }
@@ -4245,7 +4255,7 @@ ${stats ? `<div class="kpis">
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.83rem" }}>
                   <thead>
                     <tr>
-                      {["Date","Type","Qté","Coût","Prix vente","Notes"].map(h => (
+                      {["Date","Type","Qté","Coût","Prix vente","Notes",""].map(h => (
                         <th key={h} style={{ color: GRAY_DIM, fontWeight: 600, fontSize: "0.72rem", letterSpacing: "0.06em", textTransform: "uppercase", textAlign: "left", padding: "0.4rem 0.6rem", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>{h}</th>
                       ))}
                     </tr>
@@ -4261,6 +4271,13 @@ ${stats ? `<div class="kpis">
                         <td style={{ padding: "0.45rem 0.6rem", color: ORANGE }}>{m.cout_unitaire ? fmt$(m.cout_unitaire) : "—"}</td>
                         <td style={{ padding: "0.45rem 0.6rem", color: BLUE }}>{m.prix_unitaire ? fmt$(m.prix_unitaire) : "—"}</td>
                         <td style={{ padding: "0.45rem 0.6rem", color: GRAY_DIM }}>{m.notes || "—"}</td>
+                        <td style={{ padding: "0.45rem 0.6rem" }}>
+                          <button
+                            onClick={() => deleteMouvement(m.id, histPiece!.piece.id)}
+                            title="Supprimer ce mouvement"
+                            style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 6, color: "#ef4444", cursor: "pointer", padding: "0.2rem 0.5rem", fontSize: "0.78rem" }}
+                          >🗑️</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

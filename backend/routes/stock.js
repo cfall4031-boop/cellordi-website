@@ -148,4 +148,12 @@ router.get("/:id/mouvements", auth, (req, res) => {
   res.json({ mouvements });
 });
 
+// ── DELETE /api/stock/mouvement/:mvtId — supprimer un mouvement (annuler une erreur) ──
+router.delete("/mouvement/:mvtId", auth, (req, res) => {
+  const mvt = db.prepare("SELECT * FROM mouvements_stock WHERE id = ?").get(req.params.mvtId);
+  if (!mvt) return res.status(404).json({ erreur: "Mouvement introuvable." });
+  db.prepare("DELETE FROM mouvements_stock WHERE id = ?").run(req.params.mvtId);
+  res.json({ message: "Mouvement supprimé.", mouvement: mvt });
+});
+
 module.exports = router;
