@@ -37,8 +37,8 @@ export function PageWrapper({ children, title, description }: PageWrapperProps) 
 
       {/* Mobile sticky CTA bar */}
       <div className="mobile-cta-bar">
-        <a href="tel:5142375792" className="cta-call">📞 Appeler</a>
-        <a href="/#rendezvous" className="cta-rdv">📅 Prendre rendez-vous</a>
+        <a href="tel:5142375792" className="cta-call">Appeler</a>
+        <a href="/#rendezvous" className="cta-rdv">Prendre rendez-vous</a>
       </div>
 
       <style>{`

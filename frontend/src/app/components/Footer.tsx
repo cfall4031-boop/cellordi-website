@@ -40,7 +40,7 @@ export function Footer() {
   };
 
   return (
-    <footer style={{ background: NAVY, borderTop: "1px solid rgba(109,212,0,0.1)", padding: "5rem 2rem 2rem" }}>
+    <footer style={{ background: NAVY, borderTop: "1px solid rgba(255,255,255,0.08)", padding: "5rem 2rem 2rem" }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: "3rem", marginBottom: "4rem" }} className="footer-grid">
           {/* Brand */}
@@ -55,7 +55,7 @@ export function Footer() {
               </svg>
               <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "1.4rem", color: WHITE, letterSpacing: "0.05em", lineHeight: 1.1 }}>
                 <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>{t("footer.repair")}</span>
-                CeLL<span style={{ color: GREEN }}>&</span>Ordi
+                CeLL<span style={{ color: WHITE }}>&</span>Ordi
               </span>
             </div>
             <p style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY, lineHeight: 1.7, marginBottom: "1.5rem", maxWidth: "260px" }}>
@@ -97,8 +97,8 @@ export function Footer() {
                 style={{
                   width: "36px",
                   height: "36px",
-                  background: hovSocials === "Google" ? `rgba(109,212,0,0.15)` : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${hovSocials === "Google" ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                  background: hovSocials === "Google" ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${hovSocials === "Google" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.07)"}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -115,7 +115,7 @@ export function Footer() {
           {/* Link columns */}
           {Object.entries(LINKS).map(([title, links]) => (
             <div key={title}>
-              <h4 style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.85rem", color: WHITE, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
+              <h4 style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: "0.85rem", color: WHITE, letterSpacing: "0em", marginBottom: "1.2rem" }}>
                 {title}
               </h4>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.6rem" }}>
@@ -124,7 +124,7 @@ export function Footer() {
                     <a
                       href={link.href}
                       style={{ fontFamily: FONT_BODY, fontSize: "0.88rem", color: GRAY, textDecoration: "none", transition: "color 0.2s" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = GREEN)}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = WHITE)}
                       onMouseLeave={(e) => (e.currentTarget.style.color = GRAY)}
                     >
                       {link.label}
@@ -156,7 +156,7 @@ export function Footer() {
                 display: "inline-block",
                 width: "8px",
                 height: "8px",
-                background: GREEN,
+                background: "rgba(255,255,255,0.4)",
                 borderRadius: "50%",
                 animation: "pulse-dot 2s ease-in-out infinite",
               }}

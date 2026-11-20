@@ -10,8 +10,8 @@ export function Process() {
     <section id="process" style={{
       background: NAVY,
       padding: "1.6rem 2rem",
-      borderTop: "1px solid rgba(109,212,0,0.08)",
-      borderBottom: "1px solid rgba(109,212,0,0.08)",
+      borderTop: "1px solid rgba(255,255,255,0.06)",
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
     }}>
       <div style={{
         maxWidth: "900px",
@@ -28,20 +28,20 @@ export function Process() {
               display: "inline-flex",
               alignItems: "center",
               gap: "0.55rem",
-              background: "rgba(109,212,0,0.06)",
-              border: "1px solid rgba(109,212,0,0.15)",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: "50px",
               padding: "0.45rem 1rem 0.45rem 0.45rem",
             }}>
               <span className="process-num" style={{
                 width: "24px",
                 height: "24px",
-                background: GREEN,
+                background: "rgba(255,255,255,0.1)",
                 borderRadius: "50%",
                 fontFamily: FONT_DISPLAY,
-                fontWeight: 900,
+                fontWeight: 500,
                 fontSize: "0.72rem",
-                color: NAVY,
+                color: WHITE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -51,11 +51,10 @@ export function Process() {
               </span>
               <span className="process-label" style={{
                 fontFamily: FONT_DISPLAY,
-                fontWeight: 700,
+                fontWeight: 400,
                 fontSize: "0.8rem",
                 color: WHITE,
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
+                letterSpacing: "0em",
                 whiteSpace: "nowrap",
               }}>
                 {step.title}

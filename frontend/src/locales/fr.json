@@ -420,5 +420,12 @@
     "all_services_sub": "Cellulaires · Ordinateurs · Informatique · Web · Cloud · Entretien TI",
     "all_services_btn": "← Tous les services",
     "rdv_btn": "Prendre rendez-vous"
+  },
+  "phone3d": {
+    "text1": "Ça arrive à tout le monde.",
+    "text2": "On s'en occupe.",
+    "text3": "Comme neuf.",
+    "cta": "Prendre RDV",
+    "aria": "Animation — téléphone cassé et réparé"
   }
 }

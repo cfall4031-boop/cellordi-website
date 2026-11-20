@@ -1530,8 +1530,8 @@ export default function ServiceDetail() {
         }
       `}</style>
       <div className="svc-mobile-cta">
-        <a href="tel:5142375792" className="cta-call">📞 Appeler</a>
-        <a href="/#rendezvous" className="cta-rdv">📅 Prendre rendez-vous</a>
+        <a href="tel:5142375792" className="cta-call">Appeler</a>
+        <a href="/#rendezvous" className="cta-rdv">Prendre rendez-vous</a>
       </div>
 
       <Footer />

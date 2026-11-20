@@ -116,7 +116,7 @@ export function Navbar() {
           zIndex: 1000,
           background: scrolled || searchOpen ? `${NAVY}f5` : "transparent",
           backdropFilter: scrolled || searchOpen ? "blur(12px)" : "none",
-          borderBottom: scrolled || searchOpen ? `1px solid rgba(109,212,0,0.12)` : "none",
+          borderBottom: scrolled || searchOpen ? "1px solid rgba(255,255,255,0.08)" : "none",
           transition: "all 0.3s",
           padding: "0 2rem",
         }}
@@ -136,8 +136,8 @@ export function Navbar() {
               <rect x="176" y="345" width="160" height="16" rx="8" fill={GREEN}/>
             </svg>
             <span style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "1.4rem", color: WHITE, letterSpacing: "0.05em", lineHeight: 1.1 }}>
-              <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 600, color: GRAY, letterSpacing: "0.18em", textTransform: "uppercase" }}>{t("nav.repair")}</span>
-              CeLL<span style={{ color: GREEN }}>&</span>Ordi
+              <span style={{ display: "block", fontSize: "0.65rem", fontWeight: 400, color: GRAY, letterSpacing: "0.06em" }}>{t("nav.repair")}</span>
+              CeLL<span style={{ color: WHITE }}>&</span>Ordi
             </span>
           </a>
 
@@ -150,11 +150,11 @@ export function Navbar() {
                 onMouseEnter={() => setHov(link.href)}
                 onMouseLeave={() => setHov(null)}
                 style={{
-                  fontFamily: FONT_DISPLAY, fontWeight: 600,
-                  fontSize: "0.82rem", letterSpacing: "0.06em",
-                  color: hov === link.href ? GREEN : GRAY,
+                  fontFamily: FONT_DISPLAY, fontWeight: 400,
+                  fontSize: "0.88rem", letterSpacing: "0em",
+                  color: hov === link.href ? WHITE : GRAY,
                   textDecoration: "none", padding: "0.4rem 0.65rem",
-                  transition: "color 0.2s", textTransform: "uppercase",
+                  transition: "color 0.2s",
                 }}
               >
                 {link.label}
@@ -175,17 +175,17 @@ export function Navbar() {
             <button
               onClick={toggleLang}
               style={{
-                background: "none", border: `1px solid rgba(109,212,0,0.3)`,
+                background: "none", border: "1px solid rgba(255,255,255,0.1)",
                 borderRadius: "4px", cursor: "pointer",
                 padding: "0.4rem 0.7rem", marginLeft: "0.6rem",
                 display: "flex", alignItems: "center", gap: "0.2rem",
-                fontFamily: FONT_DISPLAY, fontWeight: 700,
-                fontSize: "0.78rem", letterSpacing: "0.08em",
+                fontFamily: FONT_DISPLAY, fontWeight: 500,
+                fontSize: "0.78rem", letterSpacing: "0.02em",
               }}
             >
-              <span style={{ color: i18n.language === "fr" ? GREEN : GRAY }}>FR</span>
-              <span style={{ color: "rgba(109,212,0,0.4)", fontSize: "0.7rem" }}>|</span>
-              <span style={{ color: i18n.language === "en" ? GREEN : GRAY }}>EN</span>
+              <span style={{ color: i18n.language === "fr" ? WHITE : GRAY }}>FR</span>
+              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.7rem" }}>|</span>
+              <span style={{ color: i18n.language === "en" ? WHITE : GRAY }}>EN</span>
             </button>
 
             {/* Bouton recherche */}
@@ -193,12 +193,12 @@ export function Navbar() {
               onClick={() => setSearchOpen(!searchOpen)}
               title="Rechercher"
               style={{
-                background: searchOpen ? "rgba(109,212,0,0.1)" : "none",
-                border: `1px solid ${searchOpen ? GREEN : "rgba(109,212,0,0.3)"}`,
+                background: searchOpen ? "rgba(255,255,255,0.08)" : "none",
+                border: `1px solid ${searchOpen ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)"}`,
                 borderRadius: "4px", cursor: "pointer",
                 padding: "0.42rem 0.65rem", marginLeft: "0.4rem",
                 display: "flex", alignItems: "center",
-                color: searchOpen ? GREEN : GRAY,
+                color: searchOpen ? WHITE : GRAY,
                 transition: "all 0.2s",
               }}
             >
@@ -239,7 +239,7 @@ export function Navbar() {
         <div style={{
           maxHeight: menuOpen ? "520px" : "0",
           overflow: "hidden", transition: "max-height 0.32s ease",
-          background: NAVY, borderTop: menuOpen ? `1px solid rgba(109,212,0,0.15)` : "none",
+          background: NAVY, borderTop: menuOpen ? "1px solid rgba(255,255,255,0.08)" : "none",
         }}>
           <div style={{ padding: "1rem 2rem" }}>
             {navLinks.map((link) => (
@@ -247,11 +247,10 @@ export function Navbar() {
                 key={link.href} href={link.href}
                 onClick={() => setMenuOpen(false)}
                 style={{
-                  display: "block", fontFamily: FONT_DISPLAY, fontWeight: 600,
-                  fontSize: "1.1rem", letterSpacing: "0.07em", color: WHITE,
+                  display: "block", fontFamily: FONT_DISPLAY, fontWeight: 400,
+                  fontSize: "1.1rem", letterSpacing: "0em", color: WHITE,
                   textDecoration: "none", padding: "0.75rem 0",
                   borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                  textTransform: "uppercase",
                 }}
               >
                 {link.label}
@@ -263,12 +262,12 @@ export function Navbar() {
                   key={lang}
                   onClick={() => { i18n.changeLanguage(lang); setMenuOpen(false); }}
                   style={{
-                    fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.9rem",
-                    letterSpacing: "0.1em",
-                    background: i18n.language === lang ? GREEN : "transparent",
-                    color: i18n.language === lang ? NAVY : GRAY,
-                    border: `1px solid ${i18n.language === lang ? GREEN : "rgba(255,255,255,0.15)"}`,
-                    padding: "0.4rem 1rem", cursor: "pointer", textTransform: "uppercase",
+                    fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: "0.9rem",
+                    letterSpacing: "0.02em",
+                    background: i18n.language === lang ? "rgba(255,255,255,0.1)" : "transparent",
+                    color: i18n.language === lang ? WHITE : GRAY,
+                    border: `1px solid ${i18n.language === lang ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    padding: "0.4rem 1rem", cursor: "pointer",
                   }}
                 >
                   {lang.toUpperCase()}
@@ -291,7 +290,7 @@ export function Navbar() {
         <div style={{
           position: "fixed", top: "70px", left: 0, right: 0,
           background: `${NAVY}f8`, backdropFilter: "blur(16px)",
-          borderBottom: `1px solid rgba(109,212,0,0.15)`,
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
           zIndex: 999, padding: "1.2rem 2rem 1.4rem",
         }}>
           <div style={{ maxWidth: "640px", margin: "0 auto" }}>
@@ -311,7 +310,7 @@ export function Navbar() {
                 style={{
                   width: "100%", boxSizing: "border-box",
                   background: "rgba(255,255,255,0.05)",
-                  border: `1px solid rgba(109,212,0,0.25)`,
+                  border: "1px solid rgba(255,255,255,0.12)",
                   borderRadius: "8px",
                   padding: "0.75rem 1rem 0.75rem 2.8rem",
                   fontFamily: FONT_BODY, fontSize: "1rem",
@@ -351,14 +350,14 @@ export function Navbar() {
                         transition: "background 0.15s",
                         background: "transparent",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(109,212,0,0.07)")}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
                       <span style={{
-                        fontFamily: FONT_DISPLAY, fontSize: "0.65rem", fontWeight: 700,
-                        letterSpacing: "0.1em", textTransform: "uppercase",
-                        color: GREEN, background: "rgba(109,212,0,0.1)",
-                        border: "1px solid rgba(109,212,0,0.2)",
+                        fontFamily: FONT_DISPLAY, fontSize: "0.65rem", fontWeight: 400,
+                        letterSpacing: "0em",
+                        color: GRAY, background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         padding: "0.15rem 0.5rem", borderRadius: "4px",
                         flexShrink: 0, minWidth: "58px", textAlign: "center",
                       }}>

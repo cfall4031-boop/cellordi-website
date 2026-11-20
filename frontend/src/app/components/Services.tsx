@@ -7,7 +7,7 @@ import { NAVY, NAVY_MID, NAVY_LIGHT, GREEN, GREEN_GLOW, WHITE, GRAY, FONT_DISPLA
 
 // ─── Icônes SVG ──────────────────────────────────────────────────────────────
 const IconPhone = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
     <line x1="12" y1="18" x2="12.01" y2="18"/>
     <line x1="9" y1="6" x2="15" y2="6" strokeOpacity="0.5"/>
@@ -15,7 +15,7 @@ const IconPhone = () => (
 );
 
 const IconLaptop = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="13" rx="2"/>
     <path d="M2 19h20"/>
     <path d="M9 19l1-2h4l1 2"/>
@@ -25,7 +25,7 @@ const IconLaptop = () => (
 );
 
 const IconShield = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
     <polyline points="9 12 11 14 15 10"/>
   </svg>
@@ -53,10 +53,10 @@ export function Services() {
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         <FadeUp>
           <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <span className="services-tag" style={{ fontFamily: FONT_DISPLAY, fontWeight: 700, fontSize: "0.82rem", color: GREEN, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+            <span className="services-tag" style={{ fontFamily: FONT_DISPLAY, fontWeight: 400, fontSize: "0.82rem", color: GRAY, letterSpacing: "0em" }}>
               {t("services.tag")}
             </span>
-            <h2 className="services-title" style={{ fontFamily: FONT_DISPLAY, fontWeight: 900, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, textTransform: "uppercase", letterSpacing: "0.02em", margin: "0.6rem 0 1rem" }}>
+            <h2 className="services-title" style={{ fontFamily: FONT_DISPLAY, fontWeight: 500, fontSize: "clamp(2rem, 4vw, 3rem)", color: WHITE, letterSpacing: "-0.02em", margin: "0.6rem 0 1rem" }}>
               <TypewriterTitle text={t("services.title")} />
             </h2>
             <p className="services-subtitle" style={{ fontFamily: FONT_BODY, color: GRAY, fontSize: "1rem", maxWidth: "520px", margin: "0 auto" }}>
@@ -98,12 +98,12 @@ export function Services() {
                     onMouseLeave={() => setHovered(null)}
                     style={{
                       background: hovered === i ? NAVY_LIGHT : NAVY,
-                      border: `1px solid ${hovered === i ? GREEN + "66" : "rgba(255,255,255,0.05)"}`,
+                      border: `1px solid ${hovered === i ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)"}`,
                       padding: "2rem",
                       transition: "all 0.25s",
                       cursor: "pointer",
                       transform: hovered === i ? "translateY(-5px)" : "translateY(0)",
-                      boxShadow: hovered === i ? `0 12px 40px rgba(109,212,0,0.12)` : "none",
+                      boxShadow: hovered === i ? `0 12px 40px rgba(0,0,0,0.3)` : "none",
                       height: "100%",
                       boxSizing: "border-box",
                       display: "flex",
@@ -114,15 +114,15 @@ export function Services() {
                       style={{
                         width: "52px",
                         height: "52px",
-                        background: `rgba(109,212,0,0.1)`,
-                        border: `1px solid rgba(109,212,0,0.25)`,
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         marginBottom: "1.2rem",
-                        clipPath: "polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)",
+                        borderRadius: "8px",
                         transition: "background 0.25s",
-                        ...(hovered === i ? { background: "rgba(109,212,0,0.18)" } : {}),
+                        ...(hovered === i ? { background: "rgba(255,255,255,0.08)" } : {}),
                       }}
                     >
                       <Icon />
@@ -149,7 +149,7 @@ export function Services() {
                             gap: "0.5rem",
                           }}
                         >
-                          <span style={{ color: GREEN, fontSize: "0.7rem", flexShrink: 0 }}>▶</span>
+                          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", flexShrink: 0 }}>–</span>
                           {item}
                         </li>
                       ))}
@@ -162,13 +162,12 @@ export function Services() {
                         gap: "0.5rem",
                         marginTop: "1.5rem",
                         paddingTop: "1.2rem",
-                        borderTop: `1px solid rgba(109,212,0,${hovered === i ? "0.2" : "0.08"})`,
+                        borderTop: `1px solid rgba(255,255,255,${hovered === i ? "0.12" : "0.06"})`,
                         fontFamily: FONT_DISPLAY,
-                        fontWeight: 700,
+                        fontWeight: 400,
                         fontSize: "0.88rem",
-                        color: hovered === i ? GREEN_GLOW : GREEN,
-                        letterSpacing: "0.07em",
-                        textTransform: "uppercase",
+                        color: hovered === i ? WHITE : GRAY,
+                        letterSpacing: "0em",
                         transition: "all 0.2s",
                       }}
                     >

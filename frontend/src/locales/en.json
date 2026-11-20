@@ -420,5 +420,12 @@
     "all_services_sub": "Phones · Computers · IT Services · Web · Cloud · IT Maintenance",
     "all_services_btn": "← All services",
     "rdv_btn": "Book an appointment"
+  },
+  "phone3d": {
+    "text1": "It happens to everyone.",
+    "text2": "We take care of it.",
+    "text3": "Good as new.",
+    "cta": "Book Now",
+    "aria": "Animation — broken phone repaired"
   }
 }
