@@ -68,111 +68,21 @@ export function Hero() {
         overflow: "hidden",
       }}
     >
-      {/* SVG écran fissuré généré — fond natif */}
-      <svg
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 0 }}
-        viewBox="0 0 1440 900"
-        preserveAspectRatio="xMidYMid slice"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <defs>
-          <radialGradient id="hg-impact" cx="50%" cy="21%" r="18%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.07)"/>
-            <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
-          </radialGradient>
-          <linearGradient id="hg-fade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="55%" stopColor="#0c0c12" stopOpacity="0"/>
-            <stop offset="100%" stopColor="#0c0c12" stopOpacity="1"/>
-          </linearGradient>
-        </defs>
-
-        {/* Fond noir */}
-        <rect width="1440" height="900" fill="#0c0c12"/>
-
-        {/* Halo impact */}
-        <rect width="1440" height="900" fill="url(#hg-impact)"/>
-
-        {/* Auréoles concentriques autour du point d'impact */}
-        <circle cx="720" cy="190" r="22"  fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="0.7"/>
-        <circle cx="720" cy="190" r="48"  fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.55"/>
-        <circle cx="720" cy="190" r="82"  fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.45"/>
-        <circle cx="720" cy="190" r="124" fill="none" stroke="rgba(255,255,255,0.13)" strokeWidth="0.4"/>
-
-        {/* Craquelures — primaires */}
-        <g fill="none" strokeLinecap="round">
-          {/* NE */}
-          <path d="M720,190 L870,135 L1060,78 L1260,18"      stroke="rgba(255,255,255,0.90)" strokeWidth="1.2"/>
-          <path d="M1060,78 L1160,42 L1310,0"                 stroke="rgba(255,255,255,0.65)" strokeWidth="0.65"/>
-          <path d="M870,135 L960,70 L1080,20"                 stroke="rgba(255,255,255,0.50)" strokeWidth="0.55"/>
-          {/* ENE */}
-          <path d="M720,190 L870,162 L1060,145 L1280,128 L1440,112" stroke="rgba(255,255,255,0.78)" strokeWidth="0.95"/>
-          <path d="M1060,145 L1140,100 L1250,55 L1380,10"     stroke="rgba(255,255,255,0.48)" strokeWidth="0.55"/>
-          {/* E */}
-          <path d="M720,190 L940,225 L1180,268 L1440,312"     stroke="rgba(255,255,255,0.84)" strokeWidth="1.1"/>
-          <path d="M1180,268 L1310,290 L1440,310"             stroke="rgba(255,255,255,0.45)" strokeWidth="0.5"/>
-          {/* SE */}
-          <path d="M720,190 L910,355 L1110,528 L1310,688"     stroke="rgba(255,255,255,0.84)" strokeWidth="1.1"/>
-          <path d="M910,355 L1010,425 L1110,500 L1230,610 L1360,760" stroke="rgba(255,255,255,0.58)" strokeWidth="0.75"/>
-          <path d="M1110,528 L1220,488 L1360,468 L1440,452"   stroke="rgba(255,255,255,0.45)" strokeWidth="0.55"/>
-          {/* SSE */}
-          <path d="M720,190 L785,348 L828,528 L858,758 L872,900" stroke="rgba(255,255,255,0.70)" strokeWidth="0.85"/>
-          {/* S */}
-          <path d="M720,190 L712,408 L684,628 L652,900"       stroke="rgba(255,255,255,0.80)" strokeWidth="1.0"/>
-          <path d="M712,408 L764,508 L806,658 L826,900"       stroke="rgba(255,255,255,0.52)" strokeWidth="0.65"/>
-          <path d="M684,628 L634,728 L602,900"                stroke="rgba(255,255,255,0.42)" strokeWidth="0.5"/>
-          {/* SSW */}
-          <path d="M720,190 L658,350 L618,528 L578,758 L548,900" stroke="rgba(255,255,255,0.70)" strokeWidth="0.85"/>
-          {/* SW */}
-          <path d="M720,190 L558,335 L378,508 L178,728 L0,882" stroke="rgba(255,255,255,0.84)" strokeWidth="1.1"/>
-          <path d="M378,508 L298,608 L198,758 L98,900"        stroke="rgba(255,255,255,0.58)" strokeWidth="0.75"/>
-          <path d="M558,335 L478,428 L398,568 L318,708"       stroke="rgba(255,255,255,0.45)" strokeWidth="0.55"/>
-          {/* W */}
-          <path d="M720,190 L518,232 L298,272 L78,302 L0,312" stroke="rgba(255,255,255,0.80)" strokeWidth="1.0"/>
-          <path d="M298,272 L198,352 L78,452 L0,522"          stroke="rgba(255,255,255,0.52)" strokeWidth="0.65"/>
-          <path d="M518,232 L418,302 L308,402"                stroke="rgba(255,255,255,0.42)" strokeWidth="0.5"/>
-          {/* WNW */}
-          <path d="M720,190 L578,162 L418,142 L198,122 L0,112" stroke="rgba(255,255,255,0.78)" strokeWidth="0.95"/>
-          {/* NW */}
-          <path d="M720,190 L558,132 L378,82 L178,32 L0,2"   stroke="rgba(255,255,255,0.84)" strokeWidth="1.1"/>
-          <path d="M378,82 L278,102 L148,132 L0,162"          stroke="rgba(255,255,255,0.58)" strokeWidth="0.65"/>
-          <path d="M558,132 L458,82 L348,42 L198,0"           stroke="rgba(255,255,255,0.48)" strokeWidth="0.55"/>
-          {/* NNW */}
-          <path d="M720,190 L664,108 L628,42 L608,0"          stroke="rgba(255,255,255,0.72)" strokeWidth="0.88"/>
-          {/* N */}
-          <path d="M720,190 L702,102 L692,32 L682,0"          stroke="rgba(255,255,255,0.75)" strokeWidth="0.90"/>
-          <path d="M702,102 L744,52 L762,0"                   stroke="rgba(255,255,255,0.46)" strokeWidth="0.52"/>
-          {/* NNE */}
-          <path d="M720,190 L782,112 L842,52 L902,0"          stroke="rgba(255,255,255,0.72)" strokeWidth="0.88"/>
-
-          {/* Fragments courts proches de l'impact */}
-          <path d="M720,190 L762,224 L804,288 L836,388"       stroke="rgba(255,255,255,0.58)" strokeWidth="0.68"/>
-          <path d="M720,190 L678,224 L642,292 L612,388"       stroke="rgba(255,255,255,0.58)" strokeWidth="0.68"/>
-          <path d="M720,190 L752,162 L784,122"                stroke="rgba(255,255,255,0.52)" strokeWidth="0.60"/>
-          <path d="M720,190 L688,162 L658,132"                stroke="rgba(255,255,255,0.52)" strokeWidth="0.60"/>
-
-          {/* Fragments secondaires lointains */}
-          <path d="M1060,78 L1152,162 L1202,252"              stroke="rgba(255,255,255,0.38)" strokeWidth="0.48"/>
-          <path d="M910,355 L1002,302 L1102,262 L1252,202"    stroke="rgba(255,255,255,0.38)" strokeWidth="0.48"/>
-          <path d="M558,335 L622,252 L682,202"                stroke="rgba(255,255,255,0.38)" strokeWidth="0.48"/>
-          <path d="M378,82 L452,162 L502,242"                 stroke="rgba(255,255,255,0.38)" strokeWidth="0.48"/>
-          <path d="M198,758 L302,682 L402,602 L482,502"       stroke="rgba(255,255,255,0.32)" strokeWidth="0.42"/>
-          <path d="M1310,688 L1382,758 L1440,828"             stroke="rgba(255,255,255,0.32)" strokeWidth="0.42"/>
-
-          {/* Micro-fragments aux coins */}
-          <path d="M48,48 L118,82 L178,122"                   stroke="rgba(255,255,255,0.25)" strokeWidth="0.4"/>
-          <path d="M1392,48 L1322,92 L1262,142"               stroke="rgba(255,255,255,0.25)" strokeWidth="0.4"/>
-          <path d="M98,852 L178,802 L258,762"                 stroke="rgba(255,255,255,0.25)" strokeWidth="0.4"/>
-          <path d="M1352,822 L1282,782 L1212,752"             stroke="rgba(255,255,255,0.25)" strokeWidth="0.4"/>
-        </g>
-
-        {/* Point d'impact */}
-        <circle cx="720" cy="190" r="3.5" fill="rgba(255,255,255,0.65)"/>
-        <circle cx="720" cy="190" r="6"   fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8"/>
-
-        {/* Fondu bas vers le reste du site */}
-        <rect width="1440" height="900" fill="url(#hg-fade)"/>
-      </svg>
+      {/* Image de fond plein écran */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "url('/hero-crack.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center center",
+        backgroundRepeat: "no-repeat",
+        zIndex: 0,
+      }} />
+      {/* Fondu bas vers le reste du site */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(to bottom, transparent 55%, #0c0c12 100%)",
+        zIndex: 1,
+      }} />
 
       {/* Séparateur top subtil */}
       <div style={{
