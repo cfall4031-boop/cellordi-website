@@ -32,6 +32,42 @@ router.get("/:id", auth, (req, res) => {
   res.json({ ...client, rendezvous, tickets });
 });
 
+// POST /api/clients/find-or-create — Trouver ou créer depuis un ticket (admin)
+router.post("/find-or-create", auth, (req, res) => {
+  const { prenom, nom, telephone, email } = req.body;
+
+  if (!prenom || !nom || !telephone) {
+    return res.status(400).json({ erreur: "Prénom, nom et téléphone sont requis." });
+  }
+
+  // 1. Chercher par téléphone en premier
+  const byPhone = db.prepare("SELECT * FROM clients WHERE telephone = ?").get(telephone);
+  if (byPhone) return res.json({ created: false, client: byPhone });
+
+  // 2. Chercher par email si fourni
+  if (email) {
+    const byEmail = db.prepare("SELECT * FROM clients WHERE email = ?").get(email);
+    if (byEmail) return res.json({ created: false, client: byEmail });
+  }
+
+  // 3. Créer — email placeholder déterministe si absent
+  const finalEmail = email || `noemail.${telephone.replace(/\D/g, "")}@cellordi.local`;
+
+  try {
+    const result = db.prepare(
+      "INSERT INTO clients (prenom, nom, email, telephone) VALUES (?, ?, ?, ?)"
+    ).run(prenom, nom, finalEmail, telephone);
+
+    const client = db.prepare("SELECT * FROM clients WHERE id = ?").get(result.lastInsertRowid);
+    return res.status(201).json({ created: true, client });
+  } catch (_) {
+    // Contrainte unique — retourner le client existant
+    const existing = db.prepare("SELECT * FROM clients WHERE email = ?").get(finalEmail);
+    if (existing) return res.json({ created: false, client: existing });
+    return res.status(500).json({ erreur: "Erreur lors de la création du client." });
+  }
+});
+
 // POST /api/clients — Créer un client manuellement (admin)
 router.post("/", auth, (req, res) => {
   const { prenom, nom, email, telephone, adresse, notes } = req.body;

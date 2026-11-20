@@ -101,7 +101,8 @@ export const clientsApi = {
   getAll:  (params: Record<string, string> = {}) =>
     req<{ clients: any[] }>("GET", "/clients" + toQuery(params)),
   getOne:  (id: number) => req<any>("GET", `/clients/${id}`),
-  create:  (data: Record<string, unknown>) => req<any>("POST", "/clients", data),
+  create:       (data: Record<string, unknown>) => req<any>("POST", "/clients", data),
+  findOrCreate: (data: Record<string, unknown>) => req<any>("POST", "/clients/find-or-create", data),
   update:  (id: number, data: Record<string, unknown>) => req<any>("PATCH", `/clients/${id}`, data),
   delete:  (id: number) => req<any>("DELETE", `/clients/${id}`),
 };

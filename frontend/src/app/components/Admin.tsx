@@ -2516,7 +2516,24 @@ function NouveauTicketModal({ onClose, onCreated }: { onClose:()=>void; onCreate
   const handle = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setLoading(true);
     try {
-      await ticketsApi.create({ ...form, cout_estime: form.cout_estime ? Number(form.cout_estime) : 0 });
+      // 1. Trouver ou créer le client automatiquement
+      let clientId: number | null = null;
+      try {
+        const res = await clientsApi.findOrCreate({
+          prenom: form.prenom,
+          nom: form.nom,
+          telephone: form.telephone,
+          ...(form.email ? { email: form.email } : {}),
+        });
+        clientId = res.client?.id ?? null;
+      } catch (_) { /* non-bloquant si ça échoue */ }
+
+      // 2. Créer le ticket avec client_id lié
+      await ticketsApi.create({
+        ...form,
+        cout_estime: form.cout_estime ? Number(form.cout_estime) : 0,
+        ...(clientId ? { client_id: clientId } : {}),
+      });
       onCreated();
     } catch (err:any) { setError(err.message || "Erreur"); setLoading(false); }
   };
