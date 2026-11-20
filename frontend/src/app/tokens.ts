@@ -36,7 +36,7 @@ export const inputStyle: React.CSSProperties = {
   border: "1px solid rgba(255,255,255,0.12)",
   color: WHITE,
   fontFamily: FONT_BODY,
-  fontSize: "0.95rem",
+  fontSize: "1rem",
   padding: "0.85rem 1rem",
   outline: "none",
   borderRadius: "3px",

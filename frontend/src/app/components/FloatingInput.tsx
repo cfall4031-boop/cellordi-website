@@ -38,7 +38,7 @@ function fieldStyle(focused: boolean): React.CSSProperties {
     border: `1px solid ${focused ? "rgba(109,212,0,0.5)" : "rgba(109,212,0,0.18)"}`,
     color: WHITE,
     fontFamily: FONT_BODY,
-    fontSize: "0.95rem",
+    fontSize: "1rem",
     padding: "1.45rem 1rem 0.5rem",
     outline: "none",
     borderRadius: "2px",

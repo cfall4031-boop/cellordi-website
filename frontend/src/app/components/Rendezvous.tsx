@@ -361,7 +361,7 @@ export function Rendezvous() {
                       onChange={e => setCbPhone(e.target.value)}
                       placeholder={t("rdv.call.callback_placeholder")}
                       required
-                      style={{ ...inputStyle, fontSize: "0.83rem", padding: "0.5rem 0.75rem" }}
+                      style={{ ...inputStyle, fontSize: "1rem", padding: "0.5rem 0.75rem" }}
                     />
                     <button
                       type="submit"

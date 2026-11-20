@@ -433,4 +433,16 @@
     justify-content: center !important;
   }
 
+  /* ══════════════════════════════════════════════════════
+     iOS SAFARI — empêcher le zoom auto sur les champs
+     (tout champ < 16px déclenche un zoom non souhaité)
+  ══════════════════════════════════════════════════════ */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 1rem !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
 } /* /media (max-width: 767px) */

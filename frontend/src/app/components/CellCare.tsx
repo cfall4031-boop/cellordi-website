@@ -257,7 +257,7 @@ function WizardInscription({ params, onDone, onCancel }: { params: any; onDone: 
 
   const inputSt: React.CSSProperties = {
     width:"100%", padding:"0.6rem 0.75rem", background:"rgba(255,255,255,0.04)",
-    border:`1px solid rgba(59,130,246,0.2)`, borderRadius:7, color:WHITE, fontSize:"0.9rem",
+    border:`1px solid rgba(59,130,246,0.2)`, borderRadius:7, color:WHITE, fontSize:"1rem",
     fontFamily:"'DM Sans',sans-serif", outline:"none", boxSizing:"border-box",
   };
 
