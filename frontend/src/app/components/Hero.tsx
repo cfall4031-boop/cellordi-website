@@ -73,14 +73,15 @@ export function Hero() {
         position: "absolute", inset: 0,
         backgroundImage: "url('/hero-crack.jpg')",
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "center top",
         backgroundRepeat: "no-repeat",
+        filter: "grayscale(1) contrast(1.6) brightness(0.35)",
         zIndex: 0,
       }} />
-      {/* Overlay sombre pour lisibilité du texte */}
+      {/* Voile uniforme + fondu bas vers le noir */}
       <div style={{
         position: "absolute", inset: 0,
-        background: "linear-gradient(to right, rgba(12,12,18,0.88) 0%, rgba(12,12,18,0.55) 60%, rgba(12,12,18,0.2) 100%)",
+        background: "linear-gradient(to bottom, rgba(12,12,18,0.45) 0%, rgba(12,12,18,0.45) 60%, #0c0c12 100%)",
         zIndex: 1,
       }} />
 
